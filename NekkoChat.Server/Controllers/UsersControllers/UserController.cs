@@ -17,7 +17,7 @@ namespace NekkoChat.Server.Controllers
             _logger = logger;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("data/{id}")]
         public async Task<IActionResult> GetAllUSerDataById([FromRoute] string id)
         {
             try
@@ -40,7 +40,7 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
-        [HttpGet("{id}/{startDate}/{endDate}")]
+        [HttpGet("conversation/{id}/{startDate}/{endDate}")]
         public async Task<IActionResult> GetConversationByRangeOfDateById([FromRoute] string id, [FromRoute] DateTime startDate, [FromRoute] DateTime endDate)
         {
             try
@@ -66,7 +66,10 @@ namespace NekkoChat.Server.Controllers
                             
                              )));
 
-                Console.WriteLine(response);
+                if (!response.IsValidResponse)
+                {
+                    return NotFound(new { Message = "No index found" });
+                };
 
                 var document = response.Documents;
                 return Ok(document);
@@ -77,7 +80,7 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
-        [HttpGet("{id:alpha}")]
+        [HttpGet("conversation/all/{id}")]
         public async Task<IActionResult> GetAllConversationById([FromRoute] string id)
         {
             try
@@ -86,11 +89,61 @@ namespace NekkoChat.Server.Controllers
 
                 var response = await client.SearchAsync<ElasticUserDTO>(s => s
                     .Index("nekko_chat_beta_users")
+                    .Query(q => q
+                        .Match(m => m
+                            .Field("user_days_json.result.data.conversation_id")
+                            .Query(id)
+                    )
+                    ).Sort(s => s
+                        .Field("user_days_json.result.date")
+                        .Doc(d => d
+                            .Order(SortOrder.Desc)
+                        )
+                    )
                 );
 
-                Console.WriteLine(response);
+                if (!response.IsValidResponse)
+                {
+                    return NotFound(new { Message = "No index found" });
+                }
 
                 var document = response.Documents;
+                return Ok(document);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+            }
+        }
+
+        [HttpGet("conversation/{id}")]
+        public async Task<IActionResult> GetCurrentDayConversationById([FromRoute] string id)
+        {
+            try
+            {
+                var client = new ElasticsearchClient();            
+
+                var response = await client.SearchAsync<ElasticUserDTO>(s => s
+                    .Index("nekko_chat_beta_users")
+                    .Query(q => q
+                        .Match(m => m
+                            .Field("user_days_json.result.data.conversation_id")
+                            .Query(id)
+                    )
+                    ).Sort(s => s
+                        .Field("user_days_json.result.date")
+                        .Doc(d => d
+                            .Order(SortOrder.Desc)
+                        )
+                    )
+                );
+
+                if (!response.IsValidResponse)
+                {
+                    return NotFound(new { Message = "No index found" });
+                }
+
+                var document = response.Documents.FirstOrDefault();
                 return Ok(document);
             }
             catch (Exception ex)

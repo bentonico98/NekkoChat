@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
+//lo wa deja jejeje
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]

@@ -76,5 +76,43 @@ namespace NekkoChat.Server.Controllers
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
         }
+
+        [HttpGet("{id:alpha}")]
+        public async Task<IActionResult> GetAllConversationById([FromRoute] string id)
+        {
+            try
+            {
+                var client = new ElasticsearchClient();            
+
+                var response = await client.SearchAsync<ElasticUserDTO>(s => s
+                    .Index("nekko_chat_beta_users")
+                );
+
+                Console.WriteLine(response);
+
+                var document = response.Documents;
+                return Ok(document);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+            }
+        }
     }
 }
+
+/*
+GET /nekko_chat_beta_users/_search
+{
+  "query": {
+    "match": {
+      "user_days_json.result.data.conversation_id": 2
+    }
+  },
+  "sort": {
+    "user_days_json.result.date": "desc"
+  },
+  "size": 1
+}
+}
+*/

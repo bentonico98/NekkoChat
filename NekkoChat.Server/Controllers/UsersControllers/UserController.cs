@@ -40,33 +40,35 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
-        [HttpGet("{id}, {startDate}, {endDate}")]
-        public async Task<IActionResult> GetConversationByRangeOfDateById(string id, string startDate, string endDate)
+        [HttpGet("{id}/{startDate}/{endDate}")]
+        public async Task<IActionResult> GetConversationByRangeOfDateById([FromRoute] string id, [FromRoute] DateTime startDate, [FromRoute] DateTime endDate)
         {
             try
             {
-                var client = new ElasticsearchClient();
-
-
+                var client = new ElasticsearchClient();            
 
                 var response = await client.SearchAsync<ElasticUserDTO>(s => s
                     .Index("nekko_chat_beta_users")
                     .Query(q => q
                         .Bool(b => b
-                            .Filter(f => f
+                            .Must(f => f
                                 .Term(t => t
                                     .Field("user_days_json.result.data.conversation_id")
                                     .Value(id))
+                            ).Filter(f2 => f2 
                                 .Range(r => r
-                                    .TermRange(tr => tr
+                                    .DateRange(dr => dr
                                         .Field("user_days_json.result.data.messages.created_at")
                                         .Gte(startDate)
-                                        .Lte(endDate)))
-                            ))));
+                                        .Lte(endDate)
+                                        
+                                        )))
+                            
+                             )));
 
                 Console.WriteLine(response);
 
-                var document = response.Documents.FirstOrDefault();
+                var document = response.Documents;
                 return Ok(document);
             }
             catch (Exception ex)

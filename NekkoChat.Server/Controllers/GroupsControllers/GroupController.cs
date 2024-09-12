@@ -3,19 +3,19 @@ using System;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
+using NekkoChat.Server.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class GroupController : ControllerBase
+    public class GroupController(ILogger<GroupController> logger, ApplicationDbContext context) : ControllerBase
     {
-        private readonly ILogger<GroupController> _logger;
+        private readonly ILogger<GroupController> _logger = logger;
+        private readonly ApplicationDbContext _context = context;
 
-        public GroupController(ILogger<GroupController> logger)
-        {
-            _logger = logger;
-        }
+    
         //Busca toda la DATA del usuario basada en el id, el id aqui se busca en base a 2-1, 2-2, 2-3
         //asi se dividio ElasticSearch, esta esta pensada para busquedas mas especificas basadas en el _doc deseado
         [HttpGet("data/{id}")]

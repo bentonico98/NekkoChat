@@ -3,6 +3,10 @@ using System;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
+using Elastic.Transport;
+using Elasticsearch.Net;
+using Nest;
+using NekkoChat.Server.Data;
 
 namespace NekkoChat.Server.Controllers
 {
@@ -11,10 +15,11 @@ namespace NekkoChat.Server.Controllers
     public class UserController : ControllerBase
     {
         private readonly ILogger<UserController> _logger;
-
+        private readonly MyElasticSearch _esSearch;
         public UserController(ILogger<UserController> logger)
         {
             _logger = logger;
+            _esSearch = new MyElasticSearch();
         }
         //Busca toda la DATA del usuario basada en el id, el id aqui se busca en base a 2-1, 2-2, 2-3
         //asi se dividio ElasticSearch, esta esta pensada para busquedas mas especificas basadas en el _doc deseado
@@ -47,7 +52,7 @@ namespace NekkoChat.Server.Controllers
         {
             try
             {
-                var client = new ElasticsearchClient();            
+                var client = new ElasticsearchClient();
 
                 var response = await client.SearchAsync<ElasticUserDTO>(s => s
                     .Index("nekko_chat_beta_users")
@@ -57,15 +62,13 @@ namespace NekkoChat.Server.Controllers
                                 .Term(t => t
                                     .Field("user_days_json.result.data.conversation_id")
                                     .Value(id))
-                            ).Filter(f2 => f2 
+                            ).Filter(f2 => f2
                                 .Range(r => r
                                     .DateRange(dr => dr
                                         .Field("user_days_json.result.data.messages.created_at")
                                         .Gte(startDate)
                                         .Lte(endDate)
-                                        
                                         )))
-                            
                              )));
 
                 if (!response.IsValidResponse)
@@ -87,30 +90,23 @@ namespace NekkoChat.Server.Controllers
         {
             try
             {
-                var client = new ElasticsearchClient();            
-
-                var response = await client.SearchAsync<ElasticUserDTO>(s => s
+                var response = await _esSearch.EsClient().SearchAsync<ElasticUserDTO>(s => s
                     .Index("nekko_chat_beta_users")
                     .Query(q => q
                         .Match(m => m
                             .Field("user_days_json.result.data.conversation_id")
                             .Query(id)
                     )
-                    ).Sort(s => s
-                        .Field("user_days_json.result.date")
-                        .Doc(d => d
-                            .Order(SortOrder.Desc)
-                        )
                     )
                 );
-
-                if (!response.IsValidResponse)
+                if (response.Hits.Count <= 0)
                 {
                     return NotFound(new { Message = "No index found" });
                 }
-
+            
                 var document = response.Documents;
                 return Ok(document);
+
             }
             catch (Exception ex)
             {
@@ -123,7 +119,7 @@ namespace NekkoChat.Server.Controllers
         {
             try
             {
-                var client = new ElasticsearchClient();            
+                var client = new ElasticsearchClient();
 
                 var response = await client.SearchAsync<ElasticUserDTO>(s => s
                     .Index("nekko_chat_beta_users")
@@ -135,7 +131,7 @@ namespace NekkoChat.Server.Controllers
                     ).Sort(s => s
                         .Field("user_days_json.result.date")
                         .Doc(d => d
-                            .Order(SortOrder.Desc)
+                            .Order(Elastic.Clients.Elasticsearch.SortOrder.Desc)
                         )
                     )
                 );

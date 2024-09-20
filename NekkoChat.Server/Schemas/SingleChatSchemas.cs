@@ -4,11 +4,13 @@
     {
 
         public string? id { get; set; }
-        public string? text { get; set; }
+        public string? content { get; set; }
 
-        public string? user { get; set; }
+        public string? user_id { get; set; }
+        public string? username { get; set; }
 
-        public DateTime timestamp { get; set; } = DateTime.Now;
+        public string created_at { get; set; } = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss");
+
 
     }
 }

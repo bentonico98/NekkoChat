@@ -1,15 +1,18 @@
-﻿using Elastic.Clients.Elasticsearch;
+﻿//using Elastic.Clients.Elasticsearch;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using Elastic.Clients.Elasticsearch.QueryDsl;
+//using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
-using Elastic.Transport;
-using Elasticsearch.Net;
-using Nest;
+//using Elastic.Transport;
+//using Elasticsearch.Net;
+//using Nest;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Utils;
-using Elastic.Clients.Elasticsearch.Core.Search;
-
+using NekkoChat.Server.Models;
+using Microsoft.VisualBasic;
+//using Elastic.Clients.Elasticsearch.Core.Search;
+using System.Text.Json;
+using Newtonsoft.Json;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace NekkoChat.Server.Controllers
@@ -24,75 +27,62 @@ namespace NekkoChat.Server.Controllers
 
         // GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats/{id}")]
-        public async Task<IActionResult> Get([FromRoute] string id)
+        public  IActionResult Get([FromRoute] string id)
         {
             try
             {
-                //EL SORT ESTA COMENTADO PORQUE DA ERROR POR ALGUNA RAZON -- PUEDES ARREGLARLO??
+                List<Chats> UserChats = new();
+                List<object> ChatsContent = new();
 
-                var response = await _esSearch.EsClient().SearchAsync<ElasticUserDTO>(s => s
-                    .Index("nekko_chat_beta_users")
-                    .Query(q => q
-                        .Match(m => m
-                            .Field("user_days_json.result.data.conversation_id")
-                            .Query(id)
-                    )
-                    )/*.Sort(s => s
-                    .Field("user_days_json.result.date")
-                    .Doc(d => d
-                            .Order(Elastic.Clients.Elasticsearch.SortOrder.Desc)
-                        ))*/
-                );
+                int user_id = int.Parse(id);
+                IQueryable<Chats> conversations = from c in _context.chats select c;
+                conversations = conversations.Where((c) => c.sender_id == user_id || c.receiver_id == user_id);
+                foreach (var conversation in conversations)
+                {
+                    UserChats.Add(conversation);
+                }
 
-                if (response.Hits.Count <= 0)
+                foreach (var userChat in UserChats)
+                {
+                    IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
+                    chat = chat.Where((u) => u.chat_id == userChat.id);
+                    foreach (var c in chat)
+                    {
+                        ChatsContent.Add(JsonDocument.Parse(c.content));
+                    }
+                }
+
+                if (ChatsContent == null)
                 {
                     return NotFound(new { Message = "No index found" });
                 }
 
-                var document = response.Documents;
-                return Ok(document);
+                return Ok(ChatsContent);
 
             }
             catch (Exception ex)
             {
-
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
-
             }
         }
 
         // GET chats/chat/5 -- BUSCA UN CHAT ESPECIFICO
         [HttpGet("chat/{id}")]
-        public async Task<IActionResult> GetChatByUserId([FromRoute] string id)
+        public IActionResult GetChatByUserId([FromRoute] string id)
         {
-            
+
             try
             {
-                //EL SORT ESTA COMENTADO PORQUE DA ERROR POR ALGUNA RAZON -- PUEDES ARREGLARLO??
-                //var client = new ElasticsearchClient();
+                List < object > currentChats = new();
+                int chat_id = int.Parse(id);
+                IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
+                chat = chat.Where((u) => u.chat_id == chat_id);
 
-                var response = await _esSearch.EsClient().SearchAsync<ElasticUserDTO>(s => s
-                    .Index("nekko_chat_beta_users")
-                    .Query(q => q
-                        .Match(m => m
-                            .Field("user_days_json.result.data.conversation_id")
-                            .Query(id)
-                    )
-                    )/*.Sort(s => s
-                        .Field("user_days_json.result.date")
-                        .Doc(d => d
-                            .Order(Elastic.Clients.Elasticsearch.SortOrder.Desc)
-                        )
-                    )*/
-                );
-
-                if (response.Hits.Count <= 0)
+                foreach (var c in chat)
                 {
-                    return NotFound(new { Message = "No index found" });
+                    currentChats.Add(JsonDocument.Parse(c.content));
                 }
-
-                var document = response.Documents.FirstOrDefault();
-                return Ok(document);
+                return Ok(currentChats);
             }
             catch (Exception ex)
             {
@@ -104,7 +94,7 @@ namespace NekkoChat.Server.Controllers
         [HttpPost("chat/create")]
         public async Task<IActionResult> Post(string value, int sender_id, int receiver_id)
         {
-            int messageSent =  await _messageServices.createChat(sender_id, receiver_id, value);
+            int messageSent = await _messageServices.createChat(sender_id, receiver_id, value);
             if (messageSent <= 0)
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
@@ -131,3 +121,70 @@ namespace NekkoChat.Server.Controllers
         }
     }
 }
+
+
+
+
+// GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
+/*[HttpGet("chats/{id}")]
+public async Task<IActionResult> Get([FromRoute] string id)
+{
+    try
+    {
+        var response = await _esSearch.EsClient().SearchAsync<ElasticUserDTO>(s => s
+                    .Index("nekko_chat_beta_users_v3")
+                    .Query(q => q
+                        .Match(m => m
+                            .Field("user_days_json.result.participants.id")
+                            .Query(id)
+                    )
+                    ).Sort(s => s
+                        .Field(f => f.Field("user_days_json.result.messages.data.created_at.keyword")
+                            .Ascending()
+                  )
+                )
+                );
+        if (response.Hits.Count <= 0)
+        {
+            return NotFound(new { Message = "No index found" });
+        }
+
+        var document = response.Documents;
+        return Ok(document);
+
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+    }
+}
+
+// GET chats/chat/5 -- BUSCA UN CHAT ESPECIFICO
+[HttpGet("chat/{id}")]
+public async Task<IActionResult> GetChatByUserId([FromRoute] string id)
+{
+
+    try
+    {
+        var response = await _esSearch.EsClient().SearchAsync<ElasticUserDTO>(s => s
+            .Index("nekko_chat_beta_users_v3")
+            .Query(q => q
+                .Match(m => m
+                    .Field("user_days_json.result.conversation_id")
+                    .Query(id)
+            )
+            ));
+
+        if (response.Hits.Count <= 0)
+        {
+            return NotFound(new { Message = "No index found" });
+        }
+
+        var document = response.Documents.FirstOrDefault();
+        return Ok(document);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+    }
+}*/

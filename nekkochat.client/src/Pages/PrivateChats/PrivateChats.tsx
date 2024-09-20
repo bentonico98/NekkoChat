@@ -8,12 +8,10 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
 
 export default function PrivateChats() {
-    const user_id = 1;
+    const user_id = 2;
     const [conversations, setconversations] = useState<ChatSchema[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<any>();
-
-    
 
     const sendMessage = async (msj: string, chat_id: number, sender_id: number, receiver_id: number) => {
 
@@ -29,7 +27,9 @@ export default function PrivateChats() {
     const addToChat = (user: string, msj: string) => {
         if (!msj) return;
         setconversations((c: any) =>
-            [...c, new ChatSchema(user, msj, new Date().toJSON())]);
+            //[...c, new ChatSchema(user, msj, new Date("YYYY-MM-DD HH:mm:ss").toJSON())]);
+            [...c, { id: Math.floor(Math.random()), content: msj, username: user, user_id: user_id, created_at: new Date("YYYY-MM-DD HH:mm:ss").toJSON() }]);
+
     };
     //Mantiene la conexion abierta
     useEffect(() => {

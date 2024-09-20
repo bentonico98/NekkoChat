@@ -1,4 +1,5 @@
 ﻿using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Security;
 using Microsoft.VisualBasic;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
@@ -11,7 +12,6 @@ namespace NekkoChat.Server.Utils
     //Servicios que se encargaran del envio de los mensajes
     public class MessageServices(ApplicationDbContext _context)
     {
-        private readonly Random rand = new Random();
 
         /// <summary>
         /// Funcion que se encargue del envio de los mensajes
@@ -92,11 +92,13 @@ namespace NekkoChat.Server.Utils
             int chat_id = newChat.id;
 
             bool umCreated = await createUserMessage(chat_id, sender_id, msj);
+
             if (!umCreated)
             {
                 Users_Messages um = fetchUsersMessages(chat_id);
                 return um.chat_id;
             }
+
             return chat_id;
         }
 
@@ -128,14 +130,20 @@ namespace NekkoChat.Server.Utils
 
             MessageSchemas parsedMessage = JsonSerializer.Deserialize<MessageSchemas>(chat);
             var messages = parsedMessage.messages.ToImmutableArray();
+
+            Users user = _context.users.Find(sender_id);
+
             var newMessages = messages.AddRange(new SingleChatSchemas
             {
-                id = rand.Next().ToString(),
-                text = msj,
-                user = sender_id.ToString(),
-                timestamp = DateTime.Now
+                id = Guid.NewGuid().ToString(),
+                content = msj,
+                user_id = sender_id.ToString(),
+                username = user!.username,
+                created_at = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss")
             });
+
             string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
+            
             return payload;
         }
 
@@ -208,22 +216,28 @@ namespace NekkoChat.Server.Utils
         /// <returns> bool (true/false) -- en base a si la operacion fue exitosa o no</returns>
         private async Task<bool> createUserMessage(int chat_id, int sender_id, string msj)
         {
+            Users user = _context.users.Find(sender_id);
+
             object[] newMessages = [new SingleChatSchemas
             {
-                id = rand.Next().ToString(),
-                text = msj,
-                user = sender_id.ToString(),
-                timestamp = DateTime.Now
+                id = Guid.NewGuid().ToString(),
+                content = msj,
+                user_id = sender_id.ToString(),
+                username = user!.username,
+                created_at = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss")
             }];
+
             Users_Messages userMsj = new Users_Messages
             {
                 chat_id = chat_id,
                 content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":[]" + "}"
             };
+
             await _context.users_messages.AddRangeAsync(userMsj);
             _context.SaveChanges();
 
             int umId = userMsj.id;
+
             if (umId <= 0)
             {
                 return false;

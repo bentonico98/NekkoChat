@@ -1,0 +1,14 @@
+main {
+    display:flex;
+    gap:30px;
+}
+.align-left{
+    text-align:left;
+}
+div{
+    margin-bottom: 10px ;
+}
+.sideboxHeadItems{
+    display:flex;
+    justify-content:space-between;
+}

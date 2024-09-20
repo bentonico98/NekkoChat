@@ -12,6 +12,5 @@
     <Folder Include="src\Constants\" />
     <Folder Include="src\Schemas\" />
     <Folder Include="src\Utils\" />
-    <Folder Include="src\Pages\PrivateChats\Components\" />
   </ItemGroup>
 </Project>

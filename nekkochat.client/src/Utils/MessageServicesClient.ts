@@ -4,7 +4,8 @@ import MessageSchema from "../Schemas/MessageSchema";
 export default class MessageServicesClient {
 
     public static async sendMessageToUser(chat_id: number, sender_id: number, receiver_id: number, msj: string) {
-        let url = ServerLinks.getSendMessageUrl(new MessageSchema(chat_id, sender_id, receiver_id, msj, "user", new Date().toJSON()));
+
+        let url = ServerLinks.getSendMessageUrl(new MessageSchema(chat_id, sender_id, receiver_id, msj, sender_id.toString(), "user", new Date("YYYY-MM-DD HH:mm:ss").toJSON()));
         const value = msj;
         const result = await axios.put(url,
             value, {
@@ -12,7 +13,6 @@ export default class MessageServicesClient {
                 'Content-Type': 'application/json'
             }
         });
-        console.log(result);
         return result;
     }
 
@@ -29,13 +29,8 @@ export default class MessageServicesClient {
             // always executed
             console.log('funcciono?');
         });
-        let payload: any = [];
-        result.forEach((el: any) => {
-            el.user_days_json.result.data.messages.map((els: any) => {
-                payload.push(els);
-            });
-        });
-        return payload;
+       
+        return result;
     }
 
     public static async getChatFromUser(chat_id: string) {
@@ -51,11 +46,9 @@ export default class MessageServicesClient {
             console.log('funcciono?');
         });
 
-        let payload: any = [];
-        result.user_days_json.result.data.messages.forEach((el: any) => {
-            payload.push(el);
-        });
+        console.log(result);
 
-        return payload;
+      
+        return result;
     }
 };

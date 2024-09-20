@@ -22,7 +22,7 @@ namespace NekkoChat.Server.Data
             };
 
             var connectionPool = new StaticConnectionPool(nodes);
-            var connectionSettings = new ConnectionSettings(connectionPool).BasicAuthentication(elasticUsername, elasticPassword).DisableDirectStreaming();
+            var connectionSettings = new ConnectionSettings(connectionPool).BasicAuthentication(elasticUsername, elasticPassword);
             var elasticClient = new ElasticClient(connectionSettings);
 
             return elasticClient;

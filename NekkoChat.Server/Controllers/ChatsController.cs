@@ -34,7 +34,7 @@ namespace NekkoChat.Server.Controllers
                 List<Chats> UserChats = new();
                 List<object> ChatsContent = new();
 
-                int user_id = int.Parse(id);
+                string user_id = id;
                 IQueryable<Chats> conversations = from c in _context.chats select c;
                 conversations = conversations.Where((c) => c.sender_id == user_id || c.receiver_id == user_id);
                 foreach (var conversation in conversations)
@@ -92,7 +92,7 @@ namespace NekkoChat.Server.Controllers
 
         // POST chats/chat/create?sender_id=${sender_id}&receiver_id=${receiver_id}&value=${value} -- Ruta para creacion de un chat que tdv no exista
         [HttpPost("chat/create")]
-        public async Task<IActionResult> Post(string value, int sender_id, int receiver_id)
+        public async Task<IActionResult> Post(string value, string sender_id, string receiver_id)
         {
             int messageSent = await _messageServices.createChat(sender_id, receiver_id, value);
             if (messageSent <= 0)
@@ -104,7 +104,7 @@ namespace NekkoChat.Server.Controllers
 
         // PUT chats/chat/send/{id}?sender_id=${sender_id}&receiver_id=${receiver_id}&value=${value} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/send/{id}")]
-        public async Task<IActionResult> Put(int id, string value, int sender_id, int receiver_id)
+        public async Task<IActionResult> Put(int id, string value, string sender_id, string receiver_id)
         {
             bool messageSent = await _messageServices.sendMessage(id, sender_id, receiver_id, value);
             if (!messageSent)

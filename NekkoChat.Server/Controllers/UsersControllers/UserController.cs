@@ -7,38 +7,28 @@ using Elastic.Transport;
 using Elasticsearch.Net;
 using Nest;
 using NekkoChat.Server.Data;
+using NekkoChat.Server.Models;
 
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController : ControllerBase
+    public class UserController(ILogger<UserController> logger, ApplicationDbContext context) : ControllerBase
     {
-        private readonly ILogger<UserController> _logger;
-        private readonly MyElasticSearch _esSearch;
-        public UserController(ILogger<UserController> logger)
-        {
-            _logger = logger;
-            _esSearch = new MyElasticSearch();
-        }
-        //Busca toda la DATA del usuario basada en el id, el id aqui se busca en base a 2-1, 2-2, 2-3
-        //asi se dividio ElasticSearch, esta esta pensada para busquedas mas especificas basadas en el _doc deseado
-        [HttpGet("data/{id}")]
-        public async Task<IActionResult> GetAllUSerDataById([FromRoute] string id)
+        private readonly ILogger<UserController> _logger = logger;
+       private readonly ApplicationDbContext _context = context;
+        // /User/Manage/ConnectionId?connectionid=""&user_id=""
+        
+        [HttpPost("manage/connectionid/")]
+        public async Task<IActionResult> Post(string user_id, string connectionid)
         {
             try
             {
-                var client = new ElasticsearchClient();
-
-                var response = await client.GetAsync<ElasticUserDTO>(id, idx => idx.Index("nekko_chat_beta_users"));
-
-                if (!response.IsValidResponse)
-                {
-                    return NotFound(new { Message = "No index found" });
-                }
-
-                var document = response.Source;
-                return Ok(document);
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
+                user!.ConnectionId = connectionid;
+                _context.AspNetUsers.UpdateRange(user);
+                _context.SaveChanges();
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -48,7 +38,7 @@ namespace NekkoChat.Server.Controllers
         //Busca la conversacion en un periodo de tiempo, esta fue pensada para obtener la conversacion semanal o en el periodo que se quiera
         //y no sobrecargar la DB con pedidos, se pide en baches 
         [HttpGet("conversation/{id}/{startDate}/{endDate}")]
-        public async Task<IActionResult> GetConversationByRangeOfDateById([FromRoute] string id, [FromRoute] DateTime startDate, [FromRoute] DateTime endDate)
+        /*public async Task<IActionResult> GetConversationByRangeOfDateById([FromRoute] string id, [FromRoute] DateTime startDate, [FromRoute] DateTime endDate)
         {
             try
             {
@@ -83,9 +73,9 @@ namespace NekkoChat.Server.Controllers
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
-        }
+        }*/
         //Busca todas las conversaciones basadas en ese asi, el ordern es descendete por lo que muestra la mas reciente primero
-        [HttpGet("conversation/all/{id}")]
+        /*[HttpGet("conversation/all/{id}")]
         public async Task<IActionResult> GetAllConversationById([FromRoute] string id)
         {
             try
@@ -113,11 +103,11 @@ namespace NekkoChat.Server.Controllers
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
         }
-        //Busca la connversacion mas reciente basada en el dia (busca obtener el dia completo)
-        [HttpGet("conversation/{id}")]
-        public async Task<IActionResult> GetRecentDayConversationById([FromRoute] string id)
+        //Busca la connversacion mas reciente basada en el dia (busca obtener el dia completo)*/
+        //[HttpGet("conversation/{id}")]
+        public  void GetRecentDayConversationById([FromRoute] string id)
         {
-            try
+            /*try
             {
                 var client = new ElasticsearchClient();
 
@@ -147,7 +137,7 @@ namespace NekkoChat.Server.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
-            }
+            }*/
         }
     }
 }

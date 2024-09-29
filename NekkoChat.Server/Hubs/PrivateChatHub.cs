@@ -11,6 +11,25 @@ namespace NekkoChat.Server.Hubs
         {
             return Clients.All.SendAsync("ReceiveMessage", username, msj);    
         }
+        public Task SendTypingSignal(string sender_id, string receiver_id)
+        {
+            AspNetUsers sender = _context.AspNetUsers.Find(sender_id);
+            AspNetUsers receiver = _context.AspNetUsers.Find(receiver_id);
+
+            string senderconnectionid = "";
+            string receiverconnectionid = "";
+
+            if (sender != null)
+            {
+                senderconnectionid = sender!.ConnectionId;
+            }
+            if (receiver != null)
+            {
+                receiverconnectionid = receiver!.ConnectionId;
+            }
+
+            return Clients.Clients(receiverconnectionid).SendAsync("ReceiveTypingSignal", sender?.Id);
+        }
         public Task SendMessageToUser(string sender_id, string receiver_id, string msj)
         {
             AspNetUsers sender = _context.AspNetUsers.Find(sender_id);

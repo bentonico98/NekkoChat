@@ -1,10 +1,11 @@
 import "../PrivateChats.css";
 import ChatSchema from "../../../Schemas/ChatSchema";
-import {  ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
-import { useEffect, useState } from "react";
+//import { useEffect, useState } from "react";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
+import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
 
 /*interface incomingData {
     _id: string,
@@ -12,9 +13,11 @@ import useGetReceiver from "../../../Hooks/useGetReceiver";
     participants: object[]
 }*/
 
-export default function ChatMessages({ messages, user, connected, chat, sender, receiver }: any) {
+export default function ChatMessages({ messages, user, connected, chat, sender, receiver, isTyping }: any) {
 
-    const { receiverName } = useGetReceiver(user, messages);
+    const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
+    console.log(isTyping.user_id);
+    console.log(sender);
 
     return (
         <ChatContainer className="flexibleContainer">
@@ -23,8 +26,8 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
 
             <ConversationHeader>
                 <ConversationHeader.Back />
-                <Avatar src={avatar} name="Zoe" />
-                <ConversationHeader.Content userName={receiverName.toLocaleUpperCase()} info="Active 10 mins ago" />
+                <Avatar src={avatar} name={receiverName.toLocaleUpperCase()} />
+                <ConversationHeader.Content userName={receiverName.toLocaleUpperCase()} info={lastOnline} />
                 <ConversationHeader.Actions>
                     <VoiceCallButton />
                     <VideoCallButton />
@@ -34,19 +37,19 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
 
             {/*Chat Component*/}
 
-            <MessageList typingIndicator={<TypingIndicator content="Zoe is typing" />}>
-                <MessageSeparator content="Saturday, 30 November 2019" />
+            <MessageList typingIndicator={isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
+                <MessageSeparator content={startDate} />
                 {messages.map((el: ChatSchema, idx: number) => {
                     return (
-                        <Message key={ idx} model={{
-                                message: `${el.content}`,
-                                sentTime: `${el.created_at}`,
-                                sender: `${el.username}`,
-                                direction:  `${ el.user_id === user ? "outgoing": "incoming" }` ,
-                                position: "single"
-                            }}>
+                        <Message key={idx} model={{
+                            message: `${el.content}`,
+                            sentTime: `${el.created_at}`,
+                            sender: `${el.username}`,
+                            direction: `${el.user_id === sender ? "outgoing" : "incoming"}`,
+                            position: "single"
+                        }}>
                             <Avatar src={avatar} name={el.username} />
-                            </Message>
+                        </Message>
                     );
                 })}
             </MessageList>
@@ -58,7 +61,14 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                 disabled={!connected}
                 sendOnReturnDisabled={!connected}
                 sendDisabled={!connected}
-                onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver, e) }} /> 
+                onChange={(e) => {
+                    if (e.length > 1) {
+                        PrivateChatsServerServices.SendTypingSignal(sender, receiver);
+                    } else {
+                        return;
+                    }
+                }}
+                onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver, e) }} />
         </ChatContainer>
     );
 }

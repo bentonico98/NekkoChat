@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NekkoChat.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240922195843_AddUserIdColToAspUserNetTable")]
-    partial class AddUserIdColToAspUserNetTable
+    [Migration("20240928211956_ChangeLastOnlineToString")]
+    partial class ChangeLastOnlineToString
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -185,6 +185,9 @@ namespace NekkoChat.Server.Migrations
                     b.Property<int?>("Friends_Count")
                         .HasColumnType("integer");
 
+                    b.Property<string>("LastOnline")
+                        .HasColumnType("text");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -250,11 +253,13 @@ namespace NekkoChat.Server.Migrations
                     b.Property<bool?>("isFavorite")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("receiver_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("receiver_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("sender_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("sender_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("type")
                         .HasColumnType("text");
@@ -275,11 +280,13 @@ namespace NekkoChat.Server.Migrations
                     b.Property<bool?>("isAccepted")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("receiver_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("receiver_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
-                    b.Property<int>("sender_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("sender_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("id");
 
@@ -324,8 +331,9 @@ namespace NekkoChat.Server.Migrations
                     b.Property<int>("group_id")
                         .HasColumnType("integer");
 
-                    b.Property<int>("user_id")
-                        .HasColumnType("integer");
+                    b.Property<string>("user_id")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("id");
 
@@ -369,6 +377,7 @@ namespace NekkoChat.Server.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("user_id")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");

@@ -14,7 +14,7 @@ export default function SideBox({ messages, user, setCurrentConversation }: any)
                 {messages.map((el: incomingData, idx: number) => {
                     return (
                         <div key={idx}>
-                            <SideBoxCard key={idx} user={user} chat={el} setCurrentConversation={setCurrentConversation} />
+                            <SideBoxCard key={idx} user={user} chat={el} setCurrentConversation={setCurrentConversation}  />
                         </div>
                     );
                 })}

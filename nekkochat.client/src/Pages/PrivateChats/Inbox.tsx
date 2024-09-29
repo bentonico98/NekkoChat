@@ -1,7 +1,7 @@
 import "./Inbox.css";
 import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
-import { /*useState,*/ useEffect } from "react";
+import { useState, useEffect } from "react";
 //import { useNavigate } from "react-router-dom";
 
 import SideBox from "./Components/SideBox";
@@ -21,14 +21,21 @@ import { getUserData } from "../../Store/Slices/userSlice";
 
 export default function Inbox() {
 
+    const [isTyping, setIsTyping] = useState({typing:false, user_id: "0"});
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const addToChat = (user: string, msj: string) => {
-        if (!msj) return;
+    const addToChat = (user: string, msj: string, { typing, user_id}:any) => {
+        if (!msj && !user) {
+            setIsTyping({ typing: typing, user_id: user_id });
+            setTimeout(() => {
+                setIsTyping({ typing: false, user_id: user_id });
+            }, 3000);
+            return;
+        }
         setMessages((c: any) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON())]);
+            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
     
     const { conversations, loggedUser, user_id} = useGetUser(user);
@@ -42,7 +49,15 @@ export default function Inbox() {
     return (
         <MainContainer >
             <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
-            <ChatMessages messages={messages} user={user_id} connected={connected} sender={user_id} receiver={receiverID} chat={chatID} />
+            <ChatMessages
+                messages={messages}
+                user={loggedUser}
+                connected={connected}
+                sender={user_id}
+                receiver={receiverID}
+                chat={chatID}
+                isTyping={isTyping}
+            />
         </MainContainer>
     );
 }

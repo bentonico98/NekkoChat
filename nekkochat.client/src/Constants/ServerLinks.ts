@@ -30,6 +30,10 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `user/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
+     public static getUserById(user_id: string) {
+         const url = `user/users?user_id=${user_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
 }
 
 export default ServerLinks;

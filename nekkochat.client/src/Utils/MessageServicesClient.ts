@@ -18,6 +18,19 @@ export default class MessageServicesClient {
         return result;
     }
 
+    public static async getUserById(user_id: string) {
+        let url = ServerLinks.getUserById(user_id);
+
+        const result = await axios.get(url).then((res) => {
+            return res.data;
+        }).catch((err) => {
+            console.log(err);
+            return err;
+        });
+
+        return result;
+    }
+
     public static async getAllUsersChats(user_id: string) {
 
         let url = ServerLinks.getAllUsersChatUrl(user_id);

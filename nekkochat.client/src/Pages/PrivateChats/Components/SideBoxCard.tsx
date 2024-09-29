@@ -8,7 +8,7 @@ export default function SideBoxCard({ chat, user, setCurrentConversation }: any)
 
     const [participants] = useState<any>([...chat.participants]);
     const [messages] = useState<any>([...chat.messages]);
-    const { receiverName } = useGetReceiver(user, messages);
+    const { receiverName, unreadMsj, receiverStatus } = useGetReceiver(user, messages);
 
     return (
         <Conversation
@@ -16,8 +16,8 @@ export default function SideBoxCard({ chat, user, setCurrentConversation }: any)
             name={receiverName.toUpperCase()}
             lastSenderName={participants[participants.length - 1].name}
             info={messages[messages.length - 1].content}
-            unreadCnt={3} onClick={() => { setCurrentConversation(chat._id) }}>
-            <Avatar src={avatar} name={participants[participants.length - 1].name} status="available" />
+            unreadCnt={unreadMsj} onClick={() => { setCurrentConversation(chat._id) }}>
+            <Avatar src={avatar} name={participants[participants.length - 1].name} status={receiverStatus} />
         </Conversation>
     );
 }

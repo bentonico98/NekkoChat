@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
 import UserAuthServices from "../Utils/UserAuthServices";
-export default function useSignalServer(user: any, addToChat: (user: string, msj: string) => void) {
+export default function useSignalServer(user: any, addToChat: (user: string, msj: string, typing:boolean) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<any>();
 
@@ -13,8 +13,7 @@ export default function useSignalServer(user: any, addToChat: (user: string, msj
     }
 
     const setConnectionId = async (id:string, conn:any) => {
-        const success = await UserAuthServices.SetConnectionId(id, conn);
-        console.log(success);
+         await UserAuthServices.SetConnectionId(id, conn);
     }
 
     //Mantiene la conexion abierta

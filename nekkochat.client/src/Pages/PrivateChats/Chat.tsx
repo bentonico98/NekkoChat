@@ -25,7 +25,7 @@ export default function Chat() {
     const addToChat = (user: string, msj: string) => {
         if (!msj) return;
         setMessages((c: any) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON())]);
+            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
     const { loggedUser, user_id } = useGetUser(user);
@@ -39,7 +39,7 @@ export default function Chat() {
 
     return (
         <MainContainer>
-            <ChatMessages messages={messages} user={user_id} connected={connected} sender={user_id} receiver={receiverID} chat={chat_id} />
+            <ChatMessages messages={messages} user={loggedUser} connected={connected} sender={user_id} receiver={receiverID} chat={chat_id} />
         </MainContainer>
         
     );

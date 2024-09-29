@@ -9,10 +9,10 @@ namespace NekkoChat.Server.Models
 
         public int id { get; set; }
 
-        //[ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
+        [ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
         public string? sender_id { get; set; }
 
-        //[ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
+        [ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
         public string? receiver_id { get; set; }
 
         public bool? isAccepted { get; set; } = false;

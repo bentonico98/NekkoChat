@@ -17,10 +17,14 @@ export default class PrivateChatsServerServices {
                     await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
                 });
                 this.conn.on("ReceiveMessage", (username: string, message: string) => {
-                    addToChat(username, message);
+                    addToChat(username, message, false);
                 });
                 this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
-                    addToChat(user_id, msj);
+                    addToChat(user_id, msj, false);
+                });
+                this.conn.on("ReceiveTypingSignal", (user: string) => {
+                    addToChat(null, null, {typing: true,user_id:user});
+                    console.log(user);
                 });
 
             } catch (er) {
@@ -44,6 +48,13 @@ export default class PrivateChatsServerServices {
     public static SendMessageToUserInvoke(sender_id: string, receiver_id: string, msj: string) {
         try {
             this.conn.invoke("SendMessageToUser", sender_id, receiver_id, msj);
+        } catch (er) {
+            console.log(er);
+        }
+    }
+    public static SendTypingSignal(sender_id:string, receiver_id: string) {
+        try {
+            this.conn.invoke("SendTypingSignal", sender_id,  receiver_id);
         } catch (er) {
             console.log(er);
         }

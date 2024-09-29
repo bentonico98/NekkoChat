@@ -139,7 +139,8 @@ namespace NekkoChat.Server.Utils
                 content = msj,
                 user_id = sender_id.ToString(),
                 username = user!.UserName,
-                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                read = false
             });
 
             string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
@@ -228,7 +229,8 @@ namespace NekkoChat.Server.Utils
                 content = msj,
                 user_id = sender_id.ToString(),
                 username = sender!.UserName,
-                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                read = false
             }];
 
             object[] newParticipants = [new ParticipantsSchema 

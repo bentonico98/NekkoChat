@@ -58,7 +58,7 @@ var elasticUsername = configuration["Authentication:ElasticSearch:Username"];
 var elasticPassword = configuration["Authentication:ElasticSearch:Password"];
 
 var elasticSettings = new ElasticsearchClientSettings(new Uri("https://localhost:9200"))
-    .Authentication(new BasicAuthentication("bento", "papibento"));
+    .Authentication(new BasicAuthentication("lenny2", "423204"));
 
 var elasticClient = new ElasticsearchClient(elasticSettings);
 

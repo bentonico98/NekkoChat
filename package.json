@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/simple-peer": "^9.11.8"
+  },
+  "devDependencies": {
+    "vite-plugin-node-polyfills": "^0.22.0"
+  }
+}

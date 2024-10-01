@@ -1,10 +1,12 @@
 import './App.css';
-import PrivateChatRoutes from "./Routes/PrivateChatRoutes";
+import { VideoCall } from './Pages/VideoCall/VideoCall';
+//import PrivateChatRoutes from "./Routes/PrivateChatRoutes";
 function App() {
-    
+    console.log('Llamando al componente VideoCall');
     return (
         <div>
-            <PrivateChatRoutes/>
+            <p>video chat aquiiiiiiiiiiiiiiiiiiiiiiiiiii</p>
+            <VideoCall />
         </div>
     );
 }

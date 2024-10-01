@@ -18,6 +18,10 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `chats/chat/${id}`
          return `${this.ServerUrl}${url}`;
      };
+     public static getReadMessageUrl(chat_id: string | undefined, sender_id: string) {
+         const url = `chats/chat/read/${chat_id}?sender_id=${sender_id}`
+         return `${this.ServerUrl}${url}`;
+     }
      public static getLoginUrl() {
          const url = `login`;
          return `${this.ServerUrl}${url}`;
@@ -34,6 +38,7 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `user/users?user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
+     
 }
 
 export default ServerLinks;

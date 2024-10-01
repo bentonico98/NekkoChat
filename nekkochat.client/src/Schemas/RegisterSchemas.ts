@@ -9,6 +9,7 @@ export default class LoginSchemas {
         this.email = email;
         this.username = username;
         this.password = password;
+        this.confirmpassword = confirmpassword;
         this.phoneNumber = phoneNumber;
     }
 

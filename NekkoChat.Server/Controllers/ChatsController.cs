@@ -113,7 +113,17 @@ namespace NekkoChat.Server.Controllers
             }
             return Ok();
         }
-
+        // PUT chats/chat/read/{id}?sender_id=${sender_id} --- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/read/{chat_id}")]
+        public  IActionResult PutMessageRead(int chat_id, string sender_id)
+        {
+            bool messageSent =  _messageServices.readMessage(chat_id, sender_id);
+            if (!messageSent)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
+        }
         // DELETE chats/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]
         public void Delete(int id)

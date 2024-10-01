@@ -2,15 +2,12 @@
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using System.Security.Claims;
+using NekkoChat.Server.Constants.Interfaces;
 namespace NekkoChat.Server.Hubs
 {
-    public class PrivateChatHub(ApplicationDbContext context): Hub
+    public class PrivateChatHub(ApplicationDbContext context): Hub, iCustomChatHubs
     {
         private readonly ApplicationDbContext _context = context;
-        public Task SendMessage(string username, string msj)
-        {
-            return Clients.All.SendAsync("ReceiveMessage", username, msj);    
-        }
         public Task SendTypingSignal(string sender_id, string receiver_id)
         {
             AspNetUsers sender = _context.AspNetUsers.Find(sender_id);

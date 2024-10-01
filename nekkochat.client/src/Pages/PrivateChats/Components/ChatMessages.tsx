@@ -16,8 +16,6 @@ import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerService
 export default function ChatMessages({ messages, user, connected, chat, sender, receiver, isTyping }: any) {
 
     const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
-    console.log(isTyping.user_id);
-    console.log(sender);
 
     return (
         <ChatContainer className="flexibleContainer">
@@ -37,7 +35,7 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
 
             {/*Chat Component*/}
 
-            <MessageList typingIndicator={isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
+            <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
                 <MessageSeparator content={startDate} />
                 {messages.map((el: ChatSchema, idx: number) => {
                     return (

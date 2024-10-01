@@ -18,6 +18,24 @@ export default class MessageServicesClient {
         return result;
     }
 
+    public static async sendReadMessage(chat_id: string | undefined, sender_id: string) {
+        if (!sender_id) return false;
+      
+        let url = ServerLinks.getReadMessageUrl(chat_id, sender_id);
+
+        const result = await axios.put(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((res) => {
+            console.log(res);
+        }).catch(err => {
+            console.error(err);
+        });
+
+        return result;
+    }
+
     public static async getUserById(user_id: string) {
         let url = ServerLinks.getUserById(user_id);
 

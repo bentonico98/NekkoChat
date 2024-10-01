@@ -6,11 +6,11 @@ using NekkoChat.Server.Models;
 using NekkoChat.Server.Schemas;
 using System.Collections.Immutable;
 using System.Text.Json;
-
+using NekkoChat.Server.Constants.Interfaces;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
-    public class MessageServices(ApplicationDbContext _context)
+    public class MessageServices(ApplicationDbContext _context) : iMessageService
     {
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace NekkoChat.Server.Utils
             {
                 IQueryable<Chats> filteredChat = from chat in _context.chats select chat;
                 filteredChat = filteredChat.Where(chat => chat.sender_id == sender_id && chat.receiver_id == receiver_id);
-                if(filteredChat == null)
+                if (filteredChat == null)
                 {
                     IQueryable<Chats> filteredChatAlt = from chat in _context.chats select chat;
                     filteredChatAlt = filteredChatAlt.Where(chat => chat.sender_id == receiver_id && chat.receiver_id == sender_id);
@@ -84,7 +84,7 @@ namespace NekkoChat.Server.Utils
                 isArchived = false,
                 isFavorite = false
             };
-           
+
             _context.chats.Add(newChat);
 
             _context.SaveChanges();
@@ -101,13 +101,37 @@ namespace NekkoChat.Server.Utils
 
             return chat_id;
         }
+        /// <summary>
+        /// Funccion que se encarga de mandar el "read receipt"
+        /// </summary>
+        /// <param name="chat_id"></param>
+        /// <param name="sender_id"></param>
+        /// <returns>BOOLEAN</returns>
+        public bool readMessage(int chat_id, string sender_id)
+        {
+            if (string.IsNullOrEmpty(sender_id)) return false;
+            Users_Messages filteredConvo = fetchUsersMessages(chat_id);
+            var chats = filteredConvo.content;
+            MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats);
+            IEnumerable<SingleChatSchemas> messages = parseConvo!.messages;
+            foreach (var item in messages)
+            {
+                if(!item.user_id.Equals(sender_id))
+                {
+                    item.read = true;
+                }
+            }
+            string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
-        public void readMessage() { }
+            filteredConvo.content = payload;
+            _context.users_messages.UpdateRange(filteredConvo);
+            _context.SaveChanges();
+            return true;
+        }
         public void favoriteMessage() { }
         public void archiveMessage() { }
         public void deleteMessage() { }
         public void deleteChat() { }
-
 
 
 
@@ -144,7 +168,7 @@ namespace NekkoChat.Server.Utils
             });
 
             string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
-            
+
             return payload;
         }
 
@@ -190,7 +214,7 @@ namespace NekkoChat.Server.Utils
         /// <returns> bool (true/false) -- en base a si el registro existe o no</returns>
         private bool chatExist(string sender_id, string receiver_id)
         {
-            if ( string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(receiver_id) )
+            if (string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(receiver_id))
             {
                 return false;
             }
@@ -233,10 +257,10 @@ namespace NekkoChat.Server.Utils
                 read = false
             }];
 
-            object[] newParticipants = [new ParticipantsSchema 
-            {   
-                id = sender_id, 
-                name= sender.UserName, 
+            object[] newParticipants = [new ParticipantsSchema
+            {
+                id = sender_id,
+                name= sender.UserName,
                 connectionid= sender.ConnectionId
             }, new ParticipantsSchema
             {
@@ -263,6 +287,6 @@ namespace NekkoChat.Server.Utils
 
             return true;
         }
-        
+
     }
 }

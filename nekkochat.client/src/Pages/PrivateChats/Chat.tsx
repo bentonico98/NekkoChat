@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
 import ChatMessages from "./Components/ChatMessages";
-import ChatBox from "./Components/ChatBox";
+//import ChatBox from "./Components/ChatBox";
 import "./PrivateChats.css";
 //import MessageServicesClient from "../../Utils/MessageServicesClient";
 //import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
@@ -16,8 +16,9 @@ import ChatSchema from "../../Schemas/ChatSchema";
 import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
+import MessageServicesClient from "../../Utils/MessageServicesClient";
 export default function Chat() {
-    const { chat_id } = useParams();
+    const { chat_id } = useParams<string>();
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
@@ -35,7 +36,12 @@ export default function Chat() {
     useEffect(() => {
         dispatch(getUserData());
         fetchMessage(chat_id);
+        MessageServicesClient.sendReadMessage(chat_id, user_id);
     }, []);
+
+    useEffect(() => {
+        MessageServicesClient.sendReadMessage(chat_id, user_id);
+    }, [user_id]);
 
     return (
         <MainContainer>

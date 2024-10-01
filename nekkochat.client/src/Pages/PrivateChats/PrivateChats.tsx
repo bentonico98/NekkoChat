@@ -13,7 +13,7 @@ export default function PrivateChats() {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<any>();
 
-    const sendMessage = async (msj: string, chat_id: number, sender_id: number, receiver_id: number) => {
+    const sendMessage = async (msj: string, chat_id: number, sender_id: string, receiver_id: string) => {
 
         const result = await MessageServicesClient.sendMessageToUser(chat_id, sender_id, receiver_id, msj);
         try {

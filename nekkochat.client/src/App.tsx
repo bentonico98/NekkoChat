@@ -5,7 +5,6 @@ function App() {
     console.log('Llamando al componente VideoCall');
     return (
         <div>
-            <p>video chat aquiiiiiiiiiiiiiiiiiiiiiiiiiii</p>
             <VideoCall />
         </div>
     );

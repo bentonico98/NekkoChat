@@ -1,20 +1,33 @@
-import { useRef, useEffect } from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import { useRef, useEffect, useState } from 'react';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import VideocamOffIcon from '@mui/icons-material/VideocamOff';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 
 export const VideoCall: React.FC = () => {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
 
+    const [isVideoOn, setIsVideoOn] = useState<boolean>(false)
+    const [isMicOn, setIsMicOn] = useState<boolean>(false)
+
     useEffect(() => {
         navigator.mediaDevices.getUserMedia({
             video: true,
-            audio: true
+            audio: isMicOn
         }).then(stream => {
             localStream.current = stream;
             const video = videoRef.current;
-            if (video) {
+            if (video && isVideoOn) {
                 video.srcObject = stream;
                 video.play();
+            }
+            if (video && !isVideoOn) {
+                video.srcObject = stream;
+                video.pause();
             }
         }).catch(error => console.error('Error obteniendo los datos del video:', error));
 
@@ -36,7 +49,17 @@ export const VideoCall: React.FC = () => {
                 video.play();
             }
         };
-    }, []);
+    }, [isVideoOn, isMicOn]);
+
+    
+
+    const handleVideoState = () => {
+        setIsVideoOn(() => !isVideoOn)
+    }
+
+    const handleMicState = () => {
+        setIsMicOn(() => !isMicOn)
+    }
 
     const handleCall = async () => {
         //oferta para establecer la conexion
@@ -47,9 +70,48 @@ export const VideoCall: React.FC = () => {
     };
 
     return (
-        <div>
-            <video autoPlay ref={videoRef} />
-            <button onClick={handleCall}>Llamar</button>
-        </div>
+        <>
+            <Box sx={{ backgroundColor: "#555", padding: "0.5rem", width: "100vw", height: "100vh", overflowX: "hidden" }}>
+                <Box sx={{
+                    height: "45vh",
+                    width: "45vw",
+                    display: "block",
+                    backgroundColor:"white",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "1rem"
+
+                }}>
+                    {isVideoOn ?
+                        < video style={{ borderRadius: "1rem" }} autoPlay ref={videoRef} />
+                        :
+                        <Box sx={{
+                            backgroundColor: "#555",
+                            height: "75vh",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "1rem"
+                        }}>
+                            <VideocamOffIcon sx={{
+                                fontSize: "4rem",
+                                color: "white"
+                            }} /></Box>
+                    }
+                    <Box sx={{
+                        display: "grid",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gridTemplateColumns: "repeat(4, 1fr)",
+                        gap: "0.5rem"
+                    }}>
+                        <Button variant="contained" onClick={handleCall}>invitar</Button>
+                        <Button variant="contained" onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</Button>
+                        <Button variant="contained" onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</Button>
+                        <Button variant="contained">salir</Button>
+                    </Box>
+                </Box>
+            </Box>
+        </>
     );
 }

@@ -12,7 +12,7 @@ export default function PrivateChatRoutes() {
                 <Route path="/inbox" element={<Inbox />} />
                 <Route path="/chats" element={<PrivateChats />} />
                 <Route path="/chats/chat/:chat_id" element={<Chat />} />
-                <Route path="/chats/videocall" element={<VideoCall />} />
+                <Route path="/chats/videocall/:id" element={<VideoCall />} />
 
             </Routes>
         </BrowserRouter>

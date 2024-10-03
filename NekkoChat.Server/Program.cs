@@ -33,14 +33,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173")
+            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
     options.AddPolicy("SignalROrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173")
+            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();

@@ -8,23 +8,21 @@ import MicOffIcon from '@mui/icons-material/MicOff';
 import { useParams } from 'react-router-dom';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 
-
 export const VideoCall: React.FC = () => {
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-   // let remoteStream = useRef<MediaStream | null>(null);
 
     const [isVideoOn, setIsVideoOn] = useState<boolean>(false);
     const [isMicOn, setIsMicOn] = useState<boolean>(false);
     const [offer2, setIsOffer2] = useState<RTCSessionDescriptionInit | undefined>(undefined);
 
     const { id } = useParams();
-    const [isOffer, setIsOffer] = useState(false); 
+    const [isOffer, setIsOffer] = useState(false);
 
-    const connection =  new HubConnectionBuilder()
+    const connection = new HubConnectionBuilder()
         .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
@@ -61,7 +59,24 @@ export const VideoCall: React.FC = () => {
         }
     });
 
+    connection.on('icecandidate', (candidate) => {
+        console.log('Recibiendo ice candidate:', candidate);
+        if (peerConnection.current) {
+            peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    });
 
+    connection.on("connectionStarted", () => {
+        console.log('Conexión establecida');
+        if (peerConnection.current) {
+            peerConnection.current.onicecandidate = event => {
+                if (event.candidate) {
+                    console.log('Enviando ice candidate:', event.candidate);
+                    connection.invoke('SendIceCandidate', event.candidate).catch((err) => console.error(err));
+                }
+            };
+        }  
+    });
 
     useEffect(() => {
         if (id === '2') {
@@ -81,13 +96,17 @@ export const VideoCall: React.FC = () => {
                 localStream.current = stream;
                 const video = videoRef.current;
                 if (video && isVideoOn) {
+                    if (video.srcObject) {
+                        video.pause();
+                        if (video.srcObject instanceof MediaStream) {
+                            video.srcObject.getVideoTracks().forEach(track => track.stop());
+                            video.srcObject.getAudioTracks().forEach(track => track.stop());
+                        }
+                    }
                     video.srcObject = stream;
-                    video.play();
-                }
-                const remoteVideo = remoteVideoRef.current;
-                if (remoteVideo) {
-                    remoteVideo.srcObject = stream;
-                    remoteVideo.play();
+                    setTimeout(() => {
+                        video.play();
+                    }, 100); // Agregar un retardo de 100ms
                 }
                 if (!peerConnection.current) {
                     peerConnection.current = new RTCPeerConnection();
@@ -98,27 +117,46 @@ export const VideoCall: React.FC = () => {
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
+        
+        peerConnection.current.onconnectionstatechange = event => {
+            if (peerConnection.current?.connectionState === 'failed') {
+                console.log('La conexión WebRTC ha fallado', event);
+            } else if (peerConnection.current?.connectionState === 'closed') {
+                console.log('La conexión WebRTC ha sido cerrada', event);
+            }
+        };
+
         peerConnection.current.onicecandidate = event => {
             if (event.candidate) {
                 console.log('Enviando ice candidate:', event.candidate);
+                connection.invoke('SendIceCandidate', event.candidate.candidate).catch((err) => console.error(err));
             }
         };
 
         peerConnection.current.ontrack = event => {
             console.log('Se estableció la conexión');
             if (event.streams.length > 0) {
-                const stream = event.streams[1];
+                const stream = event.streams[0];
                 console.log('Se recibió el flujo de video remoto');
                 const remoteVideo = remoteVideoRef.current;
                 if (remoteVideo) {
+                    if (remoteVideo.srcObject) {
+                        remoteVideo.pause();
+                        if (remoteVideo.srcObject instanceof MediaStream) {
+                            remoteVideo.srcObject.getVideoTracks().forEach(track => track.stop());
+                            remoteVideo.srcObject.getAudioTracks().forEach(track => track.stop());
+                        }
+                    }
                     remoteVideo.srcObject = stream;
-                    remoteVideo.play();
+                    setTimeout(() => {
+                        remoteVideo.play();
+                    }, 100); // Agregar un retardo de 100ms
                     console.log('Se reprodujo el video remoto');
                 }
             }
         };
 
-    }, [isVideoOn, isMicOn, isOffer]);
+    }, [isVideoOn, isMicOn, isOffer, connection]);
 
     const handleVideoState = () => {
         setIsVideoOn(() => !isVideoOn);

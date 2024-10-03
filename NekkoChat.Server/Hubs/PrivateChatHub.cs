@@ -18,6 +18,8 @@ namespace NekkoChat.Server.Hubs
         {
             await Clients.All.SendAsync("answer", sdp);
         }
+
+       
     }
 }
 

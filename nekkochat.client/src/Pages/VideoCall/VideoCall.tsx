@@ -15,7 +15,7 @@ export const VideoCall: React.FC = () => {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-    const remoteStream = useRef<MediaStream | null>(null);
+   // let remoteStream = useRef<MediaStream | null>(null);
 
     const [isVideoOn, setIsVideoOn] = useState<boolean>(false);
     const [isMicOn, setIsMicOn] = useState<boolean>(false);
@@ -84,6 +84,11 @@ export const VideoCall: React.FC = () => {
                     video.srcObject = stream;
                     video.play();
                 }
+                const remoteVideo = remoteVideoRef.current;
+                if (remoteVideo) {
+                    remoteVideo.srcObject = stream;
+                    remoteVideo.play();
+                }
                 if (!peerConnection.current) {
                     peerConnection.current = new RTCPeerConnection();
                 }
@@ -100,20 +105,25 @@ export const VideoCall: React.FC = () => {
         };
 
         peerConnection.current.ontrack = event => {
+            console.log('Se estableció la conexión');
             if (event.streams.length > 0) {
-                const stream = event.streams[0];
+                const stream = event.streams[1];
+                console.log('Se recibió el flujo de video remoto');
                 const remoteVideo = remoteVideoRef.current;
                 if (remoteVideo) {
-                    remoteStream.current = stream;
-                    remoteVideo.srcObject = remoteStream.current;
+                    remoteVideo.srcObject = stream;
                     remoteVideo.play();
+                    console.log('Se reprodujo el video remoto');
                 }
             }
         };
+
     }, [isVideoOn, isMicOn, isOffer]);
 
     const handleVideoState = () => {
         setIsVideoOn(() => !isVideoOn);
+        console.log('Referencia del video local:', videoRef.current);
+        console.log('Referencia del video remoto:', remoteVideoRef.current);
     };
 
     const handleMicState = () => {
@@ -131,6 +141,13 @@ export const VideoCall: React.FC = () => {
                 setIsOffer2(() => offer);
                 await peerConnection.current.setLocalDescription({ type: 'offer', sdp: offer.sdp });
                 console.log('Enviando offer:', offer);
+
+                // Agregar los tracks de video y audio al peer connection
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                stream.getTracks().forEach(track => {
+                    peerConnection.current?.addTrack(track, stream);
+                });
+
                 connection.invoke('Offer', offer.sdp).catch((err) => console.error(err));
             } catch (error) {
                 console.error('Error creando la oferta:', error);
@@ -171,7 +188,7 @@ export const VideoCall: React.FC = () => {
 
                 }}>
                     {isVideoOn ?
-                        < video style={{ borderRadius: "1rem" }} autoPlay ref={videoRef} />
+                        < video id="local" style={{ borderRadius: "1rem" }} autoPlay ref={videoRef} />
                         :
                         <Box sx={{
                             backgroundColor: "#555",
@@ -213,7 +230,7 @@ export const VideoCall: React.FC = () => {
 
                 }}>
                     {isVideoOn ?
-                        < video style={{ borderRadius: "1rem" }} autoPlay ref={remoteVideoRef} />
+                        < video id='remoto' style={{ borderRadius: "1rem", width: "100%", height: "100%",  zIndex: "2" }} autoPlay ref={remoteVideoRef} onPlay={() => console.log('Se reprodujo el video remoto')} />
                         :
                         <Box sx={{
                             backgroundColor: "#555",

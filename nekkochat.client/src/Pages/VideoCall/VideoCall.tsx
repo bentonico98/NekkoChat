@@ -17,10 +17,6 @@ export const VideoCall: React.FC = () => {
 
     const [isVideoOn, setIsVideoOn] = useState<boolean>(false);
     const [isMicOn, setIsMicOn] = useState<boolean>(false);
-    // [offer2, setIsOffer2] = useState<RTCSessionDescriptionInit | undefined>(undefined);
-
-    //const { id } = useParams();
-    //const [isOffer, setIsOffer] = useState(false);
 
     const connection = new HubConnectionBuilder()
         .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
@@ -42,7 +38,6 @@ export const VideoCall: React.FC = () => {
     });
 
     connection.on('icecandidate', (candidate) => {
-        console.log('Recibiendo ice candidate:', candidate);
         if (peerConnection.current) {
             peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
         }
@@ -63,6 +58,7 @@ export const VideoCall: React.FC = () => {
     });
 
     useEffect(() => {
+      
         peerConnection.current = new RTCPeerConnection()
         navigator.mediaDevices.getUserMedia({
             video: true,
@@ -72,17 +68,10 @@ export const VideoCall: React.FC = () => {
                 localStream.current = stream;
                 const video = videoRef.current;
                 if (video && isVideoOn) {
-                    if (video.srcObject) {
-                        video.pause();
-                        if (video.srcObject instanceof MediaStream) {
-                            video.srcObject.getVideoTracks().forEach(track => track.stop());
-                            video.srcObject.getAudioTracks().forEach(track => track.stop());
-                        }
-                    }
                     video.srcObject = stream;
-                    setTimeout(() => {
-                        video.play();
-                    }, 100); // Agregar un retardo de 100ms
+                   
+                    video.play();
+                   
                 }
                 if (!peerConnection.current) {
                     peerConnection.current = new RTCPeerConnection();
@@ -90,6 +79,8 @@ export const VideoCall: React.FC = () => {
                 stream.getTracks().forEach(track => {
                     peerConnection.current?.addTrack(track, stream);
                 });
+
+               
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
@@ -104,7 +95,7 @@ export const VideoCall: React.FC = () => {
 
         peerConnection.current.onicecandidate = event => {
             if (event.candidate) {
-                console.log('Enviando ice candidate:', event.candidate);
+                
                 connection.invoke('SendIceCandidate', event.candidate.candidate).catch((err) => console.error(err));
             }
         };
@@ -118,25 +109,17 @@ export const VideoCall: React.FC = () => {
             console.log('Cambio de estado de la conexión: ' + event, peerConnection.current?.connectionState);
         };
 
+    
         peerConnection.current.ontrack = event => {
-            console.log('Se estableció la conexión');
             if (event.streams.length > 0) {
                 const stream = event.streams[0];
-                console.log('Se recibió el flujo de video remoto');
+
                 const remoteVideo = remoteVideoRef.current;
                 if (remoteVideo) {
-                    if (remoteVideo.srcObject) {
-                        remoteVideo.pause();
-                        if (remoteVideo.srcObject instanceof MediaStream) {
-                            remoteVideo.srcObject.getVideoTracks().forEach(track => track.stop());
-                            remoteVideo.srcObject.getAudioTracks().forEach(track => track.stop());
-                        }
-                    }
                     remoteVideo.srcObject = stream;
                     setTimeout(() => {
                         remoteVideo.play();
-                    }, 100); // Agregar un retardo de 100ms
-                    console.log('Se reprodujo el video remoto');
+                    }, 100);
                 }
             }
         };
@@ -154,8 +137,6 @@ export const VideoCall: React.FC = () => {
 
     const handleVideoState = () => {
         setIsVideoOn(() => !isVideoOn);
-        console.log('Referencia del video local:', videoRef.current);
-        console.log('Referencia del video remoto:', remoteVideoRef.current);
     };
 
     const handleMicState = () => {
@@ -166,7 +147,7 @@ export const VideoCall: React.FC = () => {
         if (peerConnection.current) {
             try {
                 if (peerConnection.current.signalingState === 'have-remote-offer') {
-                    console.error('La conexión ya tiene una descripción de sesión SDP remota establecida');
+                    console.error('La conexion ya tiene una descripcion de sesión SDP remota establecida');
                     return;
                 }
                 const offer: RTCLocalSessionDescriptionInit = await peerConnection.current.createOffer();
@@ -184,10 +165,16 @@ export const VideoCall: React.FC = () => {
                     });
                 });
                 console.log("HANDLE CALL 2", peerConnection.current.signalingState);
-                // Set the remote description with the answer
+               
                 const answerDescription = JSON.parse(offerAnswer);
                 await peerConnection.current.setRemoteDescription(answerDescription);
                 console.log("HANDLE CALL 3", peerConnection.current.signalingState);
+                //por que no es complete o connected?
+                console.log("ALL STATE OF THE CONNECTION IN OFFER: " +
+                    peerConnection.current.connectionState + " " +
+                    peerConnection.current.iceConnectionState + " " +
+                    peerConnection.current.iceGatheringState
+                );
             } catch (error) {
                 console.error('Error creando la oferta:', error);
             }
@@ -204,6 +191,11 @@ export const VideoCall: React.FC = () => {
                 console.log("HANDLE ANSWER 3", peerConnection.current.signalingState);
                 await peerConnection.current.setLocalDescription(answerAnswer);
                 console.log("HANDLE ANSWER 4", peerConnection.current.signalingState);
+                console.log("ALL STATE OF THE CONNECTION: " +
+                    peerConnection.current.connectionState + " " +
+                    peerConnection.current.iceConnectionState + " " +
+                    peerConnection.current.iceGatheringState
+                );
                 
                 connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
             } catch (error) {
@@ -268,8 +260,8 @@ export const VideoCall: React.FC = () => {
                     borderRadius: "1rem"
 
                 }}>
-                    {isVideoOn ?
-                        <video id='remoto' style={{ borderRadius: "1rem", width: "100%", height: "100%", zIndex: "2" }} autoPlay ref={remoteVideoRef} onPlay={() => console.log('Se reprodujo el video remoto')} />
+                    {remoteVideoRef ?
+                        <video id='remoto' style={{ borderRadius: "1rem", width: "100%", height: "100%", zIndex: "2" }} autoPlay ref={remoteVideoRef} onPlay={(data) => console.log('Se reprodujo el video remoto', data)} />
                         :
                         <Box sx={{
                             backgroundColor: "#555",

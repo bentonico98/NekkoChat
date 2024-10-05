@@ -1,16 +1,19 @@
-import "../PrivateChats.css";
-import ChatSchema from "../../../Schemas/ChatSchema";
 import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+
 import avatar from "../../../assets/avatar.png";
+
+import ChatSchema from "../../../Schemas/ChatSchema";
+
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
-import useGetReceiver from "../../../Hooks/useGetReceiver";
-import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
+import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
+
+import useGetGroup from "../../../Hooks/Group/useGetGroup";
 
 
 
-export default function ChatMessages({ messages, user, connected, chat, sender, receiver, isTyping }: any) {
+export default function ChatMessages({ messages, connected, sender, receiver, isTyping }: any) {
 
-    const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
+    const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
 
     return (
         <>
@@ -22,8 +25,8 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
 
                     <ConversationHeader>
                         <ConversationHeader.Back />
-                        <Avatar src={avatar} name={receiverName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={receiverName.toLocaleUpperCase()} info={lastOnline} />
+                        <Avatar src={avatar} name={groupName.toLocaleUpperCase()} />
+                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()}  />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
@@ -33,7 +36,7 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
 
                     {/*Chat Component*/}
 
-                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
+                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
                         {messages.map((el: ChatSchema, idx: number) => {
                             return (
@@ -45,6 +48,8 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                                     position: "single"
                                 }}>
                                     <Avatar src={avatar} name={el.username} />
+                                    <Message.Header sender={el.username} />
+                                    <Message.Footer sentTime={el.created_at} />
                                 </Message>
                             );
                         })}
@@ -60,12 +65,12 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                         sendDisabled={!connected}
                         onChange={(e) => {
                             if (e.length > 1) {
-                                PrivateChatsServerServices.SendTypingSignal(sender, receiver);
+                                GroupChatsServerServices.SendTypingSignal(sender, receiver);
                             } else {
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver, e) }} />
+                        onSend={async (e) => { await MessageServicesClient.sendMessageToGroup(receiver, sender, groupName, groupType,groupDesc,groupPhoto, e) }} />
                 </ChatContainer>
                 : <ChatContainer className="flexibleContainer">
                     <div>NekkoChat</div>
@@ -73,3 +78,4 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
         </>
     );
 }
+

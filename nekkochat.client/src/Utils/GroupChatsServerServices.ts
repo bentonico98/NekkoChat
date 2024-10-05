@@ -3,7 +3,7 @@ import * as signalR from "@microsoft/signalr";
 export default class PrivateChatsServerServices {
 
     public static conn = new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
+        .withUrl("https://localhost:7198/groupchathub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 
@@ -16,12 +16,11 @@ export default class PrivateChatsServerServices {
                 this.conn.onclose(async () => {
                     await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
                 });
-                this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
-                    addToChat(user_id, msj, false);
+                this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string, username:string) => {
+                    addToChat(user_id, username, msj, false);
                 });
-                this.conn.on("ReceiveTypingSignal", (user: string) => {
-                    addToChat(null, null, {typing: true,user_id:user});
-                    console.log(user);
+                this.conn.on("ReceiveTypingSignal", (user: string, username: string) => {
+                    addToChat(null, null, null, { typing: true, user_id: user, userN: username });
                 });
 
             } catch (er) {
@@ -35,16 +34,16 @@ export default class PrivateChatsServerServices {
         }
         return this.conn.connectionId;
     }
-    public static SendMessageToUserInvoke(sender_id: string, receiver_id: string, msj: string) {
+    public static SendMessageToGroupInvoke(sender_id: string, group_id: number, msj: string) {
         try {
-            this.conn.invoke("SendMessage", sender_id, receiver_id, msj);
+            this.conn.invoke("SendMessage", sender_id, group_id, msj);
         } catch (er) {
             console.log(er);
         }
     }
-    public static SendTypingSignal(sender_id:string, receiver_id: string) {
+    public static SendTypingSignal(sender_id: string, group_id: number) {
         try {
-            this.conn.invoke("SendTypingSignal", sender_id,  receiver_id);
+            this.conn.invoke("SendTypingSignal", sender_id, group_id);
         } catch (er) {
             console.log(er);
         }

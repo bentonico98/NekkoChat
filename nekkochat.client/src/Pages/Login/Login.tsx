@@ -73,19 +73,3 @@ export default function Login() {
         </main>
     );
 }
-
-/**<form>
-                <label>Username</label>
-                <br/>
-                <input type="text" placeholder="Type your username" name="username" id="username" />
-
-                <br />
-
-                <label>Password</label>
-                <br />
-                <input type="password" placeholder="Type your password" name="password" id="password" />
-
-                <br />
-
-                <button type="submit">Register</button>
-            </form> */

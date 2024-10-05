@@ -26,17 +26,16 @@ namespace NekkoChat.Server.Controllers
         private readonly MessageServices _messageServices = new MessageServices(context);
 
         // GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
-        [HttpGet("chats/{id}")]
-        public  IActionResult Get([FromRoute] string id)
+        [HttpGet("chats")]
+        public  IActionResult Get(string id)
         {
             try
             {
                 List<Chats> UserChats = new();
                 List<object> ChatsContent = new();
 
-                string user_id = id;
                 IQueryable<Chats> conversations = from c in _context.chats select c;
-                conversations = conversations.Where((c) => c.sender_id == user_id || c.receiver_id == user_id);
+                conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id);
                 foreach (var conversation in conversations)
                 {
                     UserChats.Add(conversation);

@@ -38,7 +38,6 @@ export default class UserAuthServices {
         console.log(connectionid);
 
         const result = await axios.post(url).then((res) => {
-            console.log(res);
             return res.status;
         }).catch((err) => {
             console.log(err);

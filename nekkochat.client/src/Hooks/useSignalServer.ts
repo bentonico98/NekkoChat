@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
+import GroupChatsServerServices from "../Utils/GroupChatsServerServices";
 import UserAuthServices from "../Utils/UserAuthServices";
-export default function useSignalServer(user: any, addToChat: (user: string, msj: string, typing:boolean) => void) {
+export default function useSignalServer(user: any, addToChat: (user: string, username:string, msj: string, typing:boolean) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<any>();
 
     const startServer = () => {
-        PrivateChatsServerServices.Start(addToChat).then(async (res) => {
+        GroupChatsServerServices.Start(addToChat).then(async (res) => {
             setConnected(true);
             setConn(res);
         });

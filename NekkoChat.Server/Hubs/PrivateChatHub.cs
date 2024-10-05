@@ -8,10 +8,10 @@ namespace NekkoChat.Server.Hubs
     public class PrivateChatHub(ApplicationDbContext context): Hub, iCustomChatHubs
     {
         private readonly ApplicationDbContext _context = context;
-        public Task SendTypingSignal(string sender_id, string receiver_id)
+        public async Task<Task> SendTypingSignal(string sender_id, string receiver_id)
         {
-            AspNetUsers sender = _context.AspNetUsers.Find(sender_id);
-            AspNetUsers receiver = _context.AspNetUsers.Find(receiver_id);
+            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
 
             string senderconnectionid = "";
             string receiverconnectionid = "";
@@ -27,10 +27,10 @@ namespace NekkoChat.Server.Hubs
 
             return Clients.Clients(receiverconnectionid).SendAsync("ReceiveTypingSignal", sender?.Id);
         }
-        public Task SendMessageToUser(string sender_id, string receiver_id, string msj)
+        public async Task<Task> SendMessage(string sender_id, string receiver_id, string msj)
         {
-            AspNetUsers sender = _context.AspNetUsers.Find(sender_id);
-            AspNetUsers receiver = _context.AspNetUsers.Find(receiver_id);
+            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
 
             string senderconnectionid = "";
             string receiverconnectionid = "";

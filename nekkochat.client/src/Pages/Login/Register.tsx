@@ -85,29 +85,3 @@ export default function Register() {
         </main>
     );
 }
-
-/**<form onSubmit={(e) => { e.preventDefault(); handleSubmit() }}>
-<label>Username</label>
-<br />
-<input type="text" placeholder="Type your username" name="username" id="username" />
-
-<br />
-<label>Email</label>
-<br />
-<input type="email" placeholder="Type your email" name="email" id="email" />
-
-<br />
-
-<label>Password</label>
-<br />
-<input type="password" placeholder="Type your new password" name="password" id="password" />
-
-<br />
-
-<label>Confirm Password</label>
-<br />
-<input type="password" placeholder="Verify your password" name="confirmpassword" id="confirmpassword" />
-<br />
-
-<button type="submit">Register</button>
-</form> */

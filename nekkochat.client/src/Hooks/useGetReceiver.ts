@@ -18,7 +18,7 @@ export default function useGetReceiver(user: string, messages: any) {
         setReceiverStatus((p: any) => p = GetUserStatusService(res.status));
     }
     const getUnreadMessages = () => {
-        const message: any = messages.filter((i: ChatSchema) => i.read === false);
+        const message: any = messages.filter((i: ChatSchema) => i.read === false && i.user_id !== user);
         setUnreadMsj((p: any) => p = message.length);
     }
 

@@ -1,20 +1,24 @@
 import SideBoxCard from "./SideBoxCard";
+import { Sidebar,  Search, ConversationList } from '@chatscope/chat-ui-kit-react';
 
 interface incomingData {
     day: string,
     data: object[]
 }
-export default function SideBox({ messages, setCurrentConversation }: any) {
+export default function SideBox({ messages, user, setCurrentConversation }: any) {
 
     return (
-        <div className="messageContainer">
-            {messages.map((el: incomingData, idx: number) => {
-                return (
-                    <div key={idx}>
-                        <SideBoxCard key={idx} chat={el} setCurrentConversation={setCurrentConversation } />
-                    </div>
-                );
-            })}
-        </div>
+        <Sidebar position="left" scrollable={false}>
+            <Search placeholder="Search..." />
+            <ConversationList>
+                {messages.map((el: incomingData, idx: number) => {
+                    return (
+                        <div key={idx}>
+                            <SideBoxCard key={idx} user={user} chat={el} setCurrentConversation={setCurrentConversation}  />
+                        </div>
+                    );
+                })}
+            </ConversationList>
+        </Sidebar>
     );
 }

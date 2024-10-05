@@ -1,14 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
-
+using NekkoChat.Server.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace NekkoChat.Server.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<AspNetUsers>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
         base(options)
         { }
-        public DbSet<NekkoChat.Server.Models.AspNetUsers> aspnetusers { get; set; } = default!;
+        public DbSet<NekkoChat.Server.Models.AspNetUsers> AspNetUsers { get; set; } = default!;
         public DbSet<NekkoChat.Server.Models.Users> users { get; set; } = default!;
 
 

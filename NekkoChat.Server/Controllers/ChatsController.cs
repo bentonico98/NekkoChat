@@ -26,17 +26,16 @@ namespace NekkoChat.Server.Controllers
         private readonly MessageServices _messageServices = new MessageServices(context);
 
         // GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
-        [HttpGet("chats/{id}")]
-        public  IActionResult Get([FromRoute] string id)
+        [HttpGet("chats")]
+        public  IActionResult Get(string id)
         {
             try
             {
                 List<Chats> UserChats = new();
                 List<object> ChatsContent = new();
 
-                int user_id = int.Parse(id);
                 IQueryable<Chats> conversations = from c in _context.chats select c;
-                conversations = conversations.Where((c) => c.sender_id == user_id || c.receiver_id == user_id);
+                conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id);
                 foreach (var conversation in conversations)
                 {
                     UserChats.Add(conversation);
@@ -92,7 +91,7 @@ namespace NekkoChat.Server.Controllers
 
         // POST chats/chat/create?sender_id=${sender_id}&receiver_id=${receiver_id}&value=${value} -- Ruta para creacion de un chat que tdv no exista
         [HttpPost("chat/create")]
-        public async Task<IActionResult> Post(string value, int sender_id, int receiver_id)
+        public async Task<IActionResult> Post(string value, string sender_id, string receiver_id)
         {
             int messageSent = await _messageServices.createChat(sender_id, receiver_id, value);
             if (messageSent <= 0)
@@ -104,7 +103,7 @@ namespace NekkoChat.Server.Controllers
 
         // PUT chats/chat/send/{id}?sender_id=${sender_id}&receiver_id=${receiver_id}&value=${value} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/send/{id}")]
-        public async Task<IActionResult> Put(int id, string value, int sender_id, int receiver_id)
+        public async Task<IActionResult> Put(int id, string value, string sender_id, string receiver_id)
         {
             bool messageSent = await _messageServices.sendMessage(id, sender_id, receiver_id, value);
             if (!messageSent)
@@ -113,7 +112,17 @@ namespace NekkoChat.Server.Controllers
             }
             return Ok();
         }
-
+        // PUT chats/chat/read/{id}?sender_id=${sender_id} --- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/read/{chat_id}")]
+        public  IActionResult PutMessageRead(int chat_id, string sender_id)
+        {
+            bool messageSent =  _messageServices.readMessage(chat_id, sender_id);
+            if (!messageSent)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
+        }
         // DELETE chats/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]
         public void Delete(int id)

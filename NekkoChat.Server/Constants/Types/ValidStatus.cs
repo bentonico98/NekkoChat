@@ -2,6 +2,6 @@
 {
     public class ValidStatus
     {
-        public enum Valid_Status { Offline, Online, Busy, Meeting };
+        public enum Valid_Status { available, unavailable, away, dnd, invisible, eager};
     }
 }

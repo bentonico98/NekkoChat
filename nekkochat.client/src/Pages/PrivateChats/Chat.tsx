@@ -1,53 +1,50 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { MainContainer } from '@chatscope/chat-ui-kit-react';
+
 import ChatMessages from "./Components/ChatMessages";
-import ChatBox from "./Components/ChatBox";
 import "./PrivateChats.css";
-import MessageServicesClient from "../../Utils/MessageServicesClient";
-import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
+
+import { getUserData } from "../../Store/Slices/userSlice";
+
 import ChatSchema from "../../Schemas/ChatSchema";
+
+import { useAppSelector, useAppDispatch } from "../../Hooks/storeHooks";
+import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
+import useGetUser from "../../Hooks/useGetUser";
+import useSignalServer from "../../Hooks/useSignalServer";
+
+import MessageServicesClient from "../../Utils/MessageServicesClient";
 export default function Chat() {
-    const { chat_id } = useParams();
-    const [messages, setMessages] = useState<any>([]);
-    const [connected, setConnected] = useState<boolean>(false);
+    const { chat_id } = useParams<string>();
 
-    useEffect(() => {
-        MessageServicesClient.getChatFromUser(chat_id!.toString()).then((res) => {
-            setMessages(res);
-        });
-
-    }, []);
-
-    const sendMessage = async (msj: string, chat_id: number, sender_id: number, receiver_id: number) => {
-        await MessageServicesClient.sendMessageToUser(chat_id, sender_id, receiver_id, msj);
-        PrivateChatsServerServices.SendMessageInvoke(msj, chat_id);
-        return { sender_id: sender_id, receiver_id: receiver_id };
-    };
+    const user = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
 
     const addToChat = (user: string, msj: string) => {
         if (!msj) return;
         setMessages((c: any) =>
-            [...c, new ChatSchema(user, msj, new Date().toJSON())]);
+            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
-    //Mantiene la conexion abierta
+    const { loggedUser, user_id } = useGetUser(user);
+    const { connected } = useSignalServer(loggedUser, addToChat);
+    const { messages, setMessages, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+
     useEffect(() => {
-        if (!connected) {
-            PrivateChatsServerServices.Start(addToChat).then((res) => {
-                setConnected(true);
-                return res;
-            });
-        } else {
-            return;
-        }
-    });
+        dispatch(getUserData());
+        fetchMessage(chat_id);
+        MessageServicesClient.sendReadMessage(chat_id, user_id);
+    }, []);
+
+    useEffect(() => {
+        MessageServicesClient.sendReadMessage(chat_id, user_id);
+    }, [user_id]);
 
     return (
-        <div className="mainContainer">
-            <h1>Chat: {chat_id}</h1>
-
-            <ChatMessages messages={messages} />
-            <ChatBox sendMessage={sendMessage} connected={connected} />
-        </div>
+        <MainContainer>
+            <ChatMessages messages={messages} user={loggedUser} connected={connected} sender={user_id} receiver={receiverID} chat={chat_id} />
+        </MainContainer>
+        
     );
 };

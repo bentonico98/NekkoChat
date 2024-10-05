@@ -11,8 +11,8 @@ namespace NekkoChat.Server.Models
         [ForeignKey(nameof(NekkoChat.Server.Models.Groups.id)), Required]
         public int group_id { get; set; }
 
-        [ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.id)), Required]
-        public int user_id { get; set; }
+       [ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
+        public string? user_id { get; set; }
 
         public bool? isArchived { get; set; } = false;
 

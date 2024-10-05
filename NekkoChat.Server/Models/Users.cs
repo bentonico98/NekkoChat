@@ -11,6 +11,7 @@ namespace NekkoChat.Server.Models
         public ValidStatus.Valid_Status? status { get; set; } = 0;
         public string? about { get; set; }
         public string? profilePhotoUrl { get; set; }
+        public string? connectionId { get; set; }
         public int? friends_Count { get; set; }
     }
 }

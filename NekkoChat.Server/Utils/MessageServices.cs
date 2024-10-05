@@ -6,11 +6,11 @@ using NekkoChat.Server.Models;
 using NekkoChat.Server.Schemas;
 using System.Collections.Immutable;
 using System.Text.Json;
-
+using NekkoChat.Server.Constants.Interfaces;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
-    public class MessageServices(ApplicationDbContext _context)
+    public class MessageServices(ApplicationDbContext _context) : iMessageService
     {
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace NekkoChat.Server.Utils
         /// <param name="receiver_id"></param> -- Id del que recibe
         /// <param name="msj"></param> -- Mensaje enviado
         /// <returns>bool -- Indica si fue exitoso o fallido</returns>
-        public async Task<bool> sendMessage(int chat_id, int sender_id, int receiver_id, string msj)
+        public async Task<bool> sendMessage(int chat_id, string sender_id, string receiver_id, string msj)
         {
             bool chatExists = chatExist(chat_id);
             string conversation = "";
@@ -57,7 +57,7 @@ namespace NekkoChat.Server.Utils
         /// <param name="receiver_id"></param> -- Id del que recibe
         /// <param name="msj"></param> -- Mensaje enviado por el que envia
         /// <returns>int -- ID del Chat Creado</returns>
-        public async Task<int> createChat(int sender_id, int receiver_id, string msj)
+        public async Task<int> createChat(string sender_id, string receiver_id, string msj)
         {
 
             bool chatExisted = chatExist(sender_id, receiver_id);
@@ -66,7 +66,7 @@ namespace NekkoChat.Server.Utils
             {
                 IQueryable<Chats> filteredChat = from chat in _context.chats select chat;
                 filteredChat = filteredChat.Where(chat => chat.sender_id == sender_id && chat.receiver_id == receiver_id);
-                if(filteredChat == null)
+                if (filteredChat == null)
                 {
                     IQueryable<Chats> filteredChatAlt = from chat in _context.chats select chat;
                     filteredChatAlt = filteredChatAlt.Where(chat => chat.sender_id == receiver_id && chat.receiver_id == sender_id);
@@ -84,14 +84,14 @@ namespace NekkoChat.Server.Utils
                 isArchived = false,
                 isFavorite = false
             };
-           
+
             _context.chats.Add(newChat);
 
             _context.SaveChanges();
 
             int chat_id = newChat.id;
 
-            bool umCreated = await createUserMessage(chat_id, sender_id, msj);
+            bool umCreated = await createUserMessage(chat_id, sender_id, receiver_id, msj);
 
             if (!umCreated)
             {
@@ -101,13 +101,37 @@ namespace NekkoChat.Server.Utils
 
             return chat_id;
         }
+        /// <summary>
+        /// Funccion que se encarga de mandar el "read receipt"
+        /// </summary>
+        /// <param name="chat_id"></param>
+        /// <param name="sender_id"></param>
+        /// <returns>BOOLEAN</returns>
+        public bool readMessage(int chat_id, string sender_id)
+        {
+            if (string.IsNullOrEmpty(sender_id)) return false;
+            Users_Messages filteredConvo = fetchUsersMessages(chat_id);
+            var chats = filteredConvo.content;
+            MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats);
+            IEnumerable<SingleChatSchemas> messages = parseConvo!.messages;
+            foreach (var item in messages)
+            {
+                if(!item.user_id.Equals(sender_id))
+                {
+                    item.read = true;
+                }
+            }
+            string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
-        public void readMessage() { }
+            filteredConvo.content = payload;
+            _context.users_messages.UpdateRange(filteredConvo);
+            _context.SaveChanges();
+            return true;
+        }
         public void favoriteMessage() { }
         public void archiveMessage() { }
         public void deleteMessage() { }
         public void deleteChat() { }
-
 
 
 
@@ -122,7 +146,7 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- ID del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje enviado por el usuario
         /// <returns>string -- El objeto JSON convertido en STRING</returns>
-        private string parseMessage(int chat_id, int sender_id, string msj)
+        private string parseMessage(int chat_id, string sender_id, string msj)
         {
             IQueryable<Users_Messages> currentChat = from c in _context.users_messages select c;
             currentChat = currentChat.Where(c => c.chat_id == chat_id);
@@ -131,19 +155,20 @@ namespace NekkoChat.Server.Utils
             MessageSchemas parsedMessage = JsonSerializer.Deserialize<MessageSchemas>(chat);
             var messages = parsedMessage.messages.ToImmutableArray();
 
-            Users user = _context.users.Find(sender_id);
+            AspNetUsers user = _context.AspNetUsers.Find(sender_id);
 
             var newMessages = messages.AddRange(new SingleChatSchemas
             {
                 id = Guid.NewGuid().ToString(),
                 content = msj,
                 user_id = sender_id.ToString(),
-                username = user!.username,
-                created_at = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss")
+                username = user!.UserName,
+                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                read = false
             });
 
             string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
-            
+
             return payload;
         }
 
@@ -187,14 +212,13 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- ID del que envia el mensaje
         /// <param name="receiver_id"></param> -- ID del otro participante del chat, el que recibe el mensaje
         /// <returns> bool (true/false) -- en base a si el registro existe o no</returns>
-        private bool chatExist(int sender_id, int receiver_id)
+        private bool chatExist(string sender_id, string receiver_id)
         {
-            if (sender_id <= 0 || receiver_id <= 0)
+            if (string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(receiver_id))
             {
                 return false;
             }
 
-            ;
             if (_context.chats.Any(c => c.receiver_id == receiver_id) && _context.chats.Any(c => c.sender_id == sender_id))
             {
                 return true;
@@ -214,23 +238,41 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- Id del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje del Usario
         /// <returns> bool (true/false) -- en base a si la operacion fue exitosa o no</returns>
-        private async Task<bool> createUserMessage(int chat_id, int sender_id, string msj)
+        private async Task<bool> createUserMessage(int chat_id, string sender_id, string receiver_id, string msj)
         {
-            Users user = _context.users.Find(sender_id);
+            if (string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(receiver_id)) return false;
+
+            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+
+            if (sender == null || receiver == null || chat_id <= 0) return false;
 
             object[] newMessages = [new SingleChatSchemas
             {
                 id = Guid.NewGuid().ToString(),
                 content = msj,
                 user_id = sender_id.ToString(),
-                username = user!.username,
-                created_at = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss")
+                username = sender!.UserName,
+                created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                read = false
+            }];
+
+            object[] newParticipants = [new ParticipantsSchema
+            {
+                id = sender_id,
+                name= sender.UserName,
+                connectionid= sender.ConnectionId
+            }, new ParticipantsSchema
+            {
+                id = receiver_id,
+                name= receiver.UserName,
+                connectionid= receiver.ConnectionId
             }];
 
             Users_Messages userMsj = new Users_Messages
             {
                 chat_id = chat_id,
-                content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":[]" + "}"
+                content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
             };
 
             await _context.users_messages.AddRangeAsync(userMsj);
@@ -242,8 +284,9 @@ namespace NekkoChat.Server.Utils
             {
                 return false;
             }
+
             return true;
         }
-        
+
     }
 }

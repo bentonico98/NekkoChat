@@ -5,7 +5,9 @@ using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
 using NekkoChat.Server.Data;
 using Microsoft.EntityFrameworkCore;
-
+using NekkoChat.Server.Models;
+using NekkoChat.Server.Utils;
+using System.Text.Json;
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
@@ -14,144 +16,144 @@ namespace NekkoChat.Server.Controllers
     {
         private readonly ILogger<GroupController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
+        private readonly GroupChatMessageServices _messageServices = new GroupChatMessageServices(context);
 
-    
-        //Busca toda la DATA del usuario basada en el id, el id aqui se busca en base a 2-1, 2-2, 2-3
-        //asi se dividio ElasticSearch, esta esta pensada para busquedas mas especificas basadas en el _doc deseado
-        [HttpGet("data/{id}")]
-        public async Task<IActionResult> GetAllGroupDataById([FromRoute] string id)
+        // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
+        [HttpGet("chats")]
+        public IActionResult Get(string user_id)
         {
             try
             {
-                var client = new ElasticsearchClient();
+                List<Groups_Members> GroupChats = new();
+                List<object> ChatsContent = new();
 
-                var response = await client.GetAsync<ElasticGroupDTO>(id, idx => idx.Index("nekko_chat_beta_groups"));
+                IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
+                
+                conversations = conversations.Where((c) => c.user_id == user_id);
+                foreach (var conversation in conversations)
+                {
+                    GroupChats.Add(conversation);
+                }
 
-                if (!response.IsValidResponse)
+                foreach (var userChat in GroupChats)
+                {
+                    IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
+                    chat = chat.Where((u) => u.group_id == userChat.group_id);
+                    foreach (var c in chat)
+                    {
+                        ChatsContent.Add(JsonDocument.Parse(c.content));
+                    }
+                }
+
+                if (ChatsContent == null)
                 {
                     return NotFound(new { Message = "No index found" });
                 }
 
-                var document = response.Source;
-                return Ok(document);
+                return Ok(ChatsContent);
+
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
         }
-        //Busca la conversacion en un periodo de tiempo, esta fue pensada para obtener la conversacion semanal o en el periodo que se quiera
-        //y no sobrecargar la DB con pedidos, se pide en baches 
-        [HttpGet("conversation/{id}/{startDate}/{endDate}")]
-        public async Task<IActionResult> GetGroupConversationByRangeOfDateById([FromRoute] string id, [FromRoute] DateTime startDate, [FromRoute] DateTime endDate)
+
+        // GET groupschat/chat/5 -- BUSCA UN CHAT ESPECIFICO
+        [HttpGet("chat/{id}")]
+        public IActionResult GetGroupByUserId([FromRoute] string id)
         {
+
             try
             {
-                var client = new ElasticsearchClient();            
+                List<object> currentChats = new();
+                int chat_id = int.Parse(id);
+                IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
+                chat = chat.Where((u) => u.group_id == chat_id);
 
-                var response = await client.SearchAsync<ElasticGroupDTO>(s => s
-                    .Index("nekko_chat_beta_groups")
-                    .Query(q => q
-                        .Bool(b => b
-                            .Must(f => f
-                                .Term(t => t
-                                    .Field("group_days_json.result.data.group_id")
-                                    .Value(id))
-                            ).Filter(f2 => f2 
-                                .Range(r => r
-                                    .DateRange(dr => dr
-                                        .Field("group_days_json.result.data.messages.created_at")
-                                        .Gte(startDate)
-                                        .Lte(endDate)
-                                        
-                                        )))
-                            
-                             )));
-
-                if (!response.IsValidResponse)
+                foreach (var c in chat)
                 {
-                    return NotFound(new { Message = "No index found" });
-                };
-
-                var document = response.Documents;
-                return Ok(document);
+                    currentChats.Add(JsonDocument.Parse(c.content));
+                }
+                return Ok(currentChats);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
         }
-        //Busca todas las conversaciones basadas en ese asi, el ordern es descendete por lo que muestra la mas reciente primero
-        [HttpGet("conversation/all/{id}")]
-        public async Task<IActionResult> GetAllGroupConversationById([FromRoute] string id)
+
+        // /group/groups/group_id
+
+        [HttpGet("groups/{group_id}")]
+        public async Task<IActionResult> GetGroupById(int group_id)
         {
             try
             {
-                var client = new ElasticsearchClient();            
-
-                var response = await client.SearchAsync<ElasticGroupDTO>(s => s
-                    .Index("nekko_chat_beta_groups")
-                    .Query(q => q
-                        .Match(m => m
-                            .Field("group_days_json.result.data.group_id")
-                            .Query(id)
-                    )
-                    ).Sort(s => s
-                        .Field("group_days_json.result.date")
-                        .Doc(d => d
-                            .Order(SortOrder.Desc)
-                        )
-                    )
-                );
-
-                if (!response.IsValidResponse)
-                {
-                    return NotFound(new { Message = "No index found" });
-                }
-
-                var document = response.Documents;
-                return Ok(document);
+                Groups group = await _context.groups.FindAsync(group_id);
+                return Ok(group);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
             }
         }
-        //Busca la connversacion mas reciente basada en el dia (busca obtener el dia completo)
-        [HttpGet("conversation/{id}")]
-        public async Task<IActionResult> GetRecentDayGroupConversationById([FromRoute] string id)
+
+        // POST groupschat/chat/create?sender_id=${sender_id}&groupname=${groupname}&grouptype=${grouptype}&groupdesc=${groupdesc}&groupphoto=${groupphoto}&value=${value} -- Ruta para creacion de un chat que tdv no exista
+        [HttpPost("chat/create")]
+        public async Task<IActionResult> Post(string value, string sender_id, int group_id, string groupname, string grouptype, string groupdesc, string groupphoto)
         {
-            try
+            int messageSent = await _messageServices.createChat(sender_id, group_id, groupname, grouptype, groupdesc, groupphoto,value);
+            if (messageSent <= 0)
             {
-                var client = new ElasticsearchClient();            
-
-                var response = await client.SearchAsync<ElasticGroupDTO>(s => s
-                    .Index("nekko_chat_beta_groups")
-                    .Query(q => q
-                        .Match(m => m
-                            .Field("group_days_json.result.data.group_id")
-                            .Query(id)
-                    )
-                    ).Sort(s => s
-                        .Field("group_days_json.result.date")
-                        .Doc(d => d
-                            .Order(SortOrder.Desc)
-                        )
-                    )
-                );
-
-                if (!response.IsValidResponse)
-                {
-                    return NotFound(new { Message = "No index found" });
-                }
-
-                var document = response.Documents.FirstOrDefault();
-                return Ok(document);
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
             }
-            catch (Exception ex)
+            return Ok();
+        }
+
+        // PUT groupschat/chat/send/{id}?sender_id=${sender_id}&groupname=${groupname}&grouptype=${grouptype}&groupdesc=${groupdesc}&groupphoto=${groupphoto}&value=${value}--- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/send/{id}")]
+        public async Task<IActionResult> Put(int id, string value, string sender_id, string groupname, string grouptype, string groupdesc, string groupphoto)
+        {
+            bool messageSent = await _messageServices.sendMessage(id, sender_id, groupname, grouptype, groupdesc, groupphoto, value);
+            if (!messageSent)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
             }
+            return Ok();
+        }
+
+
+        // PUT groupschat/chat/read/{id}?sender_id=${sender_id}&groupname=groupname --- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/read/{group_id}")]
+        public IActionResult PutMessageRead(int group_id, string sender_id, string groupname)
+        {
+            bool messageSent = _messageServices.readMessage(group_id, sender_id, groupname);
+            if (!messageSent)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
+        }
+
+
+        // PUT groupschat/chat/add/{id}?sender_id=${sender_id}&groupname=groupname --- Ruta para agregar nuevo integrante al grupo
+        [HttpPut("chat/add/{group_id}")]
+        public async Task< IActionResult> PutAddParticipant(int group_id, string sender_id, string groupname)
+        {
+            bool messageSent = await _messageServices.addParticipantToGroup(sender_id, group_id, groupname);
+            if (!messageSent)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
+        }
+
+
+        // DELETE groupschat/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
+        [HttpDelete("chat/delete/{id}")]
+        public void Delete(int id)
+        {
         }
     }
 }

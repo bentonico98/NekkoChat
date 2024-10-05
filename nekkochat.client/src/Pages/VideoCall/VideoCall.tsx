@@ -19,7 +19,7 @@ export const VideoCall: React.FC = () => {
     const [isMicOn, setIsMicOn] = useState<boolean>(false);
 
     const connection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
+        .withUrl("https://10.0.0.37:7198/privatechathub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 

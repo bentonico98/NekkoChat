@@ -4,9 +4,9 @@ import { VideoCall } from './Pages/VideoCall/VideoCall';
 function App() {
     console.log('Llamando al componente VideoCall');
     return (
-        <div>
+        <>
             <VideoCall />
-        </div>
+        </>
     );
 }
 

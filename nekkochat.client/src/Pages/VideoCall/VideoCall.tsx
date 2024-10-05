@@ -1,10 +1,11 @@
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import { useRef, useEffect, useState } from 'react';
+import React, { ReactNode, useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
+import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 
@@ -15,8 +16,26 @@ export const VideoCall: React.FC = () => {
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
-    const [isVideoOn, setIsVideoOn] = useState<boolean>(false);
-    const [isMicOn, setIsMicOn] = useState<boolean>(false);
+    const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
+    const [isMicOn, setIsMicOn] = useState<boolean>(true);
+
+    const VideoCallButton = ({ children, onClick, ...props }: { children: ReactNode, onClick?: React.MouseEventHandler }) => (
+        <Button
+            sx={{
+                margin:"0.3rem",
+                backgroundColor: '#777',
+                borderRadius: "0.5rem",
+                '&:hover': {
+                    backgroundColor: '#CCC',
+                    color: 'white',
+                }, }}
+            variant="contained"
+            onClick={onClick}
+            {...props}
+        >
+            {children}
+        </Button>
+    );
 
     const connection = new HubConnectionBuilder()
         .withUrl("https://10.0.0.37:7198/privatechathub", { withCredentials: false })
@@ -43,8 +62,6 @@ export const VideoCall: React.FC = () => {
         }
     });
 
-
-
     connection.on("connectionStarted", () => {
         console.log('Conexión establecida');
         if (peerConnection.current) {
@@ -61,7 +78,7 @@ export const VideoCall: React.FC = () => {
       
         peerConnection.current = new RTCPeerConnection()
         navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: isVideoOn,
             audio: isMicOn,
         })
             .then(stream => {
@@ -79,12 +96,9 @@ export const VideoCall: React.FC = () => {
                 stream.getTracks().forEach(track => {
                     peerConnection.current?.addTrack(track, stream);
                 });
-
-               
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
-        
         peerConnection.current.onconnectionstatechange = event => {
             if (peerConnection.current?.connectionState === 'failed') {
                 console.log('La conexión WebRTC ha fallado', event);
@@ -104,12 +118,11 @@ export const VideoCall: React.FC = () => {
             console.log('Cambio de estado de la conexión ICE: ' + event, peerConnection.current?.iceConnectionState);
         };
 
-       
+
         peerConnection.current.onconnectionstatechange = (event) => {
             console.log('Cambio de estado de la conexión: ' + event, peerConnection.current?.connectionState);
         };
 
-    
         peerConnection.current.ontrack = event => {
             if (event.streams.length > 0) {
                 const stream = event.streams[0];
@@ -203,26 +216,41 @@ export const VideoCall: React.FC = () => {
             }
         }
     };
-
     
     return (
-        <>
-            <Box sx={{ height: "100vh", width: "100vw", backgroundColor: "#555" }}>
+            <Box sx={{ margin: 0, padding:0, height: "100vh", width: "100vw", backgroundColor: "#555", overflow: "hidden" }}>
                 <Box sx={{
-                    height: "90vh",
-                    width: "90vw",
-                    display: "block",
-                    backgroundColor: "white",
+                    height: "80vh",
+                    position:"relative",
+                    width: "80vw",
+                    display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: "1rem"
+                    borderRadius: "1rem",
+                    margin:"2rem",
+
 
                 }}>
                     {isVideoOn ?
-                        < video id="local" style={{ borderRadius: "1rem" }} autoPlay ref={videoRef} />
+                    < video id="local" style={{ borderRadius: "1rem", height: "90vh", }} autoPlay ref={videoRef} >
+                        {!isVideoOn && <Box sx={{
+                            backgroundColor: "#555",
+                            height: "15rem",
+                            width: "15rem",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderRadius: "1rem"
+                        }}>
+                            <VideocamOffIcon sx={{
+                                fontSize: "4rem",
+                                color: "white"
+                            }} />
+                        </Box>}
+                    </video>
                         :
                         <Box sx={{
-                            backgroundColor: "#555",
+                            backgroundColor: "#777",
                             height: "75vh",
                             width: "60vw",
                             display: "flex",
@@ -235,38 +263,41 @@ export const VideoCall: React.FC = () => {
                                 color: "white"
                             }} /></Box>
                     }
-                    <Box sx={{
-                        display: "grid",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gridTemplateColumns: "repeat(4, 1fr)",
-                        gap: "0.5rem"
-                    }}>
-                        <Button variant="contained" onClick={handleCall}>enviar</Button>
-                        <Button variant="contained" onClick={handleAnswer}>recibir</Button>
-                        <Button variant="contained" onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</Button>
-                        <Button variant="contained" onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</Button>
-                        <Button variant="contained">salir</Button>
-                    </Box>
+                   
+                </Box>
+                <Box sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    
+            }}>
+                    <VideoCallButton onClick={handleCall}><SendIcon></SendIcon></VideoCallButton>
+                    <VideoCallButton onClick={handleAnswer}>recibir</VideoCallButton>
+                    <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
+                    <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
+                    <VideoCallButton>salir</VideoCallButton>
                 </Box>
 
                 <Box sx={{
-                    height: "90vh",
-                    width: "90vw",
+                    height: "15rem",
+                    width: "15rem",
+                    position:"absolute",
+                    top: "5vh",
+                    left: "70vw",
+                    zIndex:"10",
                     display: "block",
-                    backgroundColor: "white",
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: "1rem"
 
                 }}>
                     {remoteVideoRef ?
-                        <video id='remoto' style={{ borderRadius: "1rem", width: "100%", height: "100%", zIndex: "2" }} autoPlay ref={remoteVideoRef} onPlay={(data) => console.log('Se reprodujo el video remoto', data)} />
+                    <video id='remoto' style={{ borderRadius: "1rem", width: "15rem", height: "15rem", zIndex: "2" }} autoPlay ref={remoteVideoRef}> </video>
                         :
                         <Box sx={{
                             backgroundColor: "#555",
-                            height: "75vh",
-                            width: "60vw",
+                            height: "15rem",
+                            width: "15rem",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -275,47 +306,11 @@ export const VideoCall: React.FC = () => {
                             <VideocamOffIcon sx={{
                                 fontSize: "4rem",
                                 color: "white"
-                            }} /></Box>
-                    }
-                    <Box sx={{
-                        display: "grid",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gridTemplateColumns: "repeat(4, 1fr)",
-                        gap: "0.5rem"
-                    }}>
-                        <Button variant="contained" onClick={handleCall}>enviar</Button>
-                        <Button variant="contained" onClick={handleAnswer}>recibir</Button>
-                        <Button variant="contained" onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</Button>
-                        <Button variant="contained" onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</Button>
-                        <Button variant="contained">salir</Button>
+                        }} />
                     </Box>
+                    }
+                   
                 </Box>
             </Box>
-        </>
     );
 }
-
-
-/*peerConnection.current.onnegotiationneeded = async () => {
-           try {
-               console.log('Negotiation needed');
-               const offer = await peerConnection.current?.createOffer();
-               await peerConnection.current?.setLocalDescription(new RTCSessionDescription({ type: 'offer', sdp: offer?.sdp }));
-               // Send the offer to the remote peer
-               connection.invoke('Offer', offer?.sdp).catch((err) => console.error(err));
-           } catch (error) {
-               console.error('Error creating offer:', error);
-           }
-       };*/
-
-/* connection.on('answer', (sdp) => {
-       try {
-           
-           if (peerConnection.current) {
-               peerConnection.current.setRemoteDescription({ type: 'answer', sdp });
-           }
-       } catch (error) {
-           console.error('Error al actualizar la descripción de sesión SDP:', error);
-       }
-   });*/

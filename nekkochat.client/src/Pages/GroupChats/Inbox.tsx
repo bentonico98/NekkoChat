@@ -14,7 +14,7 @@ import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useGetUser from "../../Hooks/Group/useGetUser";
 
 import { getUserData } from "../../Store/Slices/userSlice";
-
+import NekkoNavbar from "../Shared/NekkoNavbar";
 export default function Inbox() {
 
     const [isTyping, setIsTyping] = useState({typing:false, user_id: "0", username: "Member"});
@@ -43,15 +43,20 @@ export default function Inbox() {
     }, []);
     
     return (
-        <MainContainer >
-            <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
-            <ChatMessages
-                messages={messages}
-                connected={connected}
-                sender={user_id}
-                receiver={chatID}
-                isTyping={isTyping}
-            />
-        </MainContainer>
+
+        <>
+            <NekkoNavbar user={user_id}  />
+            <MainContainer >
+                <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
+                <ChatMessages
+                    messages={messages}
+                    connected={connected}
+                    sender={user_id}
+                    receiver={chatID}
+                    isTyping={isTyping}
+                />
+            </MainContainer>
+        </>
+        
     );
 }

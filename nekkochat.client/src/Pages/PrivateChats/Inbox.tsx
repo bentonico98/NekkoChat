@@ -14,6 +14,7 @@ import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useGetUser from "../../Hooks/useGetUser";
 
 import { getUserData } from "../../Store/Slices/userSlice";
+import NekkoNavbar from "../Shared/NekkoNavbar";
 
 export default function Inbox() {
 
@@ -43,17 +44,22 @@ export default function Inbox() {
     }, []);
     
     return (
-        <MainContainer >
-            <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
-            <ChatMessages
-                messages={messages}
-                user={loggedUser}
-                connected={connected}
-                sender={user_id}
-                receiver={receiverID}
-                chat={chatID}
-                isTyping={isTyping}
-            />
-        </MainContainer>
+
+        <>
+            <NekkoNavbar user={user_id} />
+            <MainContainer >
+                <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
+                <ChatMessages
+                    messages={messages}
+                    user={loggedUser}
+                    connected={connected}
+                    sender={user_id}
+                    receiver={receiverID}
+                    chat={chatID}
+                    isTyping={isTyping}
+                />
+            </MainContainer>
+        </>
+        
     );
 }

@@ -7,11 +7,25 @@ export default class UserAuthServices {
         const url = ServerLinks.getLoginUrl();
 
         const result = await axios.post(url, payload).then((res) => {
-            console.log(res.data);
+            console.log(res);
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return { success: false, user: null, msj: err };
+            return { success: false, user: null, msj: err, status: 500 };
+        })
+
+        return result;
+    }
+
+    public static async Logout(user:string) {
+        const url = ServerLinks.getLogoutUrl(user);
+
+        const result = await axios.put(url).then((res) => {
+            console.log(res);
+            return res.data;
+        }).catch((err) => {
+            console.log(err);
+            return { success: false, user: null, msj: err, status: 500 };
         })
 
         return result;
@@ -22,22 +36,39 @@ export default class UserAuthServices {
         
         const result = await axios.post(url, payload).then((res) => {
             console.log(res);
-            return res.data;
+            return { success: true, user: res.data, status: res.status };
         }).catch((err) => {
             console.log(err);
-            return {success:false, user:null, msj: err};
+            return { success: false, user: null, msj: err, status: 500 };
         });
 
         return result;
     }
 
-    public static async SetConnectionId(user_id: any, connectionid: any) {
+    public static async SetConnectionId(user_id: string, connectionid: string) {
         if (!connectionid) return "500";
         if (!user_id) return "500";
         const url = ServerLinks.getSetConnectionIdUrl(user_id, connectionid);
         console.log(connectionid);
 
         const result = await axios.post(url).then((res) => {
+            return res.status;
+        }).catch((err) => {
+            console.log(err);
+            return "500";
+        });
+
+        return result;
+
+    }
+
+    public static async SetUserStatusTo(user_id: string, status: number) {
+        if (!user_id) return "500";
+        const url = ServerLinks.getSetUserStatusUrl(user_id, status);
+        console.log(status);
+
+        const result = await axios.put(url).then((res) => {
+            console.log(res);
             return res.status;
         }).catch((err) => {
             console.log(err);

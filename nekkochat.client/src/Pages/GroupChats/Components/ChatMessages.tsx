@@ -1,4 +1,4 @@
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, Button, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 
 import avatar from "../../../assets/avatar.png";
 
@@ -8,12 +8,18 @@ import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
 
 import useGetGroup from "../../../Hooks/Group/useGetGroup";
+import { useNavigate } from 'react-router-dom';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMaximize } from "@fortawesome/free-solid-svg-icons";
 
 
 export default function ChatMessages({ messages, connected, sender, receiver, isTyping }: any) {
 
     const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
+
+    const navigate = useNavigate();
+  
 
     return (
         <>
@@ -24,12 +30,13 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
                     {/*Chat Header*/}
 
                     <ConversationHeader>
-                        <ConversationHeader.Back />
+                        <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar src={avatar} name={groupName.toLocaleUpperCase()} />
                         <ConversationHeader.Content userName={groupName.toLocaleUpperCase()}  />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
+                            <Button icon={<FontAwesomeIcon icon={faMaximize} />} onClick={() => { navigate("/groupchats/chat/" + receiver); }} />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>

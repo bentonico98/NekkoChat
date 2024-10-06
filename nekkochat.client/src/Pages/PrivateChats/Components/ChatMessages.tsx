@@ -1,16 +1,20 @@
 import "../PrivateChats.css";
 import ChatSchema from "../../../Schemas/ChatSchema";
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, Button, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
 import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
 
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {  faMaximize } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 export default function ChatMessages({ messages, user, connected, chat, sender, receiver, isTyping }: any) {
 
     const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
+
+    const navigate = useNavigate();
 
     return (
         <>
@@ -21,12 +25,13 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                     {/*Chat Header*/}
 
                     <ConversationHeader>
-                        <ConversationHeader.Back />
+                        <ConversationHeader.Back onClick={() => { navigate(-1); } } />
                         <Avatar src={avatar} name={receiverName.toLocaleUpperCase()} />
                         <ConversationHeader.Content userName={receiverName.toLocaleUpperCase()} info={lastOnline} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
+                            <Button icon={<FontAwesomeIcon icon={faMaximize} />} onClick={() => { navigate("/chats/chat/" + chat); } }  />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>

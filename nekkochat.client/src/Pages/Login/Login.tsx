@@ -8,15 +8,19 @@ import {  useAppDispatch } from "../../Hooks/storeHooks";
 import { login } from "../../Store/Slices/userSlice";
 export default function Login() {
 
-    const [currentUser, setCurrentUser] = useState<any>({});
     const dispatch = useAppDispatch();
+
+    const [currentUser, setCurrentUser] = useState<any>({});
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (values: LoginSchema) => {
         const res = await UserAuthServices.Login(values);
         setLoggedIn(res.success);
-        setCurrentUser(res);
+        setCurrentUser(res.user);
+        if (res.success) {
+            await UserAuthServices.SetUserStatusTo(res.user.id, 0);
+        }
         return res;
     }
 

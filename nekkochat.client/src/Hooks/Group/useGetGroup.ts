@@ -14,7 +14,7 @@ export default function useGetGroup(user: string, messages: any, group_id:number
   
     const getUnreadMessages = () => {
         const message: any = messages.filter((i: GroupChatSchema) => i.read === false && i.user_id !== user);
-        setUnreadMsj((p: any) => p = message.length);
+        setUnreadMsj(message.length);
     }
     const getGroup = async (group_id: number) => {
         const res = await MessageServicesClient.getGroupById(group_id);
@@ -26,7 +26,7 @@ export default function useGetGroup(user: string, messages: any, group_id:number
         const date: any = filter[0]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
-            setStartDate((c: any) => c = formattedDate);
+            setStartDate(formattedDate);
         }
     }
     

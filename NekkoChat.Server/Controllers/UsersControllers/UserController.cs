@@ -20,7 +20,7 @@ namespace NekkoChat.Server.Controllers
         private readonly ApplicationDbContext _context = context;
         // /User/users?user_id=""
 
-        [HttpGet("users/")]
+        [HttpGet("users")]
         public async Task<IActionResult> Get(string user_id)
         {
             try
@@ -34,7 +34,7 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
-        [HttpPost("manage/connectionid/")]
+        [HttpPost("manage/connectionid")]
         public async Task<IActionResult> Post(string user_id, string connectionid)
         {
             try
@@ -52,7 +52,7 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
-        [HttpPut("manage/status/")]
+        [HttpPut("manage/status")]
         public async Task<IActionResult> Put(string user_id, int status)
         {
             try

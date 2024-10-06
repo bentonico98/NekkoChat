@@ -59,6 +59,10 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `login`;
          return `${this.ServerUrl}${url}`;
      };
+     public static getLogoutUrl(user:string) {
+         const url = `logout?user_id=${user}`;
+         return `${this.ServerUrl}${url}`;
+     };
      public static getRegisterUrl() {
          const url = `register`;
          return `${this.ServerUrl}${url}`;
@@ -69,6 +73,10 @@ import MessageSchema from "../Schemas/MessageSchema"
      ////////////// USER ROUTES
      public static getSetConnectionIdUrl(user_id: string, connectionid: string|any) {
          const url = `user/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getSetUserStatusUrl(user_id: string, status: number ) {
+         const url = `user/manage/status?user_id=${user_id}&status=${status}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserById(user_id: string) {

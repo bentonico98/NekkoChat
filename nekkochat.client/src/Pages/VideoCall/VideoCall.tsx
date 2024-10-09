@@ -38,7 +38,7 @@ export const VideoCall: React.FC = () => {
     );
 
     const connection = new HubConnectionBuilder()
-        .withUrl("https://10.0.0.37:7198/privatechathub", { withCredentials: false })
+        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 
@@ -53,12 +53,6 @@ export const VideoCall: React.FC = () => {
             }
         } catch (error) {
             console.error('Error al actualizar la descripción de sesión SDP:', error);
-        }
-    });
-
-    connection.on('icecandidate', (candidate) => {
-        if (peerConnection.current) {
-            peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
         }
     });
 
@@ -100,27 +94,11 @@ export const VideoCall: React.FC = () => {
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
         peerConnection.current.onconnectionstatechange = event => {
-            if (peerConnection.current?.connectionState === 'failed') {
-                console.log('La conexión WebRTC ha fallado', event);
-            } else if (peerConnection.current?.connectionState === 'closed') {
-                console.log('La conexión WebRTC ha sido cerrada', event);
-            }
-        };
-
-        peerConnection.current.onicecandidate = event => {
-            if (event.candidate) {
-                
-                connection.invoke('SendIceCandidate', event.candidate.candidate).catch((err) => console.error(err));
-            }
+           console.log("connection state", event)
         };
       
         peerConnection.current.oniceconnectionstatechange = (event) => {
             console.log('Cambio de estado de la conexión ICE: ' + event, peerConnection.current?.iceConnectionState);
-        };
-
-
-        peerConnection.current.onconnectionstatechange = (event) => {
-            console.log('Cambio de estado de la conexión: ' + event, peerConnection.current?.connectionState);
         };
 
         peerConnection.current.ontrack = event => {
@@ -166,23 +144,19 @@ export const VideoCall: React.FC = () => {
                 const offer: RTCLocalSessionDescriptionInit = await peerConnection.current.createOffer();
 
                 await peerConnection.current.setLocalDescription({ type: 'offer', sdp: offer.sdp });
-                console.log('Enviando offer:', offer);
 
-                console.log("HANDLE CALL", peerConnection.current.signalingState);
-                    
-                connection.invoke('Offer', JSON.stringify(offer)).catch((err) => console.error(err));
+                connection.invoke('VideoNotification').catch((err) => console.error(err));
+                await connection.invoke('Offer', JSON.stringify(offer)).catch((err) => console.error(err));
 
                 const offerAnswer:string = await new Promise((resolve) => {
                     connection.on('answer', (sdp) => {
                         resolve(sdp);
                     });
                 });
-                console.log("HANDLE CALL 2", peerConnection.current.signalingState);
-               
+
                 const answerDescription = JSON.parse(offerAnswer);
                 await peerConnection.current.setRemoteDescription(answerDescription);
-                console.log("HANDLE CALL 3", peerConnection.current.signalingState);
-                //por que no es complete o connected?
+
                 console.log("ALL STATE OF THE CONNECTION IN OFFER: " +
                     peerConnection.current.connectionState + " " +
                     peerConnection.current.iceConnectionState + " " +
@@ -197,20 +171,13 @@ export const VideoCall: React.FC = () => {
     const handleAnswer = async () => {
         if (peerConnection.current && answer) {
             try {
-                console.log("HANDLE ANSWER 1", peerConnection.current.signalingState);
+
                 await peerConnection.current.setRemoteDescription(answer);
-                console.log("HANDLE ANSWER 2", peerConnection.current.signalingState);
                 const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
-                console.log("HANDLE ANSWER 3", peerConnection.current.signalingState);
                 await peerConnection.current.setLocalDescription(answerAnswer);
-                console.log("HANDLE ANSWER 4", peerConnection.current.signalingState);
-                console.log("ALL STATE OF THE CONNECTION: " +
-                    peerConnection.current.connectionState + " " +
-                    peerConnection.current.iceConnectionState + " " +
-                    peerConnection.current.iceGatheringState
-                );
-                
-                connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
+
+                await connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
+
             } catch (error) {
                 console.error('Error enviando la respuesta:', error);
             }
@@ -314,3 +281,41 @@ export const VideoCall: React.FC = () => {
             </Box>
     );
 }
+/* await new Promise((resolve: (Promise:void) => void) => {
+                   connection.on('icecandidate', (candidate) => {
+                       if (peerConnection.current) {
+                           peerConnection.current.addIceCandidate(candidate);
+                           resolve();
+                       }
+                   });
+               });*/
+
+/* peerConnection.current.onicecandidate = event => {
+    if (event.candidate) {
+         console.log("SendOfferIceCandidate")
+         connection.invoke('SendOfferIceCandidate', event.candidate.candidate).catch((err) => console.error(err));
+    }
+};
+
+await new Promise((resolve: (value: void) => void) => {
+    connection.on('answericecandidate', (candidate) => {
+            console.log("answericecanidate")
+            peerConnection.current?.addIceCandidate(new RTCIceCandidate(candidate));
+            resolve()
+    });
+});*/
+
+/* await new Promise((resolve: (value: void) => void) => {
+    connection.on('offericecandidate', (candidate) => {
+            console.log("offericecandidate")
+            peerConnection.current?.addIceCandidate(new RTCIceCandidate(candidate));
+            resolve()
+    });
+});
+
+peerConnection.current.onicecandidate = event => {
+    if (event.candidate) {
+        console.log("SendAnswerIceCandidate")
+        connection.invoke('SendAnswerIceCandidate', event.candidate.candidate).catch((err) => console.error(err));
+    }
+};*/

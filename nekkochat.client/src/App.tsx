@@ -1,11 +1,18 @@
 import './App.css';
-import { VideoCall } from './Pages/VideoCall/VideoCall';
+import SimpleSnackbar from './Pages/VideoCall/Components/AnswerButtom';
+import PrivateChatRoutes from './Routes/PrivateChatRoutes';
+import { BrowserRouter as Router } from 'react-router-dom';
+
 //import PrivateChatRoutes from "./Routes/PrivateChatRoutes";
 function App() {
     console.log('Llamando al componente VideoCall');
     return (
         <>
-            <VideoCall />
+            <PrivateChatRoutes/>
+            <Router>
+                <SimpleSnackbar />
+            </Router>
+
         </>
     );
 }

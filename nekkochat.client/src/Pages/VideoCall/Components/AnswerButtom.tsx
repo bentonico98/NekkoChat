@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector} from "react-redux"
 import { RootState } from '../../../StateManagement/store';
 
+
 export default function SimpleSnackbar() {
     const [open, setOpen] = useState(false);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
@@ -18,7 +19,7 @@ export default function SimpleSnackbar() {
     peerConnection.current = new RTCPeerConnection()
 
     const connection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
+        .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 

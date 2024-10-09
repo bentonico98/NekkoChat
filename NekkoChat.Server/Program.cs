@@ -88,6 +88,7 @@ app.UseCors("AllowSpecificOrigin");
 app.MapFallbackToFile("/index.html");
 //Map de los Hub -- NOTA:Proximamente hay que cambiar la ruta em base a la ruta del chat con el cual estamos trabajando
 app.MapHub<PrivateChatHub>("/privatechathub");
+app.MapHub<VideoCallHub>("/videocallhub");
 
 app.Run();
 

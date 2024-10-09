@@ -1,6 +1,5 @@
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import React, { ReactNode, useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import MicIcon from '@mui/icons-material/Mic';
@@ -11,6 +10,9 @@ import { HubConnectionBuilder } from '@microsoft/signalr';
 import { useParams } from 'react-router-dom';
 import { useDispatch } from "react-redux"
 import { userSliceActions } from '../../StateManagement/UserRedux';
+import { VideoCallButton } from './Components/VideoCallButtom';
+import { IUserData, SendModal } from './Components/SendModal';
+
 
 
 export const VideoCall: React.FC = () => {
@@ -29,30 +31,40 @@ export const VideoCall: React.FC = () => {
 
     userDispatch(userSliceActions.setState(videoId))
 
-    const VideoCallButton = ({ children, onClick, ...props }: { children: ReactNode, onClick?: React.MouseEventHandler }) => (
-        <Button
-            sx={{
-                margin:"0.3rem",
-                backgroundColor: '#777',
-                borderRadius: "0.5rem",
-                '&:hover': {
-                    backgroundColor: '#CCC',
-                    color: 'white',
-                }, }}
-            variant="contained"
-            onClick={onClick}
-            {...props}
-        >
-            {children}
-        </Button>
-    );
-
     const connection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
+        .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 
     connection.start().catch((err) => console.error(err));
+
+    const userMock: IUserData[] = [
+        {
+            ProfileImage: "",
+            username: "jhon",
+            id: "1"
+        },
+        {
+            ProfileImage: "",
+            username: "Doe",
+            id: "2"
+        },
+        {
+            ProfileImage: "",
+            username: "Jane",
+            id: "3"
+        },
+        {
+            ProfileImage: "",
+            username: "Doena",
+            id: "4"
+        },
+        {
+            ProfileImage: "",
+            username: "Lenny",
+            id: "5"
+        },
+    ]
 
     let answer: RTCSessionDescriptionInit;
 
@@ -248,6 +260,7 @@ export const VideoCall: React.FC = () => {
                     justifyContent: "center",
                     
             }}>
+                    <SendModal Users={userMock}/>
                     <VideoCallButton onClick={handleCall}><SendIcon></SendIcon></VideoCallButton>
                     <VideoCallButton onClick={handleAnswer}>recibir</VideoCallButton>
                     <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>

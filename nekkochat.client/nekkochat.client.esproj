@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\Constants\" />
+    <Folder Include="src\StateManagement\" />
     <Folder Include="src\Pages\VideoCall\Components\" />
     <Folder Include="src\Schemas\" />
     <Folder Include="src\Utils\" />

@@ -5,6 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import { useNavigate } from 'react-router-dom';
+import { useSelector} from "react-redux"
+import { RootState } from '../../../StateManagement/store';
 
 export default function SimpleSnackbar() {
     const [open, setOpen] = useState(false);
@@ -34,9 +36,13 @@ export default function SimpleSnackbar() {
         }
     });*/
 
+    const userId = useSelector((state: RootState) => state.user.id)
+
     connection.on('videonotification',() => {
         try {
-            setOpen(true);
+            if (userId == "1") {
+                setOpen(true);
+            }
         } catch (error) {
             console.error('Error en la notificacion:', error);
         }

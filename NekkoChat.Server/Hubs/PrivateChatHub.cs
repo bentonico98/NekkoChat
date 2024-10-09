@@ -19,7 +19,7 @@ namespace NekkoChat.Server.Hubs
             await Clients.All.SendAsync("answer", sdp);
         }
 
-        public async Task VideoNotification()
+        public async Task VideoNotification(string userId)
         {
             await Clients.All.SendAsync("videonotification");
         }

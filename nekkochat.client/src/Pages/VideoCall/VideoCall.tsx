@@ -8,6 +8,10 @@ import MicOffIcon from '@mui/icons-material/MicOff';
 import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
 import { HubConnectionBuilder } from '@microsoft/signalr';
+import { useParams } from 'react-router-dom';
+import { useDispatch } from "react-redux"
+import { userSliceActions } from '../../StateManagement/UserRedux';
+
 
 export const VideoCall: React.FC = () => {
 
@@ -18,6 +22,12 @@ export const VideoCall: React.FC = () => {
 
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
+
+    const { videoId } = useParams();
+
+    const userDispatch = useDispatch();
+
+    userDispatch(userSliceActions.setState(videoId))
 
     const VideoCallButton = ({ children, onClick, ...props }: { children: ReactNode, onClick?: React.MouseEventHandler }) => (
         <Button
@@ -145,7 +155,7 @@ export const VideoCall: React.FC = () => {
 
                 await peerConnection.current.setLocalDescription({ type: 'offer', sdp: offer.sdp });
 
-                connection.invoke('VideoNotification').catch((err) => console.error(err));
+                connection.invoke('VideoNotification', "1").catch((err) => console.error(err));
                 await connection.invoke('Offer', JSON.stringify(offer)).catch((err) => console.error(err));
 
                 const offerAnswer:string = await new Promise((resolve) => {

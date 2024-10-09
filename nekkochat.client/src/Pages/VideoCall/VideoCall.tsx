@@ -22,8 +22,12 @@ export const VideoCall: React.FC = () => {
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
+    let [isOfferState] = useState<boolean>(true);
+    let [isConnectionStablish] = useState<boolean>(false);
+
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
+
 
     const { videoId } = useParams();
 
@@ -90,6 +94,21 @@ export const VideoCall: React.FC = () => {
         }  
     });
 
+    let offerCandidate: RTCIceCandidateInit | null = null;
+
+    connection.on('offericecandidate', (candidate) => {
+        console.log("offericecandidate")
+        offerCandidate = JSON.parse(candidate)
+    });
+
+    let AnswerCandidate: RTCIceCandidateInit | null = null;
+
+    connection.on('answericecandidate', (candidate) => {
+        console.log("answericecanidate")
+         AnswerCandidate = JSON.parse(candidate);
+       
+    });
+
     useEffect(() => {
       
         peerConnection.current = new RTCPeerConnection()
@@ -115,13 +134,19 @@ export const VideoCall: React.FC = () => {
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
-        peerConnection.current.onconnectionstatechange = event => {
+       /* peerConnection.current.onconnectionstatechange = event => {
            console.log("connection state", event)
-        };
+        };*/
       
         peerConnection.current.oniceconnectionstatechange = (event) => {
             console.log('Cambio de estado de la conexión ICE: ' + event, peerConnection.current?.iceConnectionState);
         };
+
+        peerConnection.current.onicecandidateerror = (event) => {
+            console.log('error conexión ICE: ', event);
+        };
+
+        
 
         peerConnection.current.ontrack = event => {
             if (event.streams.length > 0) {
@@ -146,7 +171,7 @@ export const VideoCall: React.FC = () => {
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
-    }, [isVideoOn, isMicOn, connection]);
+    }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate]);
 
     const handleVideoState = () => {
         setIsVideoOn(() => !isVideoOn);
@@ -163,11 +188,20 @@ export const VideoCall: React.FC = () => {
                     console.error('La conexion ya tiene una descripcion de sesión SDP remota establecida');
                     return;
                 }
+
+                isOfferState = true;
+
                 const offer: RTCLocalSessionDescriptionInit = await peerConnection.current.createOffer();
 
                 await peerConnection.current.setLocalDescription({ type: 'offer', sdp: offer.sdp });
 
-                connection.invoke('VideoNotification', "1").catch((err) => console.error(err));
+                peerConnection.current.onicecandidate = event => {
+                    if (event.candidate) {
+                        console.log("SendOfferIceCandidate")
+                        connection.invoke('SendOfferIceCandidate', JSON.stringify(event.candidate)).catch((err) => console.error(err));
+                    }
+                };
+
                 await connection.invoke('Offer', JSON.stringify(offer)).catch((err) => console.error(err));
 
                 const offerAnswer:string = await new Promise((resolve) => {
@@ -178,6 +212,9 @@ export const VideoCall: React.FC = () => {
 
                 const answerDescription = JSON.parse(offerAnswer);
                 await peerConnection.current.setRemoteDescription(answerDescription);
+
+                isConnectionStablish = true;
+                handleStablishIce();
 
                 console.log("ALL STATE OF THE CONNECTION IN OFFER: " +
                     peerConnection.current.connectionState + " " +
@@ -194,17 +231,42 @@ export const VideoCall: React.FC = () => {
         if (peerConnection.current && answer) {
             try {
 
+                isOfferState = false;
+
                 await peerConnection.current.setRemoteDescription(answer);
                 const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
                 await peerConnection.current.setLocalDescription(answerAnswer);
 
+                peerConnection.current.onicecandidate = event => {
+                    if (event.candidate) {
+                        console.log("SendAnswerIceCandidate")
+                        connection.invoke('SendAnswerIceCandidate', JSON.stringify(event.candidate)).catch((err) => console.error(err));
+                    }
+                };
+
                 await connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
+
+                isConnectionStablish = true;
+                handleStablishIce();
 
             } catch (error) {
                 console.error('Error enviando la respuesta:', error);
             }
         }
     };
+
+    const handleStablishIce = () => {
+        if (isConnectionStablish == true) {
+            if (isOfferState == true) {
+                console.log("aplique el offer ice que necesito", AnswerCandidate)
+                peerConnection.current?.addIceCandidate(new RTCIceCandidate(AnswerCandidate!));
+            }
+            else {
+                console.log("aplique el answer ice que necesito", offerCandidate)
+                peerConnection.current?.addIceCandidate(new RTCIceCandidate(offerCandidate!));
+            }
+        }
+    }
     
     return (
             <Box sx={{ margin: 0, padding:0, height: "100vh", width: "100vw", backgroundColor: "#555", overflow: "hidden" }}>

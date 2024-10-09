@@ -58,7 +58,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users }) => {
                 <Box sx={style}>
                     {Users.map((user) => {
                         return (
-                            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0.2rem" }}>
+                            <Box key={user.id} sx={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0.2rem" }}>
                                 <img style={{ borderRadius: "50%" }} src={user.ProfileImage} />
                                 <Typography variant="subtitle2">{user.username}</Typography>
                                 <Button onClick={() => handleInvokeVideoNotification(user.id)}><SendIcon /></Button>

@@ -8,10 +8,12 @@ import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import { useParams } from 'react-router-dom';
-import { useDispatch } from "react-redux"
-import { userSliceActions } from '../../StateManagement/UserRedux';
+import { useSelector, useDispatch } from "react-redux"
+
 import { VideoCallButton } from './Components/VideoCallButtom';
 import { IUserData, SendModal } from './Components/SendModal';
+import { videocallUserSliceActions } from '../../StateManagement/VideocallUserRedux';
+import { RootState } from '../../StateManagement/VideocallStore';
 
 
 
@@ -33,7 +35,7 @@ export const VideoCall: React.FC = () => {
 
     const userDispatch = useDispatch();
 
-    userDispatch(userSliceActions.setState(videoId))
+    userDispatch(videocallUserSliceActions.setId(videoId))
 
     const connection = new HubConnectionBuilder()
         .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
@@ -94,6 +96,20 @@ export const VideoCall: React.FC = () => {
         }  
     });
 
+    //connection.invoke('ConnectedVideoNotification', event.candidate).catch((err) => console.error(err));
+
+    const isAnsweredByUser = useSelector((state: RootState) => state.videocallUser.isVideocallAnswered)
+    connection.on('connectedvideonotification', () => {
+        if (isAnsweredByUser == true) {
+            setTimeout(() => {
+                handleAnswer();
+            }, 5000);
+        }
+        else {
+            handleCall();
+        }
+    });
+
     let offerCandidate: RTCIceCandidateInit | null = null;
 
     connection.on('offericecandidate', (candidate) => {
@@ -105,6 +121,7 @@ export const VideoCall: React.FC = () => {
 
     connection.on('answericecandidate', (candidate) => {
         console.log("answericecanidate")
+
          AnswerCandidate = JSON.parse(candidate);
        
     });

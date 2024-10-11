@@ -5,8 +5,9 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { HubConnectionBuilder } from '@microsoft/signalr';
 import { useNavigate } from 'react-router-dom';
-import { useSelector} from "react-redux"
-import { RootState } from '../../../StateManagement/store';
+import { useSelector, useDispatch } from "react-redux"
+import { RootState } from '../../../StateManagement/VideocallStore';
+import { videocallUserSliceActions } from '../../../StateManagement/VideocallUserRedux';
 
 
 export default function SimpleSnackbar() {
@@ -25,19 +26,7 @@ export default function SimpleSnackbar() {
 
     connection.start().catch((err) => console.error(err));
 
-    //let answer: RTCSessionDescriptionInit;
-
-   /* connection.on('offer', async (sdp) => {
-        try {
-            if (peerConnection.current) {
-                answer = JSON.parse(sdp);
-            }
-        } catch (error) {
-            console.error('Error al actualizar la descripción de sesión SDP:', error);
-        }
-    });*/
-
-    const userId = useSelector((state: RootState) => state.user.id)
+    const userId = useSelector((state: RootState) => state.videocallUser.id)
 
     connection.on('videonotification',() => {
         try {
@@ -48,6 +37,10 @@ export default function SimpleSnackbar() {
             console.error('Error en la notificacion:', error);
         }
     });
+
+    const userDispatch = useDispatch();
+
+
 
     const handleClick = () => {
         setOpen(true);
@@ -66,22 +59,11 @@ export default function SimpleSnackbar() {
 
     const handleAnswer = async () => {
         setOpen(false);
-        navigate("/chats/videocall", { replace: true });
+        userDispatch(videocallUserSliceActions.setAnswered(true));
+        connection.invoke('ConnectedVideoNotification').catch((err) => console.error(err));
+        navigate("/chats/videocall/" + userId, { replace: true });
         navigate(0)
-       /* if (peerConnection.current && answer) {
-            try {
-               await peerConnection.current.setRemoteDescription(answer);
-                const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
-                await peerConnection.current.setLocalDescription(answerAnswer);
-
-                await connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
-
-                navigate("/chats/videocall");
-
-            } catch (error) {
-                console.error('Error enviando la respuesta:', error);
-            }
-        }*/
+       
     };
 
     const action = (

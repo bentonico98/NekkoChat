@@ -19,6 +19,11 @@ namespace NekkoChat.Server.Hubs
             await Clients.All.SendAsync("videonotification");
         }
 
+        public async Task ConnectedVideoNotification(string userId)
+        {
+            await Clients.All.SendAsync("connectedvideonotification");
+        }
+
         public async Task SendOfferIceCandidate(string candidate)
         {
             await Clients.All.SendAsync("offericecandidate", candidate);

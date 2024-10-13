@@ -19,7 +19,7 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
     const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
 
     const navigate = useNavigate();
-  
+
 
     return (
         <>
@@ -32,7 +32,7 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
                     <ConversationHeader>
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar src={avatar} name={groupName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()}  />
+                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
@@ -77,10 +77,9 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToGroup(receiver, sender, groupName, groupType,groupDesc,groupPhoto, e) }} />
+                        onSend={async (e) => { await MessageServicesClient.sendMessageToGroup(receiver, sender, groupName, groupType, groupDesc, groupPhoto, e) }} />
                 </ChatContainer>
                 : <ChatContainer className="flexibleContainer">
-                    <div>NekkoChat</div>
                 </ChatContainer>}
         </>
     );

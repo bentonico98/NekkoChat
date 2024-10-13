@@ -5,16 +5,16 @@ import MessageSchema from "../Schemas/MessageSchema"
 
      ///////////////// PRIVATE CHATS URLS
 
-     public static getCreateChatUrl(message: MessageSchema) {
-         const url = `chats/chat/create/${message.chat_id}?value=${message.content}&sender_id=${message.sender_id}&receiver_id=${message.receiver_id}`
+     public static getCreateChatUrl(sender_id:string, receiver_id:string, msj:string) {
+         const url = `chats/chat/create?value=${msj}&sender_id=${sender_id}&receiver_id=${receiver_id}`
          return `${this.ServerUrl}${url}`;
      };
      public static getSendMessageUrl(message: MessageSchema) {
          const url = `chats/chat/send/${message.chat_id}?value=${message.content}&sender_id=${message.sender_id}&receiver_id=${message.receiver_id}`
         return `${this.ServerUrl}${url}`;
      };
-     public static getAllUsersChatUrl(id:any) {
-         const url = `chats/chats?id=${id}`
+     public static getAllUsersChatUrl(id:any,type:string) {
+         const url = `chats/chats?id=${id}&type=${type}`
          return `${this.ServerUrl}${url}`;
      };
      public static getOneUsersChatUrl(id: any) {
@@ -83,7 +83,10 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `user/users?user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
-
+     public static getUserByName(name: string) {
+         const url = `user/user?name=${name}`;
+         return `${this.ServerUrl}${url}`;
+     }
      ////////////// GROUP ROUTES
      public static getSetConnectionIdForGroupUrl(user_id: string, connectionid: string | any) {
          const url = `group/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;

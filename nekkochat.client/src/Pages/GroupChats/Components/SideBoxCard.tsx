@@ -21,7 +21,7 @@ export default function SideBoxCard({ chat, user, setCurrentConversation }: any)
         <Conversation
             key={chat._id}
             name={groupname}
-            lastSenderName={participants[participants.length - 1].name}
+            lastSenderName={messages[messages.length - 1].name}
             info={messages[messages.length - 1].content}
             unreadCnt={unreadMsj}
             onClick={async () => {

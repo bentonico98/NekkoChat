@@ -34,9 +34,27 @@ export default class MessageServicesClient {
                 'Content-Type': 'application/json'
             }
         }).then((res) => {
-            console.log(res);
+            console.log(res.status);
         }).catch(err => {
             console.error(err);
+        });
+
+        return result;
+    }
+
+    public static async createChat(sender_id: string, receiver_id: string, msj: string) {
+        let url = ServerLinks.getCreateChatUrl(sender_id, receiver_id, msj);
+
+        const result = await axios.post(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((res) => {
+            console.log(res);
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return { success: false, error: err };
         });
 
         return result;
@@ -55,9 +73,9 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async getAllUsersChats(user_id: string) {
+    public static async getAllUsersChats(user_id: string, type:string) {
 
-        let url = ServerLinks.getAllUsersChatUrl(user_id);
+        let url = ServerLinks.getAllUsersChatUrl(user_id,type);
 
         const result = await axios.get(url).then((res) => {
             //console.log(res);
@@ -79,7 +97,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-            //console.log(res);
 
             return res.data;
         }).catch(function (error) {

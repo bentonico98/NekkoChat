@@ -6,7 +6,7 @@ export default function useGetChatFromUser(user_id:string) {
     const [messages, setMessages] = useState<ChatSchema[]>([]);
     const [chatID, setChatID] = useState<string>("0");
     const [receiverID, setReceiverID] = useState<string>("0");
-    const [currentConvo, setcurrentConvo] = useState<ChatSchema[]>([]);
+    const [currentConvo, setcurrentConvo] = useState<any>([]);
 
     const setCurrentConversation = useCallback((chat_id: string | undefined) => {
         MessageServicesClient.getChatFromUser(chat_id).then((res) => {

@@ -5,7 +5,7 @@ import UserAuthServices from "../Utils/UserAuthServices";
 //import { useAppDispatch } from "./storeHooks";
 //import { getUserData } from "../Store/Slices/userSlice";
 
-export default function useGetUser(user: any) {
+export default function useGetUser(user: any, type:string) {
     const navigate = useNavigate();
 
     const [loggedUser, setLoggedUser] = useState<any>(user);
@@ -14,14 +14,14 @@ export default function useGetUser(user: any) {
     
     const dispatchUser = () => {
         if (UserAuthServices.isAuthenticated() && loggedUser == null) {
-            setLoggedUser((u: any) => u = user);
-            setUser_id((c: any) => c = loggedUser.value.id);
+            setLoggedUser( user);
+            setUser_id( loggedUser.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
-            MessageServicesClient.getAllUsersChats(loggedUser.value.id).then((res) => {
+            MessageServicesClient.getAllUsersChats(loggedUser.value.id, type).then((res) => {
                 setconversations(res);
             });
-            setLoggedUser((u: any) => u = user);
-            setUser_id((c: any) => c = loggedUser.value.id);
+            setLoggedUser(user);
+            setUser_id(loggedUser.value.id);
         }
         else {
             navigate("/login");

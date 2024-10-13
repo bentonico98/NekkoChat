@@ -4,25 +4,27 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { faStar, faArchive, faSignOutAlt, faUserFriends, faVideoCamera, faPeopleGroup, faInbox } from '@fortawesome/free-solid-svg-icons';
 
-import { useAppDispatch } from '../../Hooks/storeHooks';
+import { useAppDispatch, useAppSelector } from '../../Hooks/storeHooks';
 
 import { logout } from "../../Store/Slices/userSlice";
 
 import { useNavigate } from 'react-router-dom';
 import UserAuthServices from '../../Utils/UserAuthServices';
+import { iuserStore } from '../../Constants/Types/CommonTypes';
 
-function NekkoNavbar({user }:any) {
+function NekkoNavbar() {
 
+    const user:iuserStore = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
 
     const handleLogout = async () => {
-        await UserAuthServices.Logout(user);
+        await UserAuthServices.Logout(user.value.id);
+        const navigate = useNavigate();
         dispatch(logout());
         navigate("/login");
     }
     return (
-        <Navbar bg="light" data-bs-theme="light">
+        <Navbar bg="light"   data-bs-theme="light">
             <Container>
                 <Navbar.Brand href="/inbox">NekkoChat</Navbar.Brand>
                 <Nav>

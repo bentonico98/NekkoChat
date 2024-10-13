@@ -4,18 +4,22 @@ import { Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
+import { iparticipants } from "../../../Constants/Types/CommonTypes";
+import ChatSchema from "../../../Schemas/ChatSchema";
+import useGetParticipants from "../../../Hooks/useGetParticipants";
 
 export default function SideBoxCard({ chat, user, setCurrentConversation }: any) {
 
-    const [participants] = useState<any>([...chat.participants]);
-    const [messages] = useState<any>([...chat.messages]);
-    const { receiverName, unreadMsj, receiverStatus } = useGetReceiver(user, messages);
+    const [participants] = useState<iparticipants[]>([...chat.participants]);
+    const [messages] = useState<ChatSchema[]>([...chat.messages]);
+    const { unreadMsj, receiverStatus } = useGetReceiver(user, messages );
+    const { participantName } = useGetParticipants(chat.participants, user);
 
     return (
         <Conversation
             key={chat._id}
-            name={receiverName.toUpperCase()}
-            lastSenderName={participants[participants.length - 1].name}
+            name={participantName.toUpperCase()}
+            lastSenderName={messages[messages.length - 1].username}
             info={messages[messages.length - 1].content}
             unreadCnt={unreadMsj}
             onClick={async () => {

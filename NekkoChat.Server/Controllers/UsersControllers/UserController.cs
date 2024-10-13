@@ -34,6 +34,61 @@ namespace NekkoChat.Server.Controllers
             }
         }
 
+        [HttpGet("user")]
+        public IActionResult GetUserByName(string name) {
+
+            try {
+
+                List<AspNetUsers> searchRes = new();
+
+                var user = _context.AspNetUsers.FirstOrDefault((c) => c.UserName.Contains(name));
+                IQueryable<AspNetUsers> results = from c in _context.AspNetUsers select c;
+                results = results.Where((c) => c.UserName.Contains(name));
+
+                foreach (var search in results)
+                {
+                    searchRes.Add(search);
+                }
+
+                object payload = new { success = true, user = searchRes };
+
+                return Ok(payload);
+            
+            } catch (Exception ex) {
+                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+            }
+
+        }
+        [HttpPost("manage/friendrequest")]
+        public async Task<IActionResult> PostFriendRequest(string sender_id, string receiver_id)
+        {
+            try
+            {
+                AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
+                AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+
+                if (sender == null || receiver == null) return StatusCode(403, new { Message = "User Doesnt Exist", Error = "Invalid User" });
+
+                try {
+                    Friend_List friendReq = new Friend_List { 
+                        sender_id = sender.Id, 
+                        receiver_id = receiver.Id, 
+                        isAccepted = false 
+                    };
+                    _context.friend_list.Add(friendReq);
+                    _context.SaveChanges();
+                    return Ok();
+
+                } catch (Exception ex) {
+                    return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+            }
+        }
+
         [HttpPost("manage/connectionid")]
         public async Task<IActionResult> Post(string user_id, string connectionid)
         {

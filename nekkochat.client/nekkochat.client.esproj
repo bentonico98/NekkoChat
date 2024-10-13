@@ -9,9 +9,13 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="src\Constants\Styles\" />
     <Folder Include="src\Constants\Types\" />
     <Folder Include="src\Hooks\Private\" />
+    <Folder Include="src\Pages\Friend\Components\" />
     <Folder Include="src\Pages\Login\Components\" />
+    <Folder Include="src\Pages\Settings\" />
+    <Folder Include="src\Pages\VideoChats\" />
     <Folder Include="src\Store\Slices\" />
   </ItemGroup>
 </Project>

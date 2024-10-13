@@ -15,18 +15,18 @@ export default function useGetReceiver(user: string, messages: any) {
     const fetchUser = async (filter: ChatSchema[]) => {
         const id: string = filter[0].user_id || "0";
         const res = await MessageServicesClient.getUserById(id);
-        setReceiverStatus((p: any) => p = GetUserStatusService(res.status));
+        setReceiverStatus(GetUserStatusService(res.status));
     }
     const getUnreadMessages = () => {
         const message: any = messages.filter((i: ChatSchema) => i.read === false && i.user_id !== user);
-        setUnreadMsj((p: any) => p = message.length);
+        setUnreadMsj(message.length);
     }
 
     const getChatStartDate = (filter: any) => {
         const date: any = filter[0]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
-            setStartDate((c: any) => c = formattedDate);
+            setStartDate(formattedDate);
         }
     }
 
@@ -34,12 +34,12 @@ export default function useGetReceiver(user: string, messages: any) {
         const date: any = filter[filter.length - 1]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
-            setLastOnline((c: any) => c = formattedDate);
+            setLastOnline(formattedDate);
         }
     }
     const getReceiver = () => {
-        const filter = messages.filter((i: ChatSchema) => i.user_id != user);
-        const username = filter[0]?.username || "Unknown";
+        const filter = messages.filter((i: ChatSchema) => i.user_id !== user);
+        const username = filter[0]?.username || "";
         setReceiverName(username);
         fetchUser(filter);
         getLastOnline(filter);

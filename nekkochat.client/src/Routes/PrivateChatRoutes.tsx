@@ -8,6 +8,12 @@ import Register from "../Pages/Login/Register";
 
 import InboxGroup from "../Pages/GroupChats/Inbox";
 import ChatGroup from "../Pages/GroupChats/Chat";
+
+import FriendList from "../Pages/Friend/Index";
+import FriendProfile from "../Pages/Friend/Account";
+import VideoChats from "../Pages/VideoChats/Index";
+import Settings from "../Pages/Settings/Index";
+
 export default function PrivateChatRoutes() {
     return (
         <BrowserRouter>
@@ -17,12 +23,22 @@ export default function PrivateChatRoutes() {
 
                 <Route path="/chats" element={<Inbox />} />
                 <Route path="/chats/chat/:chat_id" element={<Chat />} />
+                <Route path="/chats/video" element={<VideoChats/> }/>
 
                 <Route path="/groupchats" element={<InboxGroup />} />
                 <Route path="/groupchats/chat/:chat_id" element={<ChatGroup />} />
 
                 <Route path="/login" element={<Login />} />
                 <Route path="/Register" element={<Register />} />
+
+                <Route path="/friends" element={<FriendList />} />
+                <Route path="/friends/:user_id" element={<FriendProfile />} />
+
+                <Route path="/account/:user_id" element={<FriendProfile />} />
+
+                <Route path="/profile" element={<FriendList />} />
+
+                <Route path="/settings" element={<Settings/>}/>
             </Routes>
         </BrowserRouter>
     );

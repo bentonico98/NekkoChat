@@ -13,15 +13,30 @@ import useSignalServer from "../../Hooks/useSignalServer";
 import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useGetUser from "../../Hooks/useGetUser";
 
-import { getUserData } from "../../Store/Slices/userSlice";
+import { closeModal, getUserData } from "../../Store/Slices/userSlice";
 import NekkoNavbar from "../Shared/NekkoNavbar";
 
+import Modal from "react-modal";
+import customStyles from "../../Constants/Styles/ModalStyles";
+import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
+import { useSearchParams } from "react-router-dom";
 export default function Inbox() {
 
-    const [isTyping, setIsTyping] = useState({typing:false, user_id: "0"});
+    const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0" });
+
+    const [searchParams] = useSearchParams();
+    const [typeParams] = useState(searchParams.get("type") || "all");
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
+    const modalOpened = useAppSelector(state => state.user.modalOpened);
+    function afterOpenModal() {
+        // references are now sync'd and can be accessed.
+        // subtitle.style.color = '#f00';
+    }
+    function close() {
+        dispatch(closeModal());
+    }
 
     const addToChat = (user: string, msj: string, { typing, user_id}:any) => {
         if (!msj && !user) {
@@ -34,23 +49,21 @@ export default function Inbox() {
         setMessages((c: any) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
-    
-    const { conversations, loggedUser, user_id} = useGetUser(user);
+
+    const { conversations, loggedUser, user_id } = useGetUser(user, typeParams);
     const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+    const { messages, setMessages, currentConvo, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
 
     useEffect(() => {
         dispatch(getUserData());
     }, []);
-    
     return (
-
         <>
-            <NekkoNavbar user={user_id} />
             <MainContainer >
                 <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
                 <ChatMessages
                     messages={messages}
+                    participants={currentConvo.length > 0 && currentConvo[0].participants}
                     user={loggedUser}
                     connected={connected}
                     sender={user_id}
@@ -59,6 +72,15 @@ export default function Inbox() {
                     isTyping={isTyping}
                 />
             </MainContainer>
+            <Modal
+                isOpen={modalOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Example Modal"
+            >
+                <PrivateChatManager/>
+            </Modal>
         </>
         
     );

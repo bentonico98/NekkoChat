@@ -76,7 +76,20 @@ export default class UserAuthServices {
         });
 
         return result;
+    }
 
+    public static async SearchUserByName(name: string) {
+        const url = ServerLinks.getUserByName(name);
+
+        const result = await axios.get(url).then((res) => {
+            console.log(res);
+            return { success: true, user: res.data, status: res.status };
+        }).catch((err) => {
+            console.log(err);
+            return { success: false, user: null, msj: err, status: 500 };
+        });
+
+        return result;
     }
 
     public static isAuthenticated() {

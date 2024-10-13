@@ -66,7 +66,7 @@ namespace NekkoChat.Server.Utils
             {
                 IQueryable<Chats> filteredChat = from chat in _context.chats select chat;
                 filteredChat = filteredChat.Where(chat => chat.sender_id == sender_id && chat.receiver_id == receiver_id);
-                if (filteredChat == null)
+                if (filteredChat == null || filteredChat.Count() <= 0)
                 {
                     IQueryable<Chats> filteredChatAlt = from chat in _context.chats select chat;
                     filteredChatAlt = filteredChatAlt.Where(chat => chat.sender_id == receiver_id && chat.receiver_id == sender_id);
@@ -101,6 +101,7 @@ namespace NekkoChat.Server.Utils
 
             return chat_id;
         }
+
         /// <summary>
         /// Funccion que se encarga de mandar el "read receipt"
         /// </summary>
@@ -219,11 +220,7 @@ namespace NekkoChat.Server.Utils
                 return false;
             }
 
-            if (_context.chats.Any(c => c.receiver_id == receiver_id) && _context.chats.Any(c => c.sender_id == sender_id))
-            {
-                return true;
-            }
-            else if (_context.chats.Any(c => c.receiver_id == sender_id) && _context.chats.Any(c => c.sender_id == receiver_id))
+            if (_context.chats.Any(c => c.receiver_id == receiver_id && c.sender_id == sender_id) || _context.chats.Any(c => c.receiver_id == sender_id && c.sender_id == receiver_id))
             {
                 return true;
             }

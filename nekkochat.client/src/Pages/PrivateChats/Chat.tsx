@@ -17,6 +17,7 @@ import useSignalServer from "../../Hooks/useSignalServer";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 export default function Chat() {
     const { chat_id } = useParams<string>();
+ 
 
     const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0" });
 
@@ -35,9 +36,9 @@ export default function Chat() {
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
-    const { loggedUser, user_id } = useGetUser(user);
+    const { loggedUser, user_id } = useGetUser(user, "all");
     const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+    const { messages, currentConvo, setMessages, receiverID, fetchMessage } = useGetChatFromUser(user_id);
 
     useEffect(() => {
         dispatch(getUserData());
@@ -54,6 +55,7 @@ export default function Chat() {
             <ChatMessages
                 messages={messages}
                 user={loggedUser}
+                participants={currentConvo.length > 0 && currentConvo[0].participants}
                 connected={connected}
                 sender={user_id}
                 receiver={receiverID}

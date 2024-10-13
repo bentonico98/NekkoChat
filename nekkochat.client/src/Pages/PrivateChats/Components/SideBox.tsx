@@ -13,11 +13,7 @@ export default function SideBox({ messages, user, setCurrentConversation }: any)
             <Search placeholder="Search..." />
             <ConversationList>
                 {messages.map((el: incomingData, idx: number) => {
-                    return (
-                        <div key={idx}>
-                            <SideBoxCard key={idx} user={user} chat={el} setCurrentConversation={setCurrentConversation}  />
-                        </div>
-                    );
+                    return (<SideBoxCard key={idx} user={user} chat={el} setCurrentConversation={setCurrentConversation}  />);
                 })}
             </ConversationList>
         </Sidebar>

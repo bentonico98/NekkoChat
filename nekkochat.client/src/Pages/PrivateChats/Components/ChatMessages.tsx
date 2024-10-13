@@ -9,13 +9,13 @@ import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerService
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {  faMaximize } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import useGetParticipants from "../../../Hooks/useGetParticipants";
 
-export default function ChatMessages({ messages, user, connected, chat, sender, receiver, isTyping }: any) {
+export default function ChatMessages({ messages, connected, chat, sender, receiver, participants, isTyping }: any) {
 
     const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
-
+    const { participantName } = useGetParticipants(participants, sender);
     const navigate = useNavigate();
-
     return (
         <>
             {messages.length > 0 ?
@@ -25,9 +25,9 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                     {/*Chat Header*/}
 
                     <ConversationHeader>
-                        <ConversationHeader.Back onClick={() => { navigate(-1); } } />
-                        <Avatar src={avatar} name={receiverName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={receiverName.toLocaleUpperCase()} info={lastOnline} />
+                        <ConversationHeader.Back onClick={() => { navigate(-1); }} />
+                        <Avatar src={avatar} name={participantName.toLocaleUpperCase()} />
+                        <ConversationHeader.Content userName={participantName.toLocaleUpperCase()} info={lastOnline} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
@@ -73,7 +73,6 @@ export default function ChatMessages({ messages, user, connected, chat, sender, 
                         onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver, e) }} />
                 </ChatContainer>
                 : <ChatContainer className="flexibleContainer">
-                    <div>NekkoChat</div>
                 </ChatContainer>}
         </>
     );

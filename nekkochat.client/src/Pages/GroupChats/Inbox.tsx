@@ -13,14 +13,30 @@ import useSignalServer from "../../Hooks/useSignalServer";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useGetUser from "../../Hooks/Group/useGetUser";
 
-import { getUserData } from "../../Store/Slices/userSlice";
+import { getUserData, openModal, closeModal } from "../../Store/Slices/userSlice";
 import NekkoNavbar from "../Shared/NekkoNavbar";
-export default function Inbox() {
 
-    const [isTyping, setIsTyping] = useState({typing:false, user_id: "0", username: "Member"});
+import Modal from "react-modal";
+import customStyles from "../../Constants/Styles/ModalStyles";
+import GroupManager from "../Shared/Forms/GroupManager";
+
+
+Modal.setAppElement("#root");
+export default function Inbox() {
+    const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0", username: "Member" });
 
     const user = useAppSelector((state) => state.user);
+    const modalOpened = useAppSelector(state => state.user.modalOpened);
     const dispatch = useAppDispatch();
+  
+    function afterOpenModal() {
+        // references are now sync'd and can be accessed.
+       // subtitle.style.color = '#f00';
+    }
+
+    function close() {
+        dispatch(closeModal());
+    }
 
     const addToChat = (user: string, username:string, msj: string, { typing, user_id, userN}:any) => {
         if (!msj && !user) {
@@ -41,13 +57,10 @@ export default function Inbox() {
     useEffect(() => {
         dispatch(getUserData());
     }, []);
-    
     return (
-
         <>
-            <NekkoNavbar user={user_id}  />
             <MainContainer >
-                <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
+                <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} open={openModal } />
                 <ChatMessages
                     messages={messages}
                     connected={connected}
@@ -55,7 +68,17 @@ export default function Inbox() {
                     receiver={chatID}
                     isTyping={isTyping}
                 />
+                
             </MainContainer>
+            <Modal
+                isOpen={modalOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Example Modal"
+            >
+                <GroupManager/>
+            </Modal>
         </>
         
     );

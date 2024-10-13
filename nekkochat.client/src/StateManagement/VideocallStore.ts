@@ -1,12 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit"
 
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import storage from "redux-persist/lib/storage";
 import { videocallUserSliceReducer } from "./VideocallUserRedux";
 
-
 const persistConfig = {
-    key: "root",
+    key: "videocallUser",
     storage,
 };
 
@@ -16,6 +15,9 @@ export const videocallStore = configureStore({
     reducer: {
         videocallUser: persistedReducer,
     },
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+        serializableCheck: false
+    }),
 });
 
 export const persistor = persistStore(videocallStore);

@@ -16,9 +16,6 @@ const videocallUserSlice = createSlice({
         setId: (state, action) => {
             state.id = action.payload
         },
-        setSenderId: (state, action) => {
-            state.sender_id = action.payload
-        },
         setAnswered: (state, action) => {
             state.isVideocallAnswered = action.payload
         }

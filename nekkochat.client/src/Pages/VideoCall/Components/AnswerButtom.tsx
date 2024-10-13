@@ -60,8 +60,9 @@ export default function SimpleSnackbar() {
     const handleAnswer = async () => {
         setOpen(false);
         userDispatch(videocallUserSliceActions.setAnswered(true));
-        connection.invoke('ConnectedVideoNotification').catch((err) => console.error(err));
+        console.log("invoco")
         navigate("/chats/videocall/" + userId, { replace: true });
+        await connection.invoke('OfferVideoNotification').catch((err) => console.error(err));
         navigate(0)
        
     };

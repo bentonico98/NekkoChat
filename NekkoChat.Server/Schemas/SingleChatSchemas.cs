@@ -10,7 +10,7 @@
         public string? username { get; set; }
 
         public string created_at { get; set; } = DateTime.Now.ToString("yyyy-mm-dd HH:mm:ss");
-
+        public bool read { get; set; } = false;
 
     }
 }

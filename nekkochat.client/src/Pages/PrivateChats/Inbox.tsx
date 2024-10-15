@@ -1,87 +1,59 @@
 import "./Inbox.css";
+import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
 import { useState, useEffect } from "react";
 
 import SideBox from "./Components/SideBox";
 import ChatMessages from "./Components/ChatMessages";
-import ChatBox from "./Components/ChatBox";
-import MessageServicesClient from "../../Utils/MessageServicesClient";
-import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
+
 import ChatSchema from "../../Schemas/ChatSchema";
+
+import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
+import useSignalServer from "../../Hooks/useSignalServer";
+import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
+import useGetUser from "../../Hooks/useGetUser";
+
+import { getUserData } from "../../Store/Slices/userSlice";
 
 export default function Inbox() {
 
-    const user_id = 2;
-    const [conversations, setconversations] = useState<any>([{ _id: "", messages: [{ id: 0, content: "", user_id: 0, username: "Guest", created_at: new Date("YYYY-MM-DD HH:mm:ss").toJSON() }], participants: [{ id: "0", name: "guest" }, { id: "0", name: "guest" }] }]);
-    const [currentConvo, setcurrentConvo] = useState<ChatSchema[]>([]);
-    const [chatID, setChatID] = useState<string>("0");
-    const [receiverID, setReceiverID] = useState<string>("0");
+    const [isTyping, setIsTyping] = useState({typing:false, user_id: "0"});
 
+    const user = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
 
-
-    const [connected, setConnected] = useState<boolean>(false);
-    const [conn, setConn] = useState<any>();
-
-    const sendMessage = async (msj: string, chat_id: number, sender_id: number, receiver_id: number) => {
-
-        if (!msj) return;
-        const result = await MessageServicesClient.sendMessageToUser(chat_id, sender_id, receiver_id, msj);
-        try {
-            conn.invoke("SendMessage", "User", msj);
-        } catch (er) {
-            console.log(er);
-        }
-        return result;
-    };
-
-    const addToChat = (user: string, msj: string) => {
-        if (!msj) return;
-        setconversations((c: any) =>
-            //[...c, new ChatSchema(user, msj, new Date("YYYY-MM-DD HH:mm:ss").toJSON())]);
-            [...c, { id: Math.floor(Math.random()), content: msj, username: user, user_id: user_id, created_at: new Date("YYYY-MM-DD HH:mm:ss").toJSON() }]);
-
-    };
-
-    //Mantiene la conexion abierta
-    useEffect(() => {
-        if (!connected) {
-            PrivateChatsServerServices.Start(addToChat).then((res) => {
-                setConnected(true);
-                setConn(res);
-            });
-        } else {
+    const addToChat = (user: string, msj: string, { typing, user_id}:any) => {
+        if (!msj && !user) {
+            setIsTyping({ typing: typing, user_id: user_id });
+            setTimeout(() => {
+                setIsTyping({ typing: false, user_id: user_id });
+            }, 3000);
             return;
         }
-        MessageServicesClient.getAllUsersChats(user_id.toString()).then((res) => {
-            setconversations(res);
-        });
-    });
-
+        setMessages((c: any) =>
+            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
+    };
+    
+    const { conversations, loggedUser, user_id} = useGetUser(user);
+    const { connected } = useSignalServer(loggedUser, addToChat);
+    const { messages, setMessages, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
 
     useEffect(() => {
-       
-
+        dispatch(getUserData());
     }, []);
-
-
-    const setCurrentConversation = (chat_id: number) => {
-        MessageServicesClient.getChatFromUser(chat_id.toString()).then((res) => {
-            setcurrentConvo(res);
-            var filter = res[0].messages.filter((i: any) => i.user_id != user_id);
-            setReceiverID(filter[0].user_id);
-            setChatID(res[0]._id);
-        });
-    }
+    
     return (
-        <main>
-            {conversations.length > 0 && <SideBox messages={conversations} setCurrentConversation={setCurrentConversation} />}
-            
-            <div>
-                <h1>NekkoChat -- Inbox</h1>
-
-                <ChatMessages messages={currentConvo} />
-                <ChatBox sendMessage={sendMessage} sender={user_id} receiver={receiverID} chat={chatID} />
-            </div>
-        </main>
+        <MainContainer >
+            <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
+            <ChatMessages
+                messages={messages}
+                user={loggedUser}
+                connected={connected}
+                sender={user_id}
+                receiver={receiverID}
+                chat={chatID}
+                isTyping={isTyping}
+            />
+        </MainContainer>
     );
 }

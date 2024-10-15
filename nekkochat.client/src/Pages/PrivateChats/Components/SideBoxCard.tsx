@@ -1,13 +1,31 @@
 import "../Inbox.css";
-export default function SideBoxCard({ chat, setCurrentConversation }: any) {
+import { useState } from "react";
+import { Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
+import avatar from "../../../assets/avatar.png";
+import useGetReceiver from "../../../Hooks/useGetReceiver";
+import MessageServicesClient from "../../../Utils/MessageServicesClient";
+
+export default function SideBoxCard({ chat, user, setCurrentConversation }: any) {
+
+    const [participants] = useState<any>([...chat.participants]);
+    const [messages] = useState<any>([...chat.messages]);
+    const { receiverName, unreadMsj, receiverStatus } = useGetReceiver(user, messages);
+
     return (
-        <button key={chat._id} onClick={() => { setCurrentConversation(chat._id) } }>
-            <div>
-                {chat.participants && <div className="sideboxHeadItems">
-                    <span className="align-left">{chat.participants[chat.participants.length - 1].name} </span>
-                    <p className="align-left">{chat.messages[chat.messages.length - 1].content}</p>
-                </div> }
-            </div>
-        </button>
+        <Conversation
+            key={chat._id}
+            name={receiverName.toUpperCase()}
+            lastSenderName={participants[participants.length - 1].name}
+            info={messages[messages.length - 1].content}
+            unreadCnt={unreadMsj}
+            onClick={async () => {
+                setCurrentConversation(chat._id);
+                await MessageServicesClient.sendReadMessage(chat._id, user);
+            }}>
+            <Avatar
+                src={avatar}
+                name={participants[participants.length - 1].name}
+                status={receiverStatus} />
+        </Conversation>
     );
 }

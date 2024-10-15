@@ -28,7 +28,8 @@ export default function SimpleSnackbar() {
 
     const userId = useSelector((state: RootState) => state.videocallUser.id)
 
-    connection.on('videonotification',() => {
+    connection.on('videonotification', () => {
+        console.log("esta es la videonotificacion");
         try {
             if (userId == "1") {
                 setOpen(true);
@@ -39,8 +40,6 @@ export default function SimpleSnackbar() {
     });
 
     const userDispatch = useDispatch();
-
-
 
     const handleClick = () => {
         setOpen(true);
@@ -61,9 +60,9 @@ export default function SimpleSnackbar() {
         setOpen(false);
         userDispatch(videocallUserSliceActions.setAnswered(true));
         console.log("invoco")
-        navigate("/chats/videocall/" + userId, { replace: true });
+       // navigate("/chats/videocall/" + userId, { replace: true });
         await connection.invoke('OfferVideoNotification').catch((err) => console.error(err));
-        navigate(0)
+       // navigate(0)
        
     };
 

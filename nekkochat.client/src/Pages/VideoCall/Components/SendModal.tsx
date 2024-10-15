@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import SendIcon from '@mui/icons-material/Send';
 import { HubConnectionBuilder } from '@microsoft/signalr';
+import Grid from '@mui/material/Grid2';
 
 
 const style = {
@@ -43,6 +44,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users }) => {
     connection.start().catch((err) => console.error(err));
 
     const handleInvokeVideoNotification = (id: string) => {
+        console.log("se mando este invoke")
         connection.invoke('VideoNotification', id).catch((err) => console.error(err));
     }
 
@@ -50,19 +52,25 @@ export const SendModal: React.FC<ISendModal> = ({ Users }) => {
         <div>
             <Button onClick={handleOpen}><SendIcon/></Button>
             <Modal
+                sx={{ width: "auto" }}
                 open={open}
                 onClose={handleClose}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
                 <Box sx={style}>
+                    <Typography sx={{ padding: "1rem" }} variant="h6">Seleccione a la persona que desea invitar</Typography>
                     {Users.map((user) => {
                         return (
-                            <Box key={user.id} sx={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "0.2rem" }}>
-                                <img style={{ borderRadius: "50%" }} src={user.ProfileImage} />
-                                <Typography variant="subtitle2">{user.username}</Typography>
-                                <Button onClick={() => handleInvokeVideoNotification(user.id)}><SendIcon /></Button>
-                            </Box>
+                            <Grid key={user.id}  container>
+                                <Grid size={8}  sx={{ padding: "0 4rem", display: "flex", alignItems: "start", justifyContent: "start" }}>
+                                   <img style={{ borderRadius: "50%", width: "3rem", height: "3rem" }} src={user.ProfileImage != "" ? user.ProfileImage : "../../../../public/defaultAvatar.jpg"} />
+                                    <Typography sx={{ padding: "1rem" }} variant="subtitle2">{user.username}</Typography>
+                              </Grid>
+                                <Grid size={4}>
+                                    <Button onClick={() => handleInvokeVideoNotification(user.id)}><SendIcon /></Button>
+                              </Grid>
+                            </Grid>
                         )
                     })}
                 </Box>

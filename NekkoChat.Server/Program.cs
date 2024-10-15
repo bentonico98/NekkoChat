@@ -19,12 +19,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //Configuracion para SignalR
-builder.Services.AddResponseCompression(options=>
+builder.Services.AddResponseCompression(options =>
 {
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
 });
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDb") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
 
 //Configuracion del CORS
@@ -91,5 +91,4 @@ app.MapHub<PrivateChatHub>("/privatechathub");
 app.MapHub<VideoCallHub>("/videocallhub");
 
 app.Run();
-
 

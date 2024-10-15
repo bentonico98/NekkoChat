@@ -90,6 +90,7 @@ export const VideoCall: React.FC = () => {
 
     //esto estaria mal, buscar otra idea para arreglarlo
     connection.on('offervideonotification', async () => {
+        console.log("lo mando")
         setTimeout(() => {
             connection.invoke('ConnectedVideoNotification').catch((err) => console.error(err));
         }, 5000);
@@ -97,6 +98,7 @@ export const VideoCall: React.FC = () => {
 
     //usaria el autenticacion pero es mejor asi para fines de prueba
     connection.on('connectedvideonotification', () => {
+        console.log("llegue aqui despues de mandar")
         if (videoId == "1") {
             console.log("yo conteste ")
             setTimeout(() => {

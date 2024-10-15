@@ -293,7 +293,7 @@ export const VideoCall: React.FC = () => {
     }
     
     return (
-            <Box sx={{ margin: 0, padding:0, height: "100vh", width: "100vw", backgroundColor: "#555", overflow: "hidden" }}>
+            <Box sx={{ margin: 0, padding:0, height: "auto", width: "100vw", backgroundColor: "#555",  }}>
                 <Box sx={{
                     height: "80vh",
                     position:"relative",
@@ -302,7 +302,7 @@ export const VideoCall: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: "1rem",
-                    margin:"2rem",
+                    margin: "3rem 5rem 0.5rem 5rem",
 
 
                 }}>
@@ -359,7 +359,7 @@ export const VideoCall: React.FC = () => {
                     width: "15rem",
                     position:"absolute",
                     top: "5vh",
-                    left: "70vw",
+                    left: "75vw",
                     zIndex:"10",
                     display: "block",
                     alignItems: "center",

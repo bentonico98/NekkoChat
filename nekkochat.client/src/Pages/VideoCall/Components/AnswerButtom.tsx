@@ -41,10 +41,6 @@ export default function SimpleSnackbar() {
 
     const userDispatch = useDispatch();
 
-    const handleClick = () => {
-        setOpen(true);
-    };
-
     const handleClose = (
         _event: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
@@ -60,9 +56,9 @@ export default function SimpleSnackbar() {
         setOpen(false);
         userDispatch(videocallUserSliceActions.setAnswered(true));
         console.log("invoco")
-       // navigate("/chats/videocall/" + userId, { replace: true });
+        navigate("/chats/videocall/" + userId, { replace: true });
         await connection.invoke('OfferVideoNotification').catch((err) => console.error(err));
-       // navigate(0)
+        navigate(0)
        
     };
 
@@ -87,7 +83,6 @@ export default function SimpleSnackbar() {
 
     return (
         <div>
-            <Button onClick={handleClick}>Open Snackbar</Button>
             <Snackbar
                 open={open}
                 autoHideDuration={6000}

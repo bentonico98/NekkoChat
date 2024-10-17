@@ -13,6 +13,7 @@ export default function useGetReceiver(user: string, messages: any) {
     const [unreadMsj, setUnreadMsj] = useState<number | undefined>();
 
     const fetchUser = async (filter: ChatSchema[]) => {
+        if (filter.length <= 0) return;
         const id: string = filter[0].user_id || "0";
         const res = await MessageServicesClient.getUserById(id);
         setReceiverStatus((p: any) => p = GetUserStatusService(res.status));

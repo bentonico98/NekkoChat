@@ -4,8 +4,11 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
 import SendIcon from '@mui/icons-material/Send';
-import { HubConnectionBuilder } from '@microsoft/signalr';
 import Grid from '@mui/material/Grid2';
+import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
+import VideocallServerServices from '../../../Utils/VideoCallService';
+//import useGetUser from '../../../Hooks/useGetUser';
+//import { useAppSelector } from '../../../Hooks/storeHooks';
 
 
 const style = {
@@ -36,16 +39,26 @@ export const SendModal: React.FC<ISendModal> = ({ Users }) => {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
-    const connection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
-        .withAutomaticReconnect()
-        .build();
+    const user = JSON.parse(localStorage.getItem("user") || '{}')
 
-    connection.start().catch((err) => console.error(err));
+    const sender_id = user.id;
 
-    const handleInvokeVideoNotification = (id: string) => {
+    const { connected, conn } = useVideocallSignalServer();
+
+    let connection: any 
+
+    React.useEffect(() => {
+        if (connected) { 
+            connection = conn?.connection;
+        }
+        else {
+            return
+        }
+    }, [connected, connection]);
+
+    const handleInvokeVideoNotification = (receiver_id:string) => {
         console.log("se mando este invoke")
-        connection.invoke('VideoNotification', id).catch((err) => console.error(err));
+        VideocallServerServices.SendVideoNotification( sender_id, receiver_id)
     }
 
     return (
@@ -68,7 +81,11 @@ export const SendModal: React.FC<ISendModal> = ({ Users }) => {
                                     <Typography sx={{ padding: "1rem" }} variant="subtitle2">{user.username}</Typography>
                               </Grid>
                                 <Grid size={4}>
-                                    <Button onClick={() => handleInvokeVideoNotification(user.id)}><SendIcon /></Button>
+                                    <Button onClick={() => {
+                                        handleInvokeVideoNotification(user.id);
+                                        console.log("sendModal " + sender_id + " " + user.id);
+                                        console.log("connection ", conn?.connectionId)
+                                    }}><SendIcon /></Button>
                               </Grid>
                             </Grid>
                         )

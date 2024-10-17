@@ -12,6 +12,6 @@
     <Folder Include="src\Constants\Types\" />
     <Folder Include="src\Hooks\Private\" />
     <Folder Include="src\Pages\Login\Components\" />
-    <Folder Include="src\Store\Slices\" />
+    <Folder Include="src\StateManagement\" />
   </ItemGroup>
 </Project>

@@ -192,7 +192,7 @@ export default class MessageServicesClient {
         if (!group_id) return false;
         if (!groupname) return false;
 
-        let url = ServerLinks.getAddParticipantToGroupUrl(group_id, sender_id, groupname);
+        const url = ServerLinks.getAddParticipantToGroupUrl(group_id, sender_id, groupname);
 
         const result = await axios.put(url, {
             headers: {

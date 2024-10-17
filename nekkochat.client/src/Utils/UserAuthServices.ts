@@ -36,6 +36,7 @@ export default class UserAuthServices {
         if (!user_id) return "500";
         const url = ServerLinks.getSetConnectionIdUrl(user_id, connectionid);
         console.log(connectionid);
+        console.log(user_id);
 
         const result = await axios.post(url).then((res) => {
             return res.status;

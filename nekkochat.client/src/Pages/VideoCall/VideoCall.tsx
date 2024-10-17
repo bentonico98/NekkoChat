@@ -6,15 +6,16 @@ import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
-import { HubConnectionBuilder } from '@microsoft/signalr';
-import { useParams } from 'react-router-dom';
-import { useSelector, useDispatch } from "react-redux"
-
+import { useSelector } from "react-redux"
+import VideocallServerServices from '../../Utils/VideoCallService'
 import { VideoCallButton } from './Components/VideoCallButtom';
 import { IUserData, SendModal } from './Components/SendModal';
-import { videocallUserSliceActions } from '../../StateManagement/VideocallUserRedux';
-import { RootState } from '../../StateManagement/VideocallStore';
+import { RootState } from '../../Store/userStore';
+import useVideocallSignalServer from '../../Hooks/useVideocallSignalR';
+//import { useAppSelector } from '../../Hooks/storeHooks';
+//import useGetUser from '../../Hooks/useGetUser';
 
+/// CADA CONNECTION ID CAMBIA, ver como mantenerlo
 export const VideoCall: React.FC = () => {
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -28,31 +29,25 @@ export const VideoCall: React.FC = () => {
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
 
+    const user = JSON.parse(localStorage.getItem("user") || '{}')
 
-    const { videoId } = useParams();
+    const user_id = user.id;
 
-    const userDispatch = useDispatch();
+    const { connected, conn } = useVideocallSignalServer();
 
-    userDispatch(videocallUserSliceActions.setId(videoId))
-
-    const connection = new HubConnectionBuilder()
-        .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
-        .withAutomaticReconnect()
-        .build();
-
-    connection.start().catch((err) => console.error(err));
+    let connection: any
 
     //Cambiar por fetch
     const userMock: IUserData[] = [
         {
             ProfileImage: "",
-            username: "jhon",
-            id: "1"
+            username: "Manuel",
+            id: "19a6819f-d3fa-45cd-823c-ff2938ae6900"
         },
         {
             ProfileImage: "",
-            username: "Doe",
-            id: "2"
+            username: "Lenny",
+            id: "8c96b919-5494-4b1d-8d7f-78880e30fc0a"
         },
         {
             ProfileImage: "",
@@ -72,58 +67,66 @@ export const VideoCall: React.FC = () => {
     ]
 
     let answer: RTCSessionDescriptionInit;
+    const isAnsweredByUser = useSelector((state: RootState) => state.videocall.isVideocallAnswered)
+    let offerCandidate: RTCIceCandidateInit | null = null;
+    let AnswerCandidate: RTCIceCandidateInit | null = null;
     //Busca guardar el answer de la conexion para usarlo cuando sea necesario
     //Este dato busca guardar los datos del offer del dispositivo 1 para ser usado en el dispositivo 2, viene de HandleCall
-    connection.on('offer', async (sdp) => {
-        try {
-            if (peerConnection.current) {
-                answer = JSON.parse(sdp); 
-            }
-        } catch (error) {
-            console.error('Error al actualizar la descripción de sesión SDP:', error);
+;
+
+    useEffect(() => {
+        if (connected) {
+            connection = conn?.connection;
+            connection.on('offer', async (sdp: string) => {
+                try {
+                    if (peerConnection.current) {
+                        answer = JSON.parse(sdp);
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar la descripción de sesión SDP:', error);
+                }
+            });
+
+            connection.on('offervideonotification', async (sender_id: string, receiver_id: string) => {
+                console.log("lo mando");
+                setTimeout(() => {
+                    VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
+                }, 5000);
+            });
+
+            connection.on('connectedvideonotification', (sender_id: string, receiver_id: string) => {
+                console.log("llegue aqui despues de mandar");
+                if (user_id === receiver_id) {
+                    console.log("yo conteste ");
+                    setTimeout(() => {
+                        handleAnswer(sender_id, receiver_id);
+                    }, 1000);
+                } else if (user_id === sender_id) {
+                    console.log("hice la llamada");
+                    handleCall(sender_id, receiver_id);
+                }
+            });
+
+            connection.on('offericecandidate', (candidate: string) => {
+                console.log("offericecandidate");
+                offerCandidate = JSON.parse(candidate);
+            });
+
+            connection.on('answericecandidate', (candidate: string) => {
+                console.log("answericecandidate");
+                AnswerCandidate = JSON.parse(candidate);
+            });
+
+            // Cleanup function to remove event listeners
+            return () => {
+                connection.off('offer');
+                connection.off('offervideonotification');
+                connection.off('connectedvideonotification');
+                connection.off('offericecandidate');
+                connection.off('answericecandidate');
+            };
         }
-    });
-
-    //connection.invoke('ConnectedVideoNotification', event.candidate).catch((err) => console.error(err));
-
-    const isAnsweredByUser = useSelector((state: RootState) => state.videocallUser.isVideocallAnswered)
-
-    //esto estaria mal, buscar otra idea para arreglarlo
-    connection.on('offervideonotification', async () => {
-        console.log("lo mando")
-        setTimeout(() => {
-            connection.invoke('ConnectedVideoNotification').catch((err) => console.error(err));
-        }, 5000);
-    });
-
-    //usaria el autenticacion pero es mejor asi para fines de prueba
-    connection.on('connectedvideonotification', () => {
-        console.log("llegue aqui despues de mandar")
-        if (videoId == "1") {
-            console.log("yo conteste ")
-            setTimeout(() => {
-                handleAnswer();
-            }, 1000);
-        }
-        else if (videoId == "2") {
-            console.log("hice la llamada")
-            handleCall();
-        }
-    });
-
-    let offerCandidate: RTCIceCandidateInit | null = null;
-    //Guarda el offer candidate para utilizarlo despues del intercambio de offer y answer
-    connection.on('offericecandidate', (candidate) => {
-        console.log("offericecandidate")
-        offerCandidate = JSON.parse(candidate)
-    });
-
-    let AnswerCandidate: RTCIceCandidateInit | null = null;
-    //Guarda el answer candidate para utilizarlo despues del intercambio de offer y answer
-    connection.on('answericecandidate', (candidate) => {
-        console.log("answericecanidate")
-         AnswerCandidate = JSON.parse(candidate);
-    });
+    }, [connected, connection]);
 
     useEffect(() => {
         //aqui los datos principales de video y sonido, aqui es donde se piden
@@ -184,15 +187,19 @@ export const VideoCall: React.FC = () => {
     }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate]);
 
     const handleVideoState = () => {
+        console.log(user)
+        console.log(user_id)
+        console.log("connection ", connection.connectionId)
         setIsVideoOn(() => !isVideoOn);
     };
 
     const handleMicState = () => {
+        console.log(user_id)
         setIsMicOn(() => !isMicOn);
     };
 
 
-    const handleCall = async () => {
+    const handleCall = async (sender_id: string, receiver_id: string) => {
         if (peerConnection.current) {
             try {
                 //Si esta en el estado de have-remote-offer no se vuelve a crear la oferta
@@ -215,16 +222,16 @@ export const VideoCall: React.FC = () => {
                 peerConnection.current.onicecandidate = event => {
                     if (event.candidate) {
                         console.log("SendOfferIceCandidate")
-                        connection.invoke('SendOfferIceCandidate', JSON.stringify(event.candidate)).catch((err) => console.error(err));
+                        VideocallServerServices.SendOfferIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
                     }
                 };
 
                 //se invoca el offer con los datos de la oferta, esta busca enviarle la offerta al segundo dispositivo
-                await connection.invoke('Offer', JSON.stringify(offer)).catch((err) => console.error(err));
+                await VideocallServerServices.SendOffer(sender_id, receiver_id, JSON.stringify(offer));
 
                 //Este se mantiene escuchando hasta que handleAnswer envie la respuesta de la conexion
                 const offerAnswer:string = await new Promise((resolve) => {
-                    connection.on('answer', (sdp) => {
+                    connection?.on('answer', (sdp: string) => {
                         resolve(sdp);
                     });
                 });
@@ -245,7 +252,7 @@ export const VideoCall: React.FC = () => {
         }
     };
 
-    const handleAnswer = async () => {
+    const handleAnswer = async (sender_id: string, receiver_id: string) => {
         if (peerConnection.current && answer) {
             try {
                 console.log("answer", isAnsweredByUser);
@@ -262,12 +269,12 @@ export const VideoCall: React.FC = () => {
                 peerConnection.current.onicecandidate = event => {
                     if (event.candidate) {
                         console.log("SendAnswerIceCandidate")
-                        connection.invoke('SendAnswerIceCandidate', JSON.stringify(event.candidate)).catch((err) => console.error(err));
+                        VideocallServerServices.SendAnswerIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
                     }
                 };
 
                 //Se envia la respuesta creada a create answer
-                await connection.invoke('Answer', JSON.stringify(answerAnswer)).catch((err) => console.error(err));
+                await VideocallServerServices.SendAnswer(sender_id, receiver_id, JSON.stringify(answerAnswer));
 
                 isConnectionStablish = true;
                 handleStablishIce();
@@ -347,8 +354,8 @@ export const VideoCall: React.FC = () => {
                     
             }}>
                     <SendModal Users={userMock}/>
-                    <VideoCallButton onClick={handleCall}><SendIcon></SendIcon></VideoCallButton>
-                    <VideoCallButton onClick={handleAnswer}>recibir</VideoCallButton>
+                <VideoCallButton onClick={() => handleCall("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}><SendIcon></SendIcon></VideoCallButton>
+                <VideoCallButton onClick={() => handleAnswer("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}>recibir</VideoCallButton>
                     <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
                     <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
                     <VideoCallButton>salir</VideoCallButton>

@@ -86,6 +86,12 @@ import MessageSchema from "../Schemas/MessageSchema"
          return `${this.ServerUrl}${url}`;
      }
 
+     ////////////// VIDEOCALL ROUTES
+     public static getVideocallUsersUrl(user_id: string) {
+         const url = `Videocall/users?user_id=${user_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+
 }
 
 export default ServerLinks;

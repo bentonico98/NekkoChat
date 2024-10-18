@@ -12,6 +12,8 @@ import { VideoCallButton } from './Components/VideoCallButtom';
 import { IUserData, SendModal } from './Components/SendModal';
 import { RootState } from '../../Store/userStore';
 import useVideocallSignalServer from '../../Hooks/useVideocallSignalR';
+import ServerLinks from '../../Constants/ServerLinks';
+import axios from 'axios';
 //import { useAppSelector } from '../../Hooks/storeHooks';
 //import useGetUser from '../../Hooks/useGetUser';
 
@@ -28,6 +30,22 @@ export const VideoCall: React.FC = () => {
 
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<boolean>(false);
+    const [data, setData] = useState<IUserData[]>([{ id: "", profilePhotoUrl: null, userName: "" }]);
+
+    /*[
+  {
+    "id": "19a6819f-d3fa-45cd-823c-ff2938ae6900",
+    "profilePhotoUrl": null,
+    "userName": "Manuel"
+  },
+  {
+    "id": "234f48b2-2b62-45ca-a763-8acd6bccabf6",
+    "profilePhotoUrl": null,
+    "userName": "Garcia"
+  }
+]*/
 
     const user = JSON.parse(localStorage.getItem("user") || '{}')
 
@@ -37,42 +55,24 @@ export const VideoCall: React.FC = () => {
 
     let connection: any
 
-    //Cambiar por fetch
-    const userMock: IUserData[] = [
-        {
-            ProfileImage: "",
-            username: "Manuel",
-            id: "19a6819f-d3fa-45cd-823c-ff2938ae6900"
-        },
-        {
-            ProfileImage: "",
-            username: "Lenny",
-            id: "8c96b919-5494-4b1d-8d7f-78880e30fc0a"
-        },
-        {
-            ProfileImage: "",
-            username: "Jane",
-            id: "3"
-        },
-        {
-            ProfileImage: "",
-            username: "Doena",
-            id: "4"
-        },
-        {
-            ProfileImage: "",
-            username: "Lenny",
-            id: "5"
-        },
-    ]
+    useEffect(() => {
+        const url = ServerLinks.getVideocallUsersUrl(user_id);
+
+        axios.get(url).then((res) => {
+            setLoading(false);
+            setData(res.data);
+        }).catch((err) => {
+            setError(true);
+            setLoading(false);
+            console.warn(err);
+        });
+
+    }, [])
 
     let answer: RTCSessionDescriptionInit;
     const isAnsweredByUser = useSelector((state: RootState) => state.videocall.isVideocallAnswered)
     let offerCandidate: RTCIceCandidateInit | null = null;
     let AnswerCandidate: RTCIceCandidateInit | null = null;
-    //Busca guardar el answer de la conexion para usarlo cuando sea necesario
-    //Este dato busca guardar los datos del offer del dispositivo 1 para ser usado en el dispositivo 2, viene de HandleCall
-;
 
     useEffect(() => {
         if (connected) {
@@ -187,9 +187,6 @@ export const VideoCall: React.FC = () => {
     }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate]);
 
     const handleVideoState = () => {
-        console.log(user)
-        console.log(user_id)
-        console.log("connection ", connection.connectionId)
         setIsVideoOn(() => !isVideoOn);
     };
 
@@ -315,20 +312,7 @@ export const VideoCall: React.FC = () => {
                 }}>
                     {isVideoOn ?
                     < video id="local" style={{ borderRadius: "1rem", height: "90vh", }} autoPlay ref={videoRef} >
-                        {!isVideoOn && <Box sx={{
-                            backgroundColor: "#555",
-                            height: "15rem",
-                            width: "15rem",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "1rem"
-                        }}>
-                            <VideocamOffIcon sx={{
-                                fontSize: "4rem",
-                                color: "white"
-                            }} />
-                        </Box>}
+                        
                     </video>
                         :
                         <Box sx={{
@@ -353,7 +337,7 @@ export const VideoCall: React.FC = () => {
                     justifyContent: "center",
                     
             }}>
-                    <SendModal Users={userMock}/>
+                <SendModal Users={data} loading={loading} error={error} />
                 <VideoCallButton onClick={() => handleCall("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}><SendIcon></SendIcon></VideoCallButton>
                 <VideoCallButton onClick={() => handleAnswer("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}>recibir</VideoCallButton>
                     <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
@@ -397,37 +381,3 @@ export const VideoCall: React.FC = () => {
             </Box>
     );
 }
-
-
-/* await new Promise((resolve: (Promise:void) => void) => {
-                   connection.on('icecandidate', (candidate) => {
-                       if (peerConnection.current) {
-                           peerConnection.current.addIceCandidate(candidate);
-                           resolve();
-                       }
-                   });
-               });*/
-
-
-/*
-navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => {
-        localStream.current = stream;
-        stream.getTracks().forEach(track => {
-            peerConnection.current?.addTrack(track, stream);
-        });
-    })
-    .catch(error => console.error('Error obteniendo los datos del video:', error));*/
-
-//no hace nada realmente pero quiero usarlo para cuando la conexion este establecida
-/*connection.on("connectionStarted", () => {
-    console.log('Conexión establecida');
-    if (peerConnection.current) {
-        peerConnection.current.onicecandidate = event => {
-            if (event.candidate) {
-                console.log('Enviando ice candidate:', event.candidate);
-                connection.invoke('SendIceCandidate', event.candidate).catch((err) => console.error(err));
-            }
-        };
-    }
-});*/

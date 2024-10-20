@@ -19,6 +19,8 @@ export default function SimpleSnackbar() {
 
     const navigate = useNavigate();
 
+    const [senderId, setSenderId] = useState<string | null>();
+
 
     peerConnection.current = new RTCPeerConnection()
 
@@ -26,7 +28,6 @@ export default function SimpleSnackbar() {
 
     const Receiver_id: string = user.id;
     const { connected, conn } = useVideocallSignalServer();
-    let Sender_id: string;
 
     let connection: any;
 
@@ -37,7 +38,7 @@ export default function SimpleSnackbar() {
                 console.log("esta es la videonotificacion");
                 try {
                     if (Receiver_id == receiver_id) {
-                        Sender_id = sender_id;
+                        setSenderId(sender_id);
                         setOpen(true);
                     }
                 } catch (error) {
@@ -45,25 +46,11 @@ export default function SimpleSnackbar() {
                 }
             });
 
-            // Cleanup function to remove event listeners
             return () => {
                 connection.off('videonotification');
             };
         }
     }, [connected, connection]);
-
-
-    connection?.on('videonotification', (sender_id: string, receiver_id: string) => {
-        console.log("esta es la videonotificacion");
-        try {
-            if (Receiver_id == receiver_id) {
-                Sender_id = sender_id;
-                setOpen(true);
-            }
-        } catch (error) {
-            console.error('Error en la notificacion:', error);
-        }
-    });
 
     const userDispatch = useDispatch();
 
@@ -81,11 +68,11 @@ export default function SimpleSnackbar() {
     const handleAnswer = async () => {
         setOpen(false);
         userDispatch(setAnswered(true));
-        console.log("invoco")
-        navigate("/chats/videocall/", { replace: true });
-        
-        await VideocallServerServices.SendOfferVideoNotification(Sender_id, Receiver_id);
-        navigate(0)
+        console.log("invoco SEND OFFER")
+        //navigate("/chats/videocall/", { replace: true });
+        console.log(senderId, Receiver_id);
+        await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id);
+       // navigate(0)
        
     };
 

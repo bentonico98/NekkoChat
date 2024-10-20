@@ -2,8 +2,13 @@ import * as signalR from "@microsoft/signalr";
 
 export default class VideocallServerServices {
 
-    public static conn: signalR.HubConnection = new signalR.HubConnectionBuilder()
+   /* public static conn: signalR.HubConnection = new signalR.HubConnectionBuilder()
         .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
+        .withAutomaticReconnect()
+        .build();*/
+
+    public static conn: signalR.HubConnection = new signalR.HubConnectionBuilder() //devtunel
+        .withUrl("https://zx9lnsnl-7198.use2.devtunnels.ms/videocallhub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 

@@ -88,14 +88,15 @@ export const VideoCall: React.FC = () => {
             });
 
             connection.on('offervideonotification', async (sender_id: string, receiver_id: string) => {
-                console.log("lo mando");
+                console.log("lo mando, MANDO EL CONNECT NOTIFICATION");
                 setTimeout(() => {
                     VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
                 }, 5000);
             });
 
             connection.on('connectedvideonotification', (sender_id: string, receiver_id: string) => {
-                console.log("llegue aqui despues de mandar");
+                console.log("llegue aqui despues de mandar AQUI EL CONNECTED");
+                console.log(receiver_id + " " + sender_id)
                 if (user_id === receiver_id) {
                     console.log("yo conteste ");
                     setTimeout(() => {
@@ -197,8 +198,11 @@ export const VideoCall: React.FC = () => {
 
 
     const handleCall = async (sender_id: string, receiver_id: string) => {
+        console.log("HANDLE CALLLLLLLL INICIAL")
         if (peerConnection.current) {
             try {
+                
+                console.log("HANDLE CALLLLLLLL")
                 //Si esta en el estado de have-remote-offer no se vuelve a crear la oferta
                 if (peerConnection.current.signalingState === 'have-remote-offer') {
                     console.error('La conexion ya tiene una descripcion de sesión SDP remota establecida');
@@ -250,9 +254,10 @@ export const VideoCall: React.FC = () => {
     };
 
     const handleAnswer = async (sender_id: string, receiver_id: string) => {
+        console.log("HANDLE ANSWER INICIAL")
         if (peerConnection.current && answer) {
             try {
-                console.log("answer", isAnsweredByUser);
+                console.log("HANDLE ANSWER")
                 isOfferState = false;
 
                 //Usa la respuesta del offertante que se paso por signal R

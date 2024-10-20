@@ -59,23 +59,17 @@ namespace NekkoChat.Server.Hubs
             AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
             AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
 
-            Console.WriteLine(sender_id + " " + receiver_id);
-
-            Console.WriteLine(sender + " " + receiver);
-
             string senderconnectionid = "";
             string receiverconnectionid = "";
 
             if (sender != null)
             {
                 senderconnectionid = sender!.ConnectionId;
-                Console.WriteLine($"senderconnectionid { senderconnectionid}");
             }
 
             if (receiver != null)
             {
                 receiverconnectionid = receiver!.ConnectionId;
-                Console.WriteLine($"receiverconnectionid {receiverconnectionid}");
             }
 
             return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("videonotification", sender_id, receiver_id);
@@ -99,7 +93,7 @@ namespace NekkoChat.Server.Hubs
                 receiverconnectionid = receiver!.ConnectionId;
             }
 
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("OfferVideoNotification", sender_id, receiver_id);
+            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("offervideonotification", sender_id, receiver_id);
         }
 
         public async Task<Task> ConnectedVideoNotification(string sender_id, string receiver_id)

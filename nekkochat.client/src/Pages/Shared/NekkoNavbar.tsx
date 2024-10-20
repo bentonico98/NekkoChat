@@ -6,22 +6,20 @@ import { faStar, faArchive, faSignOutAlt, faUserFriends, faVideoCamera, faPeople
 
 import { useAppDispatch, useAppSelector } from '../../Hooks/storeHooks';
 
-import { logout } from "../../Store/Slices/userSlice";
+import { logout, UserState } from "../../Store/Slices/userSlice";
 
-import { useNavigate } from 'react-router-dom';
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
 
 function NekkoNavbar() {
 
-    const user:iuserStore = useAppSelector((state) => state.user);
+    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const handleLogout = async () => {
         await UserAuthServices.Logout(user.value.id);
-        const navigate = useNavigate();
         dispatch(logout());
-        navigate("/login");
+        window.location.href = "/login"
     }
     return (
         <Navbar bg="light" sticky="top"  data-bs-theme="light">

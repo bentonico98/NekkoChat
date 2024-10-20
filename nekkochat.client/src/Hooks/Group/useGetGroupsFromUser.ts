@@ -4,7 +4,7 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 
 export default function useGetChatFromUser() {
     const [messages, setMessages] = useState<GroupChatSchema[]>([]);
-    const [chatID, setChatID] = useState<string>("0");
+    const [chatID, setChatID] = useState<number>(0);
     const [currentConvo, setcurrentConvo] = useState<GroupChatSchema[]>([]);
 
     const setCurrentConversation = useCallback((group_id: number) => {

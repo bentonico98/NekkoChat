@@ -8,7 +8,7 @@ export default function Index() {
     const { friend, setValue, search } = useSearchUserByName();
 
     return (
-        <Container>
+        <Container className="h-100"  >
             <h1>Friends List</h1>
             <br />
             <Container>

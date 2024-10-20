@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../userStore";
 
-interface UserState {
+export interface UserState {
     value: object,
     modalOpened: boolean
 }

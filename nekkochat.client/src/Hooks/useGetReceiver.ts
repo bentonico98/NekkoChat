@@ -5,7 +5,7 @@ import MessageServicesClient from "../Utils/MessageServicesClient";
 import GetUserStatusService from "../Utils/GetUserStatusService";
 import { UserStatus } from "@chatscope/chat-ui-kit-react/src/types/unions";
 
-export default function useGetReceiver(user: string, messages: any) {
+export default function useGetReceiver(user: string, messages: ChatSchema[]) {
     const [receiverName, setReceiverName] = useState("");
     const [receiverStatus, setReceiverStatus] = useState<UserStatus>("unavailable");
     const [lastOnline, setLastOnline] = useState<string | undefined>();
@@ -18,27 +18,34 @@ export default function useGetReceiver(user: string, messages: any) {
         setReceiverStatus(GetUserStatusService(res.status));
     }
     const getUnreadMessages = () => {
-        const message: any = messages.filter((i: ChatSchema) => i.read === false && i.user_id !== user);
+        const message: ChatSchema[] = messages.filter((i: ChatSchema) => i.read === false && i.user_id !== user);
         setUnreadMsj(message.length);
     }
 
-    const getChatStartDate = (filter: any) => {
-        const date: any = filter[0]?.created_at || new Date().toJSON();
+    const getChatStartDate = (filter: ChatSchema[]) => {
+        const date: string = filter[0]?.created_at || new Date().toJSON();
+
         const formattedDate = timeAgo(date);
+
         if (formattedDate) {
             setStartDate(formattedDate);
         }
     }
 
-    const getLastOnline = (filter: any) => {
-        const date: any = filter[filter.length - 1]?.created_at || new Date().toJSON();
+    const getLastOnline = (filter: ChatSchema[]) => {
+        const date: string = filter[filter.length - 1]?.created_at || new Date().toJSON();
+
         const formattedDate = timeAgo(date);
+
         if (formattedDate) {
             setLastOnline(formattedDate);
         }
     }
     const getReceiver = () => {
         const filter = messages.filter((i: ChatSchema) => i.user_id !== user);
+
+        if (filter.length <= 0) return;
+
         const username = filter[0]?.username || "";
         setReceiverName(username);
         fetchUser(filter);

@@ -24,7 +24,7 @@ function NekkoNavbar() {
         navigate("/login");
     }
     return (
-        <Navbar bg="light"   data-bs-theme="light">
+        <Navbar bg="light" sticky="top"  data-bs-theme="light">
             <Container>
                 <Navbar.Brand href="/inbox">NekkoChat</Navbar.Brand>
                 <Nav>

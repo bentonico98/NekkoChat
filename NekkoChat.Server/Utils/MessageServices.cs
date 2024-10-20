@@ -1,12 +1,11 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Security;
-using Microsoft.VisualBasic;
+﻿using Microsoft.VisualBasic;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using NekkoChat.Server.Schemas;
 using System.Collections.Immutable;
 using System.Text.Json;
 using NekkoChat.Server.Constants.Interfaces;
+using System;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
@@ -129,16 +128,87 @@ namespace NekkoChat.Server.Utils
             _context.SaveChanges();
             return true;
         }
-        public void favoriteMessage() { }
-        public void archiveMessage() { }
-        public void deleteMessage() { }
-        public void deleteChat() { }
+        public bool favoriteMessage(int chat_id, string user_id, bool status) {
+            bool chatExisted = chatExist(chat_id, user_id);
+
+            if (!chatExisted) return false;
+
+            Chats chat = _context.chats.Find(chat_id);
+
+            chat!.isFavorite = status;
+
+            _context.chats.Update(chat);
+            _context.SaveChanges();
+
+            return true;
+        }
+        public bool archiveMessage(int chat_id, string user_id, bool status) {
+            bool chatExisted = chatExist(chat_id, user_id);
+
+            if (!chatExisted) return false;
+
+            Chats chat = _context.chats.Find(chat_id);
+
+            chat!.isArchived = status;
+
+            _context.chats.Update(chat);
+            _context.SaveChanges();
+
+            return true;
+        }
+        public bool deleteMessage(int chat_id, string message_id, string user_id) {
+
+            if (chat_id <= 0) return false;
+
+            Users_Messages filteredConvo = fetchUsersMessages(chat_id);
+            var chats = filteredConvo.content;
+            MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats);
+            IEnumerable<SingleChatSchemas> messages = parseConvo!.messages;
+
+            bool isUserMessage = this.belongToUser(messages, message_id,user_id);
+
+            if (!isUserMessage)
+            {
+                return false;
+            }
+
+            List<SingleChatSchemas> newConvoAfterDeletion = new();
+
+            foreach (var message in messages)
+            {
+                if(message.id != message_id)
+                {
+                    newConvoAfterDeletion.Add(message);
+                }
+            }
+            string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+
+            filteredConvo.content = payload;
+
+            _context.users_messages.Update(filteredConvo);
+            _context.SaveChanges();
+
+            return true;
+        }
+        public bool deleteChat(int chat_id, string user_id) {
+            // --- TO DO
+            return true;
+        }
 
 
 
         /// /////////////// FUNCIONES PRIVADAS -- DEBAJO DE ESTA LINEA
 
 
+
+        private bool belongToUser(IEnumerable<SingleChatSchemas> messages, string message_id, string user_id)
+        {
+            var exist = messages.Where((m) => m.id == message_id && m.user_id == user_id);
+
+            if(!exist.Any()) return false;
+
+            return true;
+        }
 
         /// <summary>
         /// Funcion que convierte de JSONB a Array y de Array a JSONB para almacenar en la DB
@@ -198,6 +268,29 @@ namespace NekkoChat.Server.Utils
             }
 
             var chatExist = _context.chats.Any(c => c.id == chat_id);
+
+            if (!chatExist)
+            {
+                return false;
+            }
+
+            return chatExist;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="chat_id"></param>
+        /// <param name="user_id"></param>
+        /// <returns>BOOL true / false</returns>
+        private bool chatExist(int chat_id, string user_id)
+        {
+            if (chat_id <= 0)
+            {
+                return false;
+            }
+
+            var chatExist = _context.chats.Any(c => c.id == chat_id && c.sender_id == user_id || c.receiver_id == user_id);
 
             if (!chatExist)
             {

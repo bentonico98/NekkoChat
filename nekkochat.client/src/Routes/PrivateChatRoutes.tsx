@@ -32,7 +32,7 @@ export default function PrivateChatRoutes() {
                 <Route path="/Register" element={<Register />} />
 
                 <Route path="/friends" element={<FriendList />} />
-                <Route path="/friends/:user_id" element={<FriendProfile />} />
+                <Route path="/friends/:user_id" element={<FriendProfile />}  />
 
                 <Route path="/account/:user_id" element={<FriendProfile />} />
 

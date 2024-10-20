@@ -45,7 +45,7 @@ export default class UserAuthServices {
         return result;
     }
 
-    public static async SetConnectionId(user_id: string, connectionid: string) {
+    public static async SetConnectionId(user_id: string, connectionid: string|undefined|null) {
         if (!connectionid) return "500";
         if (!user_id) return "500";
         const url = ServerLinks.getSetConnectionIdUrl(user_id, connectionid);

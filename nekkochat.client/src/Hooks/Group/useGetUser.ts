@@ -2,22 +2,22 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-//import { useAppDispatch } from "./storeHooks";
-//import { getUserData } from "../Store/Slices/userSlice";
+import { iConversationClusterProps, iuserStore } from "../../Constants/Types/CommonTypes";
+import { UserState } from "../../Store/Slices/userSlice";
 
-export default function useGetUser(user: any) {
+export default function useGetUser(user: UserState |iuserStore | any ) {
     const navigate = useNavigate();
 
-    const [loggedUser, setLoggedUser] = useState<any>(user);
-    const [conversations, setconversations] = useState<any>([]);
-    const [user_id, setUser_id] = useState<string>(user.value.id ? user.value.id : null);
+    const [loggedUser, setLoggedUser] = useState<iuserStore | any>(user);
+    const [conversations, setconversations] = useState<iConversationClusterProps[]>([]);
+    const [user_id, setUser_id] = useState<string>(user.value?.id ? user.value?.id : "0");
     
     const dispatchUser = () => {
         if (UserAuthServices.isAuthenticated() && loggedUser == null) {
             setLoggedUser(user);
-            setUser_id(loggedUser.value.id);
+            setUser_id(loggedUser!.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
-            MessageServicesClient.getAllGroupsChats(loggedUser.value.id).then((res:any) => {
+            MessageServicesClient.getAllGroupsChats(loggedUser.value.id).then((res: iConversationClusterProps[]) => {
                 setconversations(res);
             });
             setLoggedUser(user);

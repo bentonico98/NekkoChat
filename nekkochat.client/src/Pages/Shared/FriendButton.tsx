@@ -1,23 +1,21 @@
-import { Button, Col, Container, Row } from "react-bootstrap";
+import { Button, Col, Container, Row, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMessage, faInfoCircle, faPhone } from '@fortawesome/free-solid-svg-icons';
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { useAppSelector } from "../../Hooks/storeHooks";
+import avatar from "../../assets/avatar.png";
+import { iuserStore } from "../../Constants/Types/CommonTypes";
 
 type incomingProps = {
     name: any,
     id: string,
     idx: number
 }
-interface userStore {
-    value: any,
-    modalOpened: boolean
-}
 export default function FriendButton({ name, id, idx }: incomingProps) {
 
-    const user: userStore = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
 
     const navigate = useNavigate();
 
@@ -37,10 +35,11 @@ export default function FriendButton({ name, id, idx }: incomingProps) {
     return (
         <Container key={idx}>
             <Row className="border border-2 rounded pt-2">
-                <Col lg={6}>
+                <Col lg={6} className="p-1">
+                    <Image src={avatar} roundedCircle fluid width={50} className="mx-2" />
                     {name}
                 </Col>
-                <Col>
+                <Col className="pt-2">
                     <Button onClick={() => { handlePhoneButton(); } }>{<FontAwesomeIcon icon={faPhone} />}</Button>
                     <Button className="mx-1" onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
                     <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>

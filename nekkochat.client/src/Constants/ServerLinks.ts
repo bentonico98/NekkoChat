@@ -26,6 +26,15 @@ import MessageSchema from "../Schemas/MessageSchema"
          return `${this.ServerUrl}${url}`;
      }
 
+     public static getDeleteMessageUrl(chat_id: string | undefined, message_id:string, sender_id: string) {
+         const url = `chats/chat/message/delete/${chat_id}?sender_id=${sender_id}&messages_id=${message_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+
+     public static getManageChatUrl(operation: string, chat_id: string | undefined,  user_id: string, status:boolean) {
+         const url = `chats/chat/manage/${chat_id}?operation=${operation}&user_id=${user_id}&favorite=${status}&archive=${status}`;
+         return `${this.ServerUrl}${url}`;
+     }
      ///////// GROUP CHAT URLS
 
      public static getCreateGroupChatUrl(message: GroupMessageSchema) {

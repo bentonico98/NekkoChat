@@ -12,14 +12,19 @@ import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMaximize } from "@fortawesome/free-solid-svg-icons";
+import { iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
 
 
-export default function ChatMessages({ messages, connected, sender, receiver, isTyping }: any) {
+export default function ChatMessages({
+    messages,
+    connected,
+    sender,
+    receiver,
+    isTyping }: iGroupChatMessagesProps) {
 
     const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
 
     const navigate = useNavigate();
-
 
     return (
         <>
@@ -31,12 +36,16 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
 
                     <ConversationHeader>
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
-                        <Avatar src={avatar} name={groupName.toLocaleUpperCase()} />
+                        <Avatar
+                            src={avatar}
+                            name={groupName.toLocaleUpperCase()} />
                         <ConversationHeader.Content userName={groupName.toLocaleUpperCase()} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
-                            <Button icon={<FontAwesomeIcon icon={faMaximize} />} onClick={() => { navigate("/groupchats/chat/" + receiver); }} />
+                            <Button
+                                icon={<FontAwesomeIcon icon={faMaximize} />}
+                                onClick={() => { navigate("/groupchats/chat/" + receiver); }} />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>

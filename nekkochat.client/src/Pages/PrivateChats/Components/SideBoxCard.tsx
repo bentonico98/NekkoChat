@@ -4,11 +4,11 @@ import { Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
-import { iparticipants } from "../../../Constants/Types/CommonTypes";
+import { iparticipants, iSideBoxCardProps } from "../../../Constants/Types/CommonTypes";
 import ChatSchema from "../../../Schemas/ChatSchema";
 import useGetParticipants from "../../../Hooks/useGetParticipants";
 
-export default function SideBoxCard({ chat, user, setCurrentConversation }: any) {
+export default function SideBoxCard({ chat, user, setCurrentConversation }: iSideBoxCardProps) {
 
     const [participants] = useState<iparticipants[]>([...chat.participants]);
     const [messages] = useState<ChatSchema[]>([...chat.messages]);

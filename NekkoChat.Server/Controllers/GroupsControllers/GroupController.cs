@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
 using NekkoChat.Server.Data;
 using Microsoft.EntityFrameworkCore;

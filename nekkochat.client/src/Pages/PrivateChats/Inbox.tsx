@@ -14,15 +14,15 @@ import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useGetUser from "../../Hooks/useGetUser";
 
 import { closeModal, getUserData } from "../../Store/Slices/userSlice";
-import NekkoNavbar from "../Shared/NekkoNavbar";
 
 import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
 import { useSearchParams } from "react-router-dom";
+import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Inbox() {
 
-    const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0" });
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
 
     const [searchParams] = useSearchParams();
     const [typeParams] = useState(searchParams.get("type") || "all");
@@ -38,7 +38,7 @@ export default function Inbox() {
         dispatch(closeModal());
     }
 
-    const addToChat = (user: string, msj: string, { typing, user_id}:any) => {
+    const addToChat = (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => {
         if (!msj && !user) {
             setIsTyping({ typing: typing, user_id: user_id });
             setTimeout(() => {
@@ -46,7 +46,7 @@ export default function Inbox() {
             }, 3000);
             return;
         }
-        setMessages((c: any) =>
+        setMessages((c: ChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
@@ -54,17 +54,21 @@ export default function Inbox() {
     const { connected } = useSignalServer(loggedUser, addToChat);
     const { messages, setMessages, currentConvo, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
 
+
     useEffect(() => {
         dispatch(getUserData());
     }, []);
+
     return (
         <>
             <MainContainer >
-                <SideBox messages={conversations} user={user_id} setCurrentConversation={fetchMessage} />
+                <SideBox
+                    messages={conversations}
+                    user={user_id}
+                    setCurrentConversation={fetchMessage} />
                 <ChatMessages
                     messages={messages}
                     participants={currentConvo.length > 0 && currentConvo[0].participants}
-                    user={loggedUser}
                     connected={connected}
                     sender={user_id}
                     receiver={receiverID}

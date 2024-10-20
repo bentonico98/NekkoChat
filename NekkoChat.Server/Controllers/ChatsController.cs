@@ -130,10 +130,46 @@ namespace NekkoChat.Server.Controllers
             }
             return Ok();
         }
+        // PUT chats/chat/manage/{id}?operation=${operation}&favorite={true/false}&archive={true/false}&user_id={user_id} --- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/manage/{chat_id}")]
+        public IActionResult PutManageChat(int chat_id, [FromQuery] string operation, [FromQuery] bool favorite, [FromQuery] bool archive, [FromQuery] string user_id)
+        {
+            bool managed = false;
+
+            if (operation == "archive")
+            {
+                managed = _messageServices.archiveMessage(chat_id, user_id, archive);
+
+            }
+            else if (operation == "favorite")
+            {
+                managed = _messageServices.favoriteMessage(chat_id, user_id, archive);
+            }
+            
+            if (!managed)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
+        }
+
         // DELETE chats/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]
         public void Delete(int id)
         {
+
+        }
+
+        // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)
+        [HttpDelete("chat/message/delete/{id}")]
+        public IActionResult DeleteSingleMessage(int id, [FromQuery] string message_id, [FromQuery] string user_id)
+        {
+            bool messageDeleted = _messageServices.deleteMessage(id, message_id, user_id);
+            if (!messageDeleted)
+            {
+                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+            }
+            return Ok();
         }
     }
 }

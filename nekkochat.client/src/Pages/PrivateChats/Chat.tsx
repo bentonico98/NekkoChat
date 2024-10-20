@@ -15,16 +15,16 @@ import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
 
 import MessageServicesClient from "../../Utils/MessageServicesClient";
+import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Chat() {
     const { chat_id } = useParams<string>();
  
-
-    const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0" });
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const addToChat = (user: string, msj: string, { typing, user_id }: any) => {
+    const addToChat = (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => {
         if (!msj && !user) {
             setIsTyping({ typing: typing, user_id: user_id });
             setTimeout(() => {
@@ -32,7 +32,7 @@ export default function Chat() {
             }, 3000);
             return;
         }
-        setMessages((c: any) =>
+        setMessages((c: ChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
@@ -55,7 +55,7 @@ export default function Chat() {
             <ChatMessages
                 messages={messages}
                 user={loggedUser}
-                participants={currentConvo.length > 0 && currentConvo[0].participants}
+                participants={currentConvo[0].participants}
                 connected={connected}
                 sender={user_id}
                 receiver={receiverID}

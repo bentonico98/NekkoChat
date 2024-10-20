@@ -1,5 +1,4 @@
-﻿using Elastic.Clients.Elasticsearch.Nodes;
-using NekkoChat.Server.Models;
+﻿using NekkoChat.Server.Models;
 
 namespace NekkoChat.Server.Constants.Interfaces
 {

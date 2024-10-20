@@ -11,19 +11,24 @@ import ChatSchema from "../../Schemas/ChatSchema";
 import { useAppSelector, useAppDispatch } from "../../Hooks/storeHooks";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useGetUser from "../../Hooks/Group/useGetUser";
-import useSignalServer from "../../Hooks/useSignalServer";
+import useSignalServer from "../../Hooks/Group/useSignalServer";
 
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 import useGetGroup from "../../Hooks/Group/useGetGroup";
+import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Chat() {
     const { chat_id } = useParams() as { chat_id: string };
 
-    const [isTyping, setIsTyping] = useState({ typing: false, user_id: "0", username: "Member" });
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({
+        typing: false,
+        user_id: "0",
+        username: "Member"
+    });
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const addToChat = (user: string, username: string, msj: string, { typing, user_id, userN }: any) => {
+    const addToChat = (user: string, username: string, msj: string, { typing, user_id, username:userN }: iTypingComponentProps) => {
         if (!msj && !user) {
             setIsTyping({ typing: typing, user_id: user_id, username: userN });
             setTimeout(() => {
@@ -31,14 +36,14 @@ export default function Chat() {
             }, 3000);
             return;
         }
-        setMessages((c: any) =>
+        setMessages((c: ChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, username, msj, new Date().toJSON(), false)]);
     };
 
     const { loggedUser, user_id } = useGetUser(user);
     const { connected } = useSignalServer(loggedUser, addToChat);
     const { messages, setMessages, chatID, fetchMessage } = useGetGroupsFromUser();
-    const { groupName } = useGetGroup(user_id, messages, parseInt(chatID));
+    const { groupName } = useGetGroup(user_id, messages, chatID);
 
     useEffect(() => {
         dispatch(getUserData());

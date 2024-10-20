@@ -1,5 +1,3 @@
-using Elastic.Clients.Elasticsearch;
-using Elastic.Transport;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using NekkoChat.Server.Data;
@@ -66,13 +64,13 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 
-var elasticUsername = configuration["Authentication:ElasticSearch:Username"];
+/*var elasticUsername = configuration["Authentication:ElasticSearch:Username"];
 var elasticPassword = configuration["Authentication:ElasticSearch:Password"];
 
 var elasticSettings = new ElasticsearchClientSettings(new Uri("https://localhost:9200"))
     .Authentication(new BasicAuthentication("bento", "papibento"));
 
-var elasticClient = new ElasticsearchClient(elasticSettings);
+var elasticClient = new ElasticsearchClient(elasticSettings);*/
 
 var app = builder.Build();
 

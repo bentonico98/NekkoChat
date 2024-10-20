@@ -3,7 +3,7 @@ import GroupChatSchema from "../../Schemas/GroupChatSchema";
 import timeAgo from "../../Utils/TimeFormatter";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 
-export default function useGetGroup(user: string, messages: any, group_id:number) {
+export default function useGetGroup(user: string, messages: GroupChatSchema[], group_id: number) {
     const [groupName, setGroupName] = useState<string>("");
     const [groupType, setGroupType] = useState<string>("");
     const [groupDesc, setGroupDesc] = useState<string>("");
@@ -13,7 +13,7 @@ export default function useGetGroup(user: string, messages: any, group_id:number
     const [unreadMsj, setUnreadMsj] = useState<number | undefined>();
   
     const getUnreadMessages = () => {
-        const message: any = messages.filter((i: GroupChatSchema) => i.read === false && i.user_id !== user);
+        const message: GroupChatSchema[] = messages.filter((i: GroupChatSchema) => i.read === false && i.user_id !== user);
         setUnreadMsj(message.length);
     }
     const getGroup = async (group_id: number) => {
@@ -22,8 +22,8 @@ export default function useGetGroup(user: string, messages: any, group_id:number
         setGroupDesc(res.description);
         setGroupPhoto(res.profilePhotoUrl);
     }
-    const getChatStartDate = (filter: any) => {
-        const date: any = filter[0]?.created_at || new Date().toJSON();
+    const getChatStartDate = (filter: GroupChatSchema[]) => {
+        const date: string = filter[0]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
             setStartDate(formattedDate);

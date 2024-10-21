@@ -3,7 +3,6 @@ using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using System.Security.Claims;
 using NekkoChat.Server.Constants.Interfaces;
-using Elastic.Clients.Elasticsearch.Security;
 using Microsoft.EntityFrameworkCore;
 namespace NekkoChat.Server.Hubs
 {

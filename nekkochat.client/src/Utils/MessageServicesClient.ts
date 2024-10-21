@@ -34,9 +34,89 @@ export default class MessageServicesClient {
                 'Content-Type': 'application/json'
             }
         }).then((res) => {
-            console.log(res);
+            console.log(res.status);
         }).catch(err => {
             console.error(err);
+        });
+
+        return result;
+    }
+
+    public static async deleteMessageFromChat(chat_id: number | undefined, message_id:string, sender_id: string) {
+        if (!sender_id) return false;
+
+        let url = ServerLinks.getDeleteMessageUrl(chat_id, message_id, sender_id);
+
+        const result = await axios.delete(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            data: {
+                id:chat_id
+            }
+        }).then((res) => {
+            console.log(res.status);
+        }).catch(err => {
+            console.error(err);
+        });
+
+        return result;
+    }
+
+    public static async deleteChat(chat_id: number | undefined, message_id: string, sender_id: string) {
+        if (!sender_id) return false;
+
+        let url = ServerLinks.getDeleteMessageUrl(chat_id, message_id, sender_id);
+
+        const result = await axios.delete(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((res) => {
+            console.log(res.status);
+        }).catch(err => {
+            console.error(err);
+        });
+
+        return result;
+    }
+
+    public static async deleteUserChat(chat_id: number | undefined,  sender_id: string) {
+        if (!sender_id) return false;
+        if (!chat_id) return false;
+    }
+
+    public static async manageChat(operation:string, chat_id: number | undefined, user_id: string, status:boolean) {
+        if (!user_id) return false;
+
+        let url = ServerLinks.getManageChatUrl(operation, chat_id, user_id, status);
+
+        const result = await axios.put(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((res) => {
+            console.log(res.status);
+        }).catch(err => {
+            console.error(err);
+        });
+
+        return result;
+    }
+
+    public static async createChat(sender_id: string, receiver_id: string, msj: string) {
+        let url = ServerLinks.getCreateChatUrl(sender_id, receiver_id, msj);
+
+        const result = await axios.post(url, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((res) => {
+            console.log(res);
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return { success: false, error: err };
         });
 
         return result;
@@ -55,9 +135,9 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async getAllUsersChats(user_id: string) {
+    public static async getAllUsersChats(user_id: string, type:string) {
 
-        let url = ServerLinks.getAllUsersChatUrl(user_id);
+        let url = ServerLinks.getAllUsersChatUrl(user_id,type);
 
         const result = await axios.get(url).then((res) => {
             //console.log(res);
@@ -75,11 +155,10 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async getChatFromUser(chat_id: string|undefined) {
+    public static async getChatFromUser(chat_id: number) {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-            //console.log(res);
 
             return res.data;
         }).catch(function (error) {
@@ -168,7 +247,7 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async sendReadMessageGroup(group_id: number| undefined, sender_id: string, groupname:string) {
+    public static async sendReadMessageGroup(group_id: number, sender_id: string, groupname:string | undefined) {
         if (!sender_id) return false;
         if (!group_id) return false;
         if (!groupname) return false;

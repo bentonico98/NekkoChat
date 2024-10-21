@@ -3,18 +3,32 @@ import RegisterSchemas from '../../Schemas/RegisterSchemas';
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { useState, useEffect } from "react";
 import { ErrorInterface } from '../../Constants/Types/CommonTypes';
+import { useAppDispatch } from '../../Hooks/storeHooks';
+import { useNavigate } from 'react-router-dom';
+import { login } from '../../Store/Slices/userSlice';
 
 export default function Register() {
+
+    const dispatch = useAppDispatch();
+
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
+    const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
+
+    const navigate = useNavigate();
 
     const handleSubmit = async (values: RegisterSchemas) => {
         const res = await UserAuthServices.Register(values);
         setLoggedIn(res.success);
+        setCurrentUser(res);
+        if (res.success) {
+            await UserAuthServices.SetUserStatusTo(res.user.id, 0);
+        }
         return res;
     }
     useEffect(() => {
         if (loggedIn) {
-            window.location.href = "/inbox"
+            dispatch(login(currentUser));
+            navigate("/inbox");
         }
     }, [loggedIn]);
 

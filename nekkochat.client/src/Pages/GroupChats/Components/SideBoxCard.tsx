@@ -9,24 +9,28 @@ import avatar from "../../../assets/avatar.png";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
 
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
+import { iChatSchema, iparticipants, iSideBoxCardProps } from "../../../Constants/Types/CommonTypes";
 
-export default function SideBoxCard({ chat, user, setCurrentConversation }: any) {
+export default function SideBoxCard({
+    chat,
+    user,
+    setCurrentConversation }: iSideBoxCardProps) {
 
-    const [participants] = useState<any>([...chat.participants]);
-    const [groupname] = useState<string>(chat.groupname);
-    const [messages] = useState<any>([...chat.messages]);
+    const [participants] = useState<iparticipants[]>([...chat.participants]);
+    const [groupname] = useState<string | undefined>(chat.groupname);
+    const [messages] = useState<iChatSchema[]>([...chat.messages]);
     const { unreadMsj } = useGetReceiver(user, messages);
 
     return (
         <Conversation
             key={chat._id}
             name={groupname}
-            lastSenderName={participants[participants.length - 1].name}
+            lastSenderName={messages[messages.length - 1].username}
             info={messages[messages.length - 1].content}
             unreadCnt={unreadMsj}
             onClick={async () => {
                 setCurrentConversation(chat._id);
-                await MessageServicesClient.sendReadMessageGroup(chat._id, user, groupname);
+                await MessageServicesClient.sendReadMessageGroup(parseInt(chat._id), user, groupname);
             }}>
             <Avatar
                 src={avatar}

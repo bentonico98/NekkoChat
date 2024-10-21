@@ -1,5 +1,4 @@
-﻿using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Security;
+﻿
 using Microsoft.VisualBasic;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;

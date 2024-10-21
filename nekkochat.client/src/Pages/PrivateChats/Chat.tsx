@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
 import ChatMessages from "./Components/ChatMessages";
@@ -15,25 +15,34 @@ import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
 
 import MessageServicesClient from "../../Utils/MessageServicesClient";
+import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Chat() {
     const { chat_id } = useParams<string>();
+ 
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const addToChat = (user: string, msj: string) => {
-        if (!msj) return;
-        setMessages((c: any) =>
+    const addToChat = (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => {
+        if (!msj && !user) {
+            setIsTyping({ typing: typing, user_id: user_id });
+            setTimeout(() => {
+                setIsTyping({ typing: false, user_id: user_id });
+            }, 3000);
+            return;
+        }
+        setMessages((c: iChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
-    const { loggedUser, user_id } = useGetUser(user);
+    const { loggedUser, user_id } = useGetUser(user, "all");
     const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+    const { messages, currentConvo, setMessages, receiverID, fetchMessage } = useGetChatFromUser(user_id);
 
     useEffect(() => {
         dispatch(getUserData());
-        fetchMessage(chat_id);
+        fetchMessage(parseInt(chat_id || "0"));
         MessageServicesClient.sendReadMessage(chat_id, user_id);
     }, []);
 
@@ -43,7 +52,15 @@ export default function Chat() {
 
     return (
         <MainContainer>
-            <ChatMessages messages={messages} user={loggedUser} connected={connected} sender={user_id} receiver={receiverID} chat={chat_id} />
+            <ChatMessages
+                messages={messages}
+                participants={currentConvo[0].participants}
+                connected={connected}
+                sender={user_id}
+                receiver={receiverID}
+                chat={parseInt(chat_id || "0")}
+                isTyping={isTyping}
+            />
         </MainContainer>
         
     );

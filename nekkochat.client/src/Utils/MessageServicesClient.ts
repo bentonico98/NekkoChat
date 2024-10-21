@@ -50,6 +50,9 @@ export default class MessageServicesClient {
         const result = await axios.delete(url, {
             headers: {
                 'Content-Type': 'application/json'
+            },
+            data: {
+                id:chat_id
             }
         }).then((res) => {
             console.log(res.status);
@@ -77,6 +80,12 @@ export default class MessageServicesClient {
 
         return result;
     }
+
+    public static async deleteUserChat(chat_id: number | undefined,  sender_id: string) {
+        if (!sender_id) return false;
+        if (!chat_id) return false;
+    }
+
     public static async manageChat(operation:string, chat_id: number | undefined, user_id: string, status:boolean) {
         if (!user_id) return false;
 
@@ -146,7 +155,7 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async getChatFromUser(chat_id: string|undefined) {
+    public static async getChatFromUser(chat_id: number) {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {

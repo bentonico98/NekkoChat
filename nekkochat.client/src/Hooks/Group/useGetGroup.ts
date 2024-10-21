@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import GroupChatSchema from "../../Schemas/GroupChatSchema";
 import timeAgo from "../../Utils/TimeFormatter";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
+import { iChatSchema } from "../../Constants/Types/CommonTypes";
 
-export default function useGetGroup(user: string, messages: GroupChatSchema[], group_id: number) {
+export default function useGetGroup(user: string, messages: iChatSchema[], group_id: number) {
     const [groupName, setGroupName] = useState<string>("");
     const [groupType, setGroupType] = useState<string>("");
     const [groupDesc, setGroupDesc] = useState<string>("");
@@ -13,7 +13,7 @@ export default function useGetGroup(user: string, messages: GroupChatSchema[], g
     const [unreadMsj, setUnreadMsj] = useState<number | undefined>();
   
     const getUnreadMessages = () => {
-        const message: GroupChatSchema[] = messages.filter((i: GroupChatSchema) => i.read === false && i.user_id !== user);
+        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false && i.user_id !== user);
         setUnreadMsj(message.length);
     }
     const getGroup = async (group_id: number) => {
@@ -22,7 +22,7 @@ export default function useGetGroup(user: string, messages: GroupChatSchema[], g
         setGroupDesc(res.description);
         setGroupPhoto(res.profilePhotoUrl);
     }
-    const getChatStartDate = (filter: GroupChatSchema[]) => {
+    const getChatStartDate = (filter: iChatSchema[]) => {
         const date: string = filter[0]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
@@ -31,7 +31,7 @@ export default function useGetGroup(user: string, messages: GroupChatSchema[], g
     }
     
     const getReceiver = () => {
-        const filter = messages.filter((i: GroupChatSchema) => i.user_id != user);
+        const filter = messages.filter((i: iChatSchema) => i.user_id != user);
         const groupname = filter[0]?.groupname || "Unknown";
         setGroupName(groupname);
         getChatStartDate(filter);

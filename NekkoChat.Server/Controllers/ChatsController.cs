@@ -155,9 +155,9 @@ namespace NekkoChat.Server.Controllers
 
         // DELETE chats/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
-
+            return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
         }
 
         // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)

@@ -1,5 +1,7 @@
-export default class ChatSchema {
-    public id?: string;
+import { iChatSchema } from "../Constants/Types/CommonTypes";
+
+export default class ChatSchema implements iChatSchema {
+    public id: string;
     public content?: string;
     public username?: string;
     public user_id?: string;

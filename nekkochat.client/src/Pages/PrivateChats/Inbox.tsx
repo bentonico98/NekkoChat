@@ -19,7 +19,7 @@ import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
 import { useSearchParams } from "react-router-dom";
-import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Inbox() {
 
     const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
@@ -46,35 +46,35 @@ export default function Inbox() {
             }, 3000);
             return;
         }
-        setMessages((c: ChatSchema[]) =>
+        setMessages((c: iChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
-
-    const { conversations, loggedUser, user_id } = useGetUser(user, typeParams);
-    const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, currentConvo, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
-
 
     useEffect(() => {
         dispatch(getUserData());
     }, []);
 
+    const { conversations, loggedUser, user_id } = useGetUser(user, typeParams);
+    const { connected } = useSignalServer(loggedUser, addToChat);
+    const { messages, setMessages, currentConvo, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+
     return (
         <>
-            <MainContainer >
+            <MainContainer>
                 <SideBox
                     messages={conversations}
                     user={user_id}
                     setCurrentConversation={fetchMessage} />
-                <ChatMessages
+
+                {currentConvo.length > 0 && <ChatMessages
                     messages={messages}
-                    participants={currentConvo.length > 0 && currentConvo[0].participants}
+                    participants={currentConvo[0].participants}
                     connected={connected}
                     sender={user_id}
                     receiver={receiverID}
                     chat={chatID}
                     isTyping={isTyping}
-                />
+                />}
             </MainContainer>
             <Modal
                 isOpen={modalOpened}

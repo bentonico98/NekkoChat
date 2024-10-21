@@ -7,6 +7,7 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
 import { iuserStore } from "../../Constants/Types/CommonTypes";
+import { UserState } from "../../Store/Slices/userSlice";
 
 type incomingProps = {
     name: any,
@@ -15,7 +16,7 @@ type incomingProps = {
 }
 export default function FriendButton({ name, id, idx }: incomingProps) {
 
-    const user: iuserStore = useAppSelector((state) => state.user);
+    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
 
     const navigate = useNavigate();
 

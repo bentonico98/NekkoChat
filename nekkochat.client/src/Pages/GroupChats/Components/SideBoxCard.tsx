@@ -30,7 +30,7 @@ export default function SideBoxCard({
             unreadCnt={unreadMsj}
             onClick={async () => {
                 setCurrentConversation(chat._id);
-                await MessageServicesClient.sendReadMessageGroup(chat._id, user, groupname);
+                await MessageServicesClient.sendReadMessageGroup(parseInt(chat._id), user, groupname);
             }}>
             <Avatar
                 src={avatar}

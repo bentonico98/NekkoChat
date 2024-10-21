@@ -1,5 +1,4 @@
-﻿import ChatSchema from "../../../Schemas/ChatSchema";
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+﻿import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
@@ -10,7 +9,7 @@ import useGetParticipants from "../../../Hooks/useGetParticipants";
 import {  useState } from "react";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
-import { iChatMessagesProps } from "../../../Constants/Types/CommonTypes";
+import { iChatMessagesProps, iChatSchema } from "../../../Constants/Types/CommonTypes";
 
 export default function ChatMessages(
     {
@@ -132,7 +131,7 @@ export default function ChatMessages(
 
                     <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
                         <MessageSeparator content={startDate} />
-                        {messages.map((el: ChatSchema, idx: number) => {
+                        {messages.map((el: iChatSchema, idx: number) => {
                             return (
                                 <Message key={idx} model={{
                                     message: `${el.content}`,
@@ -234,12 +233,12 @@ export default function ChatMessages(
                         sendDisabled={!connected}
                         onChange={(e) => {
                             if (e.length > 1) {
-                                PrivateChatsServerServices.SendTypingSignal(sender, receiver);
+                                PrivateChatsServerServices.SendTypingSignal(sender, receiver.toString());
                             } else {
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver, e) }} />
+                        onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver.toString(), e) }} />
                 </ChatContainer>
                 : <ChatContainer className="flexibleContainer">
                 </ChatContainer>}

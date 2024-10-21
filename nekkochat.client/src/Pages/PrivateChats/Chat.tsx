@@ -15,7 +15,7 @@ import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
 
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Chat() {
     const { chat_id } = useParams<string>();
  
@@ -32,7 +32,7 @@ export default function Chat() {
             }, 3000);
             return;
         }
-        setMessages((c: ChatSchema[]) =>
+        setMessages((c: iChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
     };
 
@@ -42,7 +42,7 @@ export default function Chat() {
 
     useEffect(() => {
         dispatch(getUserData());
-        fetchMessage(chat_id);
+        fetchMessage(parseInt(chat_id || "0"));
         MessageServicesClient.sendReadMessage(chat_id, user_id);
     }, []);
 
@@ -54,12 +54,11 @@ export default function Chat() {
         <MainContainer>
             <ChatMessages
                 messages={messages}
-                user={loggedUser}
                 participants={currentConvo[0].participants}
                 connected={connected}
                 sender={user_id}
                 receiver={receiverID}
-                chat={chat_id}
+                chat={parseInt(chat_id || "0")}
                 isTyping={isTyping}
             />
         </MainContainer>

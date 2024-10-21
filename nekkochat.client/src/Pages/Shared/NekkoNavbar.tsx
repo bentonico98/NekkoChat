@@ -11,16 +11,28 @@ import { logout, UserState } from "../../Store/Slices/userSlice";
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
 
+import * as React from "react";
 function NekkoNavbar() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
+    const navigate = () => {
+        window.location.href = "/login"
+    }
+
     const handleLogout = async () => {
         await UserAuthServices.Logout(user.value.id);
         dispatch(logout());
-        window.location.href = "/login"
+        navigate();
     }
+
+    React.useLayoutEffect(() => {
+        if (!UserAuthServices.isAuthenticated()) {
+            navigate();
+        } 
+    }, []);
+    
     return (
         <Navbar bg="light" sticky="top"  data-bs-theme="light">
             <Container>

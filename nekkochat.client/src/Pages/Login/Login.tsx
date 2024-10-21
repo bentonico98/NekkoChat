@@ -10,14 +10,14 @@ export default function Login() {
 
     const dispatch = useAppDispatch();
 
-    const [currentUser, setCurrentUser] = useState<any>({});
+    const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (values: LoginSchema) => {
         const res = await UserAuthServices.Login(values);
         setLoggedIn(res.success);
-        setCurrentUser(res.user);
+        setCurrentUser(res);
         if (res.success) {
             await UserAuthServices.SetUserStatusTo(res.user.id, 0);
         }

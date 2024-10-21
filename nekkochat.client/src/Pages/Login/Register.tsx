@@ -12,14 +12,14 @@ export default function Register() {
     const dispatch = useAppDispatch();
 
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
-    const [currentUser, setCurrentUser] = useState<any>({});
+    const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
 
     const navigate = useNavigate();
 
     const handleSubmit = async (values: RegisterSchemas) => {
         const res = await UserAuthServices.Register(values);
         setLoggedIn(res.success);
-        setCurrentUser(res.user);
+        setCurrentUser(res);
         if (res.success) {
             await UserAuthServices.SetUserStatusTo(res.user.id, 0);
         }

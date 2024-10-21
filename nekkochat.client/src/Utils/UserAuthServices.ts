@@ -7,7 +7,8 @@ export default class UserAuthServices {
         const url = ServerLinks.getLoginUrl();
 
         const result = await axios.post(url, payload).then((res) => {
-            console.log(res);
+            console.log(res.status);
+            console.log(res.data);
             return res.data;
         }).catch((err) => {
             console.log(err);
@@ -21,7 +22,8 @@ export default class UserAuthServices {
         const url = ServerLinks.getLogoutUrl(user);
 
         const result = await axios.put(url).then((res) => {
-            console.log(res);
+            console.log(res.status);
+            console.log(res.data);
             return res.data;
         }).catch((err) => {
             console.log(err);

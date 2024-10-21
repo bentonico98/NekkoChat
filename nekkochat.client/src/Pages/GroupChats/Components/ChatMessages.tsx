@@ -2,8 +2,6 @@ import { ChatContainer, MessageList, Message, MessageInput, Avatar, Button, Conv
 
 import avatar from "../../../assets/avatar.png";
 
-import ChatSchema from "../../../Schemas/ChatSchema";
-
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
 
@@ -12,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMaximize } from "@fortawesome/free-solid-svg-icons";
-import { iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
+import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
 
 
 export default function ChatMessages({
@@ -54,7 +52,7 @@ export default function ChatMessages({
 
                     <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
-                        {messages.map((el: ChatSchema, idx: number) => {
+                        {messages.map((el: iChatSchema, idx: number) => {
                             return (
                                 <Message key={idx} model={{
                                     message: `${el.content}`,

@@ -13,11 +13,11 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `chats/chat/send/${message.chat_id}?value=${message.content}&sender_id=${message.sender_id}&receiver_id=${message.receiver_id}`
         return `${this.ServerUrl}${url}`;
      };
-     public static getAllUsersChatUrl(id:any,type:string) {
+     public static getAllUsersChatUrl(id: string, type: string) {
          const url = `chats/chats?id=${id}&type=${type}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getOneUsersChatUrl(id: any) {
+     public static getOneUsersChatUrl(id: number) {
          const url = `chats/chat/${id}`
          return `${this.ServerUrl}${url}`;
      };
@@ -26,12 +26,12 @@ import MessageSchema from "../Schemas/MessageSchema"
          return `${this.ServerUrl}${url}`;
      }
 
-     public static getDeleteMessageUrl(chat_id: string | undefined, message_id:string, sender_id: string) {
-         const url = `chats/chat/message/delete/${chat_id}?sender_id=${sender_id}&messages_id=${message_id}`;
+     public static getDeleteMessageUrl(chat_id: number | undefined, message_id: string, user_id: string) {
+         const url = `chats/chat/message/delete/${chat_id}?user_id=${user_id}&message_id=${message_id}`;
          return `${this.ServerUrl}${url}`;
      }
 
-     public static getManageChatUrl(operation: string, chat_id: string | undefined,  user_id: string, status:boolean) {
+     public static getManageChatUrl(operation: string, chat_id: number | undefined,  user_id: string, status:boolean) {
          const url = `chats/chat/manage/${chat_id}?operation=${operation}&user_id=${user_id}&favorite=${status}&archive=${status}`;
          return `${this.ServerUrl}${url}`;
      }

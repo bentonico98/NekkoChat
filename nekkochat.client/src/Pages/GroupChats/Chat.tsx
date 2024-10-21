@@ -15,7 +15,7 @@ import useSignalServer from "../../Hooks/Group/useSignalServer";
 
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 import useGetGroup from "../../Hooks/Group/useGetGroup";
-import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Chat() {
     const { chat_id } = useParams() as { chat_id: string };
 
@@ -36,7 +36,7 @@ export default function Chat() {
             }, 3000);
             return;
         }
-        setMessages((c: ChatSchema[]) =>
+        setMessages((c: iChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, username, msj, new Date().toJSON(), false)]);
     };
 

@@ -1,5 +1,3 @@
-import ChatSchema from "../../Schemas/ChatSchema"
-
 export interface ErrorInterface {
     email?: string,
     username?: string,
@@ -59,16 +57,16 @@ export interface iChatBoxProps {
 }
 
 export interface iChatMessagesProps {
-    messages: ChatSchema[],
+    messages: iChatSchema[],
     connected: boolean,
     chat: number,
     sender: string,
     receiver: string | number,
-    participants?: iparticipants[] | boolean,
+    participants: iparticipants[],
     isTyping: iTypingComponentProps
 }
 export interface iGroupChatMessagesProps {
-    messages: ChatSchema[],
+    messages: iChatSchema[],
     connected: boolean,
     chat?: number,
     sender: string,

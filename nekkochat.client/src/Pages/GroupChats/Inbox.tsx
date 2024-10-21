@@ -13,12 +13,12 @@ import useSignalServer from "../../Hooks/Group/useSignalServer";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useGetUser from "../../Hooks/Group/useGetUser";
 
-import { getUserData, openModal, closeModal } from "../../Store/Slices/userSlice";
+import { getUserData,  closeModal } from "../../Store/Slices/userSlice";
 
 import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import GroupManager from "../Shared/Forms/GroupManager";
-import { iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 
 Modal.setAppElement("#root");
 export default function Inbox() {
@@ -49,7 +49,7 @@ export default function Inbox() {
             }, 3000);
             return;
         }
-        setMessages((c: ChatSchema[]) =>
+        setMessages((c: iChatSchema[]) =>
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, username, msj, new Date().toJSON(), false)]);
     };
 

@@ -3,7 +3,7 @@ import MessageSchema from "../Schemas/MessageSchema"
  class ServerLinks {
      //private static ServerUrl = "https://localhost:7198/";
 
-     private static ServerUrl = "https://zx9lnsnl-7198.use2.devtunnels.ms/"; //devTunel
+     private static ServerUrl = "https://9843tknk-7198.use2.devtunnels.ms/"; //devTunel
 
      ///////////////// PRIVATE CHATS URLS
 

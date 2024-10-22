@@ -6,11 +6,9 @@ import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
-import { useSelector } from "react-redux"
 import VideocallServerServices from '../../Utils/VideoCallService'
 import { VideoCallButton } from './Components/VideoCallButtom';
 import { IUserData, SendModal } from './Components/SendModal';
-import { RootState } from '../../Store/userStore';
 import useVideocallSignalServer from '../../Hooks/useVideocallSignalR';
 import ServerLinks from '../../Constants/ServerLinks';
 import axios from 'axios';
@@ -24,28 +22,17 @@ export const VideoCall: React.FC = () => {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-
     let [isOfferState] = useState<boolean>(true);
     let [isConnectionStablish] = useState<boolean>(false);
-
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<boolean>(false);
     const [data, setData] = useState<IUserData[]>([{ id: "", profilePhotoUrl: null, userName: "" }]);
-
-    /*[
-  {
-    "id": "19a6819f-d3fa-45cd-823c-ff2938ae6900",
-    "profilePhotoUrl": null,
-    "userName": "Manuel"
-  },
-  {
-    "id": "234f48b2-2b62-45ca-a763-8acd6bccabf6",
-    "profilePhotoUrl": null,
-    "userName": "Garcia"
-  }
-]*/
+    const [videoTrackState, setVideoTrackState] = useState<MediaStreamTrack | undefined>(undefined);
+    const [audioTrackState, setAudioTrackState] = useState<MediaStreamTrack | undefined>(undefined);
+    //const [isRemoteVideoSender, setIsRemoteVideoSender] = useState<boolean>(false);
+    
 
     const user = JSON.parse(localStorage.getItem("user") || '{}')
 
@@ -70,7 +57,6 @@ export const VideoCall: React.FC = () => {
     }, [])
 
     let answer: RTCSessionDescriptionInit;
-    const isAnsweredByUser = useSelector((state: RootState) => state.videocall.isVideocallAnswered)
     let offerCandidate: RTCIceCandidateInit | null = null;
     let AnswerCandidate: RTCIceCandidateInit | null = null;
 
@@ -173,7 +159,6 @@ export const VideoCall: React.FC = () => {
         peerConnection.current.ontrack = event => {
             if (event.streams.length > 0) {
                 const stream = event.streams[0];
-
                 const remoteVideo = remoteVideoRef.current;
                 if (remoteVideo) {
                     remoteVideo.srcObject = stream;
@@ -182,20 +167,52 @@ export const VideoCall: React.FC = () => {
                         remoteVideo.play();
                     }, 100);
                 }
+
+                
             }
         };
+       
 
     }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate]);
 
-    const handleVideoState = () => {
-        setIsVideoOn(() => !isVideoOn);
-    };
-
     const handleMicState = () => {
-        console.log(user_id)
-        setIsMicOn(() => !isMicOn);
+        if (localStream.current) {
+            const audioTrack = localStream.current.getAudioTracks()[0];
+            setAudioTrackState(audioTrack);
+            if (audioTrack && isMicOn == true) {
+                localStream.current.removeTrack(audioTrack)
+                setIsMicOn(!isMicOn);
+                audioTrack.stop();
+                return
+            }
+            setIsMicOn(!isMicOn);
+            if (audioTrackState != undefined) {
+                localStream.current.addTrack(audioTrackState);
+            }
+
+
+        }
     };
 
+    const handleVideoState = async () => {
+        
+        if (localStream.current) {
+            const videoTrack = localStream.current.getVideoTracks()[0];
+            setVideoTrackState(videoTrack);
+            if (videoTrack && isVideoOn == true) {
+                localStream.current.removeTrack(videoTrack)
+                setIsVideoOn(!isVideoOn);
+                videoTrack.stop();
+                return
+            }
+            setIsVideoOn(!isVideoOn);
+            if (videoTrackState != undefined) {
+                localStream.current.addTrack(videoTrackState);
+            }
+            
+           
+        }
+    };
 
     const handleCall = async (sender_id: string, receiver_id: string) => {
         console.log("HANDLE CALLLLLLLL INICIAL")
@@ -316,9 +333,7 @@ export const VideoCall: React.FC = () => {
 
                 }}>
                     {isVideoOn ?
-                    < video id="local" style={{ borderRadius: "1rem", height: "90vh", }} autoPlay ref={videoRef} >
-                        
-                    </video>
+                    < video id="local" style={{ borderRadius: "1rem", height: "90vh", }} autoPlay ref={videoRef}/>
                         :
                         <Box sx={{
                             backgroundColor: "#777",
@@ -362,25 +377,25 @@ export const VideoCall: React.FC = () => {
                     justifyContent: "center",
                     borderRadius: "1rem"
 
-                }}>
-                    {remoteVideoRef ?
+            }}>
+                {remoteVideoRef ?
                     <video id='remoto' style={{ borderRadius: "1rem", width: "15rem", height: "15rem", zIndex: "2" }} autoPlay ref={remoteVideoRef}> </video>
-                        :
-                        <Box sx={{
-                            backgroundColor: "#555",
-                            height: "15rem",
-                            width: "15rem",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "1rem"
-                        }}>
-                            <VideocamOffIcon sx={{
-                                fontSize: "4rem",
-                                color: "white"
+                    :
+                    <Box sx={{
+                        backgroundColor: "#555",
+                        height: "15rem",
+                        width: "15rem",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "1rem"
+                    }}>
+                        <VideocamOffIcon sx={{
+                            fontSize: "4rem",
+                            color: "white"
                         }} />
                     </Box>
-                    }
+                }
                    
                 </Box>
             </Box>

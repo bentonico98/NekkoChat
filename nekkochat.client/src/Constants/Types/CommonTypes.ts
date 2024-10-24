@@ -12,10 +12,27 @@ export interface iparticipants {
 }
 
 export interface iuserStore {
-    value: iChatSchema,
+    value: iUserViewModel,
     modalOpened: boolean
 }
 
+export interface iUserViewModel {
+    id: string,
+    userName: string,
+    connectionId: string,
+    profilePhotoUrl: string,
+    friends_Count?: number ,
+    about?: string,
+    lastOnline?: string
+}
+
+export interface iResponseViewModel {
+     Success: boolean;
+     User: iUserViewModel;
+     Message: string;
+     Error?: string | null;
+     Status: number;
+}
 export interface iChatSchema {
     id: string,
     content?: string,

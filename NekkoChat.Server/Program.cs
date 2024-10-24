@@ -58,10 +58,13 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddSignalR();
 
+//AutoMapper Config
+builder.Services.AddAutoMapper(typeof(Program));
+//builder.Services.AddControllersWithViews();
 
-var configuration = new ConfigurationBuilder()
+/*var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
-    .Build();
+    .Build();*/
 
 
 /*var elasticUsername = configuration["Authentication:ElasticSearch:Username"];

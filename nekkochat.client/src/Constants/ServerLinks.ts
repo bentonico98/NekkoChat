@@ -96,6 +96,10 @@ import MessageSchema from "../Schemas/MessageSchema"
          const url = `user/user?name=${name}`;
          return `${this.ServerUrl}${url}`;
      }
+     public static getUserFriends(user_id:string) {
+         const url = `user/friends?user_id=${user_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
      ////////////// GROUP ROUTES
      public static getSetConnectionIdForGroupUrl(user_id: string, connectionid: string | any) {
          const url = `group/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;

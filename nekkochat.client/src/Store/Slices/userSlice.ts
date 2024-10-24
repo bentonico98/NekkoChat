@@ -8,7 +8,7 @@ export interface UserState {
 }
 
 const initialState: UserState = {
-    value: {},
+    value: JSON.parse(localStorage.getItem("user") || '{}'),
     modalOpened : false
 }
 

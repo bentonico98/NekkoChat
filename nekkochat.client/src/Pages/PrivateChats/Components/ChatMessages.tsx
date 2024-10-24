@@ -10,6 +10,7 @@ import {  useState } from "react";
 import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
 import { iChatMessagesProps, iChatSchema } from "../../../Constants/Types/CommonTypes";
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 
 export default function ChatMessages(
     {
@@ -75,9 +76,9 @@ export default function ChatMessages(
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
                             src={avatar}
-                            name={participantName.toLocaleUpperCase()} />
+                            name={FirstLetterUpperCase(participantName)} />
                         <ConversationHeader.Content
-                            userName={participantName.toLocaleUpperCase()}
+                            userName={FirstLetterUpperCase(participantName)}
                             info={lastOnline} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />

@@ -10,6 +10,7 @@ import useGetReceiver from "../../../Hooks/useGetReceiver";
 
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import { iChatSchema, iparticipants, iSideBoxCardProps } from "../../../Constants/Types/CommonTypes";
+import FirstLetterUpperCase from "../../../Utils/FirstLetterUpperCase";
 
 export default function SideBoxCard({
     chat,
@@ -17,14 +18,14 @@ export default function SideBoxCard({
     setCurrentConversation }: iSideBoxCardProps) {
 
     const [participants] = useState<iparticipants[]>([...chat.participants]);
-    const [groupname] = useState<string | undefined>(chat.groupname);
+    const [groupname] = useState<string>(chat.groupname || "Unknown");
     const [messages] = useState<iChatSchema[]>([...chat.messages]);
     const { unreadMsj } = useGetReceiver(user, messages);
 
     return (
         <Conversation
             key={chat._id}
-            name={groupname}
+            name={FirstLetterUpperCase(groupname) }
             lastSenderName={messages[messages.length - 1].username}
             info={messages[messages.length - 1].content}
             unreadCnt={unreadMsj}

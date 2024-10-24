@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMaximize } from "@fortawesome/free-solid-svg-icons";
 import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 
 
 export default function ChatMessages({
@@ -36,8 +37,8 @@ export default function ChatMessages({
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
                             src={avatar}
-                            name={groupName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()} />
+                            name={FirstLetterUpperCase(groupName)} />
+                        <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />

@@ -8,6 +8,7 @@ import { iChatSchema, iparticipants, iSideBoxCardProps } from "../../../Constant
 import useGetParticipants from "../../../Hooks/useGetParticipants";
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { Archive, Delete, Favorite } from "@mui/icons-material";
+import FirstLetterUpperCase from "../../../Utils/FirstLetterUpperCase";
 
 export default function SideBoxCard({ chat, user, setCurrentConversation }: iSideBoxCardProps) {
 
@@ -38,7 +39,7 @@ export default function SideBoxCard({ chat, user, setCurrentConversation }: iSid
         <>
             <Conversation
                 key={chat._id}
-                name={participantName.toUpperCase()}
+                name={FirstLetterUpperCase(participantName)}
                 lastSenderName={messages[messages.length - 1].username}
                 info={messages[messages.length - 1].content}
                 unreadCnt={unreadMsj}

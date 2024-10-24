@@ -8,6 +8,7 @@ import { useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
 import { iuserStore } from "../../Constants/Types/CommonTypes";
 import { UserState } from "../../Store/Slices/userSlice";
+import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 
 type incomingProps = {
     name: any,
@@ -38,7 +39,7 @@ export default function FriendButton({ name, id, idx }: incomingProps) {
             <Row className="border border-2 rounded pt-2">
                 <Col lg={6} className="p-1">
                     <Image src={avatar} roundedCircle fluid width={50} className="mx-2" />
-                    {name}
+                    {FirstLetterUpperCase(name)}
                 </Col>
                 <Col className="pt-2">
                     <Button onClick={() => { handlePhoneButton(); } }>{<FontAwesomeIcon icon={faPhone} />}</Button>

@@ -1,17 +1,27 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import UserAuthServices from "../Utils/UserAuthServices";
+import { iUserViewModel } from "../Constants/Types/CommonTypes";
 
 export default function useSearchUserByName() {
-    const [value, setValue] = useState('');
 
-    const [friend, setFriend] = useState([]);
+    const [searchFriends, setSearchFriends] = useState<iUserViewModel[]>([]);
 
-    const handleSearch = async () => {
-        const res = await UserAuthServices.SearchUserByName(value);
+    const handleSearch = async (stringSearch:string) => {
+        const res = await UserAuthServices.SearchUserByName(stringSearch);
         if (res.success) {
-            setFriend(res.user.user);
+            setSearchFriends(res.user.user); 
         }
     }
+    const handleSearchFromList = useCallback((stringSearch: string, list: iUserViewModel[]) => {
+        const filter = list.filter((u: iUserViewModel) => u.userName.includes(stringSearch));
+        if (filter.length > 0) {
+            setSearchFriends(filter);
+        }
+    }, []);
 
-    return { friend, setValue, search: handleSearch };
+    const resetSearch = () => {
+        setSearchFriends([]);
+    }
+
+    return { searchFriends, searchUserByName: handleSearch, searchFromList: handleSearchFromList, resetSearch };
 }

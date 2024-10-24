@@ -1,6 +1,7 @@
 import ServerLinks from "../Constants/ServerLinks"
 import axios from "axios";
 import RegisterSchemas from "../Schemas/RegisterSchemas";
+import ResponseViewModel from "../Model/ReponseViewModel";
 export default class UserAuthServices {
 
     public static async Login(payload: any) {
@@ -89,6 +90,20 @@ export default class UserAuthServices {
         }).catch((err) => {
             console.log(err);
             return { success: false, user: null, msj: err, status: 500 };
+        });
+
+        return result;
+    }
+
+    public static async GetUserFriends(user_id: string) {
+        const url = ServerLinks.getUserFriends(user_id);
+
+        const result = await axios.get(url).then((res) => {
+            console.log(res);
+            return res.data;
+        }).catch((err) => {
+            console.log(err);
+            return new ResponseViewModel(false, 500);
         });
 
         return result;

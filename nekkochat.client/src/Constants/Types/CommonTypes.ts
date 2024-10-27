@@ -5,6 +5,34 @@ export interface ErrorInterface {
     confirmpassword?: string,
 }
 
+export interface iServeResponseTypes {
+    success: boolean,
+    user: iConversationClusterProps[],
+    message: string,
+    error: string,
+    statusCode:number
+}
+export interface iServerRequestTypes {
+    sender_id?: string,
+    receiver_id?: string,
+    user_id?: string,
+    operation?: string
+    chat_id?: number;
+    message_id?: string,
+    value?: string,
+    favorite?: boolean,
+    archive?: boolean,
+    connectionid?: string
+}
+export interface iGroupRequestTypes {
+    sender_id?: string,
+    group_id: number,
+    groupname?: string,
+    grouptype?: string,
+    groupdesc?: string,
+    groupphoto?: string,
+    value?: string,
+}
 export interface iparticipants {
     id: string,
     name: string,
@@ -21,17 +49,19 @@ export interface iUserViewModel {
     userName: string,
     connectionId: string,
     profilePhotoUrl: string,
-    friends_Count?: number ,
+    friends_Count?: number,
     about?: string,
-    lastOnline?: string
+    lastOnline?: string,
+    isFriend?: boolean,
+    isSender?: boolean
 }
 
 export interface iResponseViewModel {
-     Success: boolean;
-     User: iUserViewModel;
-     Message: string;
-     Error?: string | null;
-     Status: number;
+    Success?: boolean | null;
+    User?: iUserViewModel | null;
+    Message?: string | null;
+    Error?: string | null;
+    Status?: number | null;
 }
 export interface iChatSchema {
     id: string,
@@ -47,6 +77,7 @@ export interface iConversationClusterProps {
     messages: iChatSchema[],
     participants: iparticipants[],
     groupname?: string,
+    status?:string
 }
 
 export interface iSideBoxProps {
@@ -56,7 +87,7 @@ export interface iSideBoxProps {
 }
 export interface iSideBoxCardProps {
     chat: iConversationClusterProps,
-    user: string ,
+    user: string,
     setCurrentConversation: (arg: string) => void
 }
 

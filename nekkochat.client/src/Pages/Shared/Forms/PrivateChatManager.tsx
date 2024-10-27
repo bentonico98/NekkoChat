@@ -36,7 +36,7 @@ export default function PrivateChatManager() {
                                     variant="primary"
                                     onClick={() => {
                                         searchFromList(value, friend);
-                                        searchUserByName(value)
+                                        searchUserByName(value, friend)
                                     }} >Search</Button>
                             </Col>
                         </Row>
@@ -50,7 +50,8 @@ export default function PrivateChatManager() {
                                     <FriendButton
                                         name={el.userName}
                                         id={el.id}
-                                        idx={idx} />
+                                        idx={idx}
+                                        item={el}/>
                                 </Row>
                             })}
                         </div>}
@@ -61,7 +62,8 @@ export default function PrivateChatManager() {
                                 <FriendButton
                                     name={el.userName}
                                     id={el.id}
-                                    idx={idx} />
+                                    idx={idx}
+                                    item={el} />
                             </Row>
                         })}
                     </Container>

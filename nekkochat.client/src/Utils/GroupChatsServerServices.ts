@@ -1,4 +1,5 @@
 import * as signalR from "@microsoft/signalr";
+import { iGroupRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
@@ -34,9 +35,9 @@ export default class PrivateChatsServerServices {
         }
         return this.conn.connectionId;
     }
-    public static SendMessageToGroupInvoke(sender_id: string, group_id: number, msj: string) {
+    public static SendMessageToGroupInvoke(data: iGroupRequestTypes) {
         try {
-            this.conn.invoke("SendMessage", sender_id, group_id, msj);
+            this.conn.invoke("SendMessage", data.sender_id, data.group_id, data.value);
         } catch (er) {
             console.log(er);
         }

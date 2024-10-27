@@ -6,8 +6,8 @@ import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerService
 
 import { useNavigate } from "react-router-dom";
 import useGetParticipants from "../../../Hooks/useGetParticipants";
-import {  useState } from "react";
-import { Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { useState } from "react";
+import { Container, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
 import { iChatMessagesProps, iChatSchema } from "../../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
@@ -23,8 +23,9 @@ export default function ChatMessages(
         isTyping
     }: iChatMessagesProps) {
 
-    const { receiverName, lastOnline, startDate } = useGetReceiver(sender, messages);
-    const { participantName } = useGetParticipants(participants, sender);
+    const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender);
+    const { getParticipantName } = useGetParticipants(sender);
+
     const navigate = useNavigate();
 
     const [chat_id, setChat_id] = useState<number>(chat);
@@ -59,7 +60,7 @@ export default function ChatMessages(
         if (!message_id) return;
         if (!user_id) return;
 
-        const deleted = await MessageServicesClient.deleteMessageFromChat(chat_id, message_id, user_id);
+        const deleted = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
 
         console.log(deleted);
     }
@@ -76,10 +77,10 @@ export default function ChatMessages(
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
                             src={avatar}
-                            name={FirstLetterUpperCase(participantName)} />
+                            name={FirstLetterUpperCase(getParticipantName(participants))} />
                         <ConversationHeader.Content
-                            userName={FirstLetterUpperCase(participantName)}
-                            info={lastOnline} />
+                            userName={FirstLetterUpperCase(getParticipantName(participants))}
+                            info={getLastOnline(messages)} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
@@ -95,18 +96,28 @@ export default function ChatMessages(
                                     'aria-labelledby': 'basic-button',
                                 }}
                             >
-                                <MenuItem onClick={async () => { 
+                                <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.manageChat("archive", chat, sender, true);
+                                    await MessageServicesClient.manageChat({
+                                        operation: "archive",
+                                        chat_id: chat,
+                                        sender_id: sender,
+                                        archive: true
+                                    });
                                 }}>
                                     <ListItemIcon>
                                         <Archive fontSize="small" />
                                     </ListItemIcon>
                                     <ListItemText>Archive</ListItemText>
                                 </MenuItem>
-                                <MenuItem onClick={async () => { 
+                                <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.manageChat("favorite", chat, sender, true);
+                                    await MessageServicesClient.manageChat({
+                                        operation: "favorite",
+                                        chat_id: chat,
+                                        sender_id: sender,
+                                        favorite: true
+                                    });
 
                                 }}>
                                     <ListItemIcon>
@@ -116,22 +127,30 @@ export default function ChatMessages(
                                 </MenuItem>
                                 <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.deleteChat(chat, message_id, sender);
+                                    await MessageServicesClient.deleteChat({
+                                        chat_id: chat,
+                                        message_id,
+                                        sender_id: sender
+                                    });
                                 }}>
                                     <ListItemIcon>
                                         <Delete fontSize="small" />
                                     </ListItemIcon>
                                     <ListItemText>Delete</ListItemText>
                                 </MenuItem>
-                                
+
                             </Menu>
                         </ConversationHeader.Actions>
                     </ConversationHeader>
 
                     {/*Chat Component*/}
 
-                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id === receiver && <TypingIndicator content={`${receiverName} is typing`} />}>
-                        <MessageSeparator content={startDate} />
+                    <MessageList
+                        typingIndicator={isTyping &&
+                            isTyping.typing &&
+                            isTyping.user_id === receiver &&
+                            <TypingIndicator content={`${getReceiverName(messages)} is typing`} />}>
+                        <MessageSeparator content={`${getChatStartDate(messages)}`} />
                         {messages.map((el: iChatSchema, idx: number) => {
                             return (
                                 <Message key={idx} model={{
@@ -150,6 +169,8 @@ export default function ChatMessages(
                                 </Message>
                             );
                         })}
+                        {/* Popup Menu */}
+
                         <Menu
                             id="basic-menu"
                             anchorEl={messageAnchor}
@@ -215,7 +236,7 @@ export default function ChatMessages(
                                 </Typography>
                             </MenuItem>
                             <Divider />
-                            <MenuItem onClick={() => { handleDeleteMessageButton(chat_id, message_id, sender) } }>
+                            <MenuItem onClick={() => { handleDeleteMessageButton(chat_id, message_id, sender) }}>
                                 <ListItemIcon>
                                     <Delete fontSize="small" />
                                 </ListItemIcon>
@@ -234,15 +255,26 @@ export default function ChatMessages(
                         sendDisabled={!connected}
                         onChange={(e) => {
                             if (e.length > 1) {
-                                PrivateChatsServerServices.SendTypingSignal(sender, receiver.toString());
+                                PrivateChatsServerServices.SendTypingSignal({
+                                    sender_id: sender,
+                                    receiver_id: receiver.toString()
+                                });
                             } else {
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToUser(chat, sender, receiver.toString(), e) }} />
+                        onSend={async (e) => {
+                            await MessageServicesClient.sendMessageToUser({
+                                chat_id: chat,
+                                sender_id: sender,
+                                receiver_id: receiver.toString(),
+                                value: e
+                            })
+                        }} />
                 </ChatContainer>
-                : <ChatContainer className="flexibleContainer">
-                </ChatContainer>}
+                : <Container style={{ minHeight: "100vh", zIndex:90000 }}>
+                    <h1>NekkoChat Privado</h1>
+                </Container>}
         </>
     );
 }

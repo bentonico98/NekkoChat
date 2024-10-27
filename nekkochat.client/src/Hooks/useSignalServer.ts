@@ -4,17 +4,21 @@ import { iTypingComponentProps, iuserStore } from "../Constants/Types/CommonType
 import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
 export default function useSignalServer(user: iuserStore, addToChat: (user: string, msj: string, { typing,user_id }: iTypingComponentProps) => void) {
     const [connected, setConnected] = useState<boolean>(false);
-    const [conn, setConn] = useState<string | null>();
+    const [conn, setConn] = useState<string>("");
 
     const startServer = () => {
         PrivateChatsServerServices.Start(addToChat).then(async (res) => {
             setConnected(true);
-            setConn(res);
+            setConn(res || "");
         });
     }
 
-    const setConnectionId = async (id: string, conn: string | undefined | null) => {
-         await UserAuthServices.SetConnectionId(id, conn);
+    const setConnectionId = async (id: string, conn: string) => {
+        await UserAuthServices.SetConnectionId({
+            user_id: id,
+            sender_id: id,
+            connectionid: conn
+        });
     }
 
     //Mantiene la conexion abierta

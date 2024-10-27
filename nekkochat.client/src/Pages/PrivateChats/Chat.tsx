@@ -19,7 +19,10 @@ import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/Common
 export default function Chat() {
     const { chat_id } = useParams<string>();
  
-    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({
+        typing: false,
+        user_id: "0"
+    });
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
@@ -33,7 +36,12 @@ export default function Chat() {
             return;
         }
         setMessages((c: iChatSchema[]) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
+            [...c, new ChatSchema(Math.floor(
+                Math.random()).toString(),
+                user,
+                user,
+                msj,
+                new Date().toJSON(), false)]);
     };
 
     const { loggedUser, user_id } = useGetUser(user, "all");
@@ -43,11 +51,17 @@ export default function Chat() {
     useEffect(() => {
         dispatch(getUserData());
         fetchMessage(parseInt(chat_id || "0"));
-        MessageServicesClient.sendReadMessage(chat_id, user_id);
+        MessageServicesClient.sendReadMessage({
+            chat_id: parseInt(chat_id || "0"),
+            user_id
+        });
     }, []);
 
     useEffect(() => {
-        MessageServicesClient.sendReadMessage(chat_id, user_id);
+        MessageServicesClient.sendReadMessage({
+            chat_id: parseInt(chat_id || "0"),
+            user_id
+        });
     }, [user_id]);
 
     return (

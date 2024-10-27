@@ -8,41 +8,47 @@ using NekkoChat.Server.Models;
 using NekkoChat.Server.Constants.Types;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using NekkoChat.Server.Constants;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController(ILogger<UserController> logger, ApplicationDbContext context, IMapper mapper, IServiceProvider serviceProvider) : ControllerBase
+    public class UserController(
+        ILogger<UserController> logger, 
+        ApplicationDbContext context, 
+        IMapper mapper, 
+        IServiceProvider serviceProvider) : ControllerBase
     {
         private readonly ILogger<UserController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
         private readonly IMapper _mapper = mapper;
 
-        // /User/users?user_id=""
+        // /User/users?user_id="user_id"
 
         [HttpGet("users")]
-        public async Task<IActionResult> Get(string user_id)
+        public async Task<IActionResult> Get([FromQuery] string user_id)
         {
             try
             {
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
-                return Ok(user);
+                UserDTO userView = _mapper.Map<UserDTO>(user);
+                return Ok(new ResponseDTO<UserDTO> { Success = true, SingleUser = userView, StatusCode = 200 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<UserDTO> { Message = ErrorMessages.ErrorMessage, Error = ex.Message, StatusCode = 500 });
             }
         }
 
         [HttpGet("user")]
-        public IActionResult GetUserByName(string name)
+        public IActionResult GetUserByName([FromQuery] string name)
         {
 
             try
             {
-
-                List<AspNetUsers> searchRes = new();
+                List<UserDTO> searchRes = new();
 
                 var user = _context.AspNetUsers.FirstOrDefault((c) => c.UserName.Contains(name));
                 IQueryable<AspNetUsers> results = from c in _context.AspNetUsers select c;
@@ -50,29 +56,35 @@ namespace NekkoChat.Server.Controllers
 
                 foreach (var search in results)
                 {
-                    searchRes.Add(search);
+                    UserDTO userView = _mapper.Map<UserDTO>(search);
+                    searchRes.Add(userView);
                 }
 
-                object payload = new { success = true, user = searchRes };
-
-                return Ok(payload);
+                return Ok(new ResponseDTO<UserDTO> { Success = true, User = searchRes, StatusCode = 200 });
 
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
 
         }
         [HttpGet("friends")]
-        public IActionResult GetUserFriends([FromQuery] string user_id)
+        public IActionResult GetUserFriends([FromQuery] string user_id, [FromQuery] string operation)
         {
             try
             {
                 List<UserDTO> friendsList = new();
 
                 IQueryable<Friend_List> friends = from fr in _context.friend_list select fr;
-                friends = friends.Where((fr) => fr.receiver_id == user_id);
+                if (operation == "requests")
+                {
+                    friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == false);
+                }
+                else
+                {
+                    friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == true);
+                }
 
                 foreach (var friend in friends)
                 {
@@ -81,130 +93,137 @@ namespace NekkoChat.Server.Controllers
                         AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id);
                         if (!string.IsNullOrEmpty(user!.Id))
                         {
-                            var config = new MapperConfiguration(cfg => cfg.CreateMap<AspNetUsers, UserDTO>());
-                            var mapper = new Mapper(config);
-                            UserDTO userView = mapper.Map<UserDTO>(user);
+                            //var config = new MapperConfiguration(cfg => cfg.CreateMap<AspNetUsers, UserDTO>());
+                            //var mapper = new Mapper(config);
+                            UserDTO userView = _mapper.Map<UserDTO>(user);
+                            if (operation == "requests")
+                            {
+                                userView.isFriend = false;
+                                userView.isSender = true;
+
+                            }
+                            else
+                            {
+                                userView.isFriend = true;
+                            }
                             friendsList.Add(userView);
                         }
                     }
-                    
-                }
 
-                //object payload = new { success = true, user = friendsList };
+                }
 
                 return Ok(new ResponseDTO<UserDTO> { Success = true, User = friendsList, StatusCode = 200 });
 
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = "An error ocurred", Error = ex.Message, StatusCode= 500 });
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
 
         }
+
         [HttpPost("manage/friendrequest/send")]
-        public async Task<IActionResult> PostFriendRequest([FromBody] UserRequest data)
+        public async Task<IActionResult> PostFriendRequest([FromQuery] UserRequest data)
         {
+            if (data.receiver_id is null && data.sender_id is null)
+            {
+                return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
+            }
+
+            AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.receiver_id);
+
+            if (sender == null || receiver == null) return StatusCode(403, new ResponseDTO<Friend_List> { Message = "User " + ErrorMessages.NoExist, Error = ErrorMessages.Invalid + " User." });
+
             try
             {
-                AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
-                AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.receiver_id);
-
-                if (sender == null || receiver == null) return StatusCode(403, new { Message = "User Doesnt Exist", Error = "Invalid User" });
-
-                try
+                Friend_List friendReq = new Friend_List
                 {
-                    Friend_List friendReq = new Friend_List
-                    {
-                        sender_id = sender.Id,
-                        receiver_id = receiver.Id,
-                        isAccepted = false
-                    };
-                    _context.friend_list.Add(friendReq);
-                    _context.SaveChanges();
-                    return Ok();
-
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
-                }
+                    sender_id = sender.Id,
+                    receiver_id = receiver.Id,
+                    isAccepted = false
+                };
+                _context.friend_list.Add(friendReq);
+                _context.SaveChanges();
+                return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ex.Message });
             }
+
         }
 
         [HttpPatch("manage/friendrequest/response")]
         public async Task<IActionResult> PatchFriendRequest([FromBody] UserRequest data)
         {
+            if (data.receiver_id is null && data.sender_id is null)
+            {
+                return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
+            }
             try
             {
-                try
+                Friend_List friendReq = await _context.friend_list.FirstOrDefaultAsync((fr) =>
+                fr.sender_id == data.sender_id && fr.receiver_id == data.receiver_id
+                ||
+                fr.sender_id == data.receiver_id && fr.receiver_id == data.sender_id);
+
+                if (data.operation == "accept" && friendReq!.id > 0)
                 {
-                    Friend_List friendReq = await _context.friend_list.FirstOrDefaultAsync((fr) => fr.sender_id == data.sender_id && fr.receiver_id == data.receiver_id);
-
-                    if (data.operation == "accept" && friendReq!.id > 0)
-                    {
-                        friendReq.isAccepted = true;
-                        _context.friend_list.Update(friendReq);
-                    }
-                    else if (data.operation == "decline" && friendReq!.id > 0)
-                    {
-                        _context.RemoveRange(friendReq);
-                    }
-                    else
-                    {
-                        return BadRequest();
-                    }
-
-                    _context.SaveChanges();
-                    return Ok();
-
+                    friendReq.isAccepted = true;
+                    _context.friend_list.Update(friendReq);
                 }
-                catch (Exception ex)
+                else if (data.operation == "decline" && friendReq!.id > 0)
                 {
-                    return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                    _context.RemoveRange(friendReq);
                 }
+                else
+                {
+                    return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.ErrorRegular, StatusCode = 400 });
+                }
+
+                _context.SaveChanges();
+                return Ok(new ResponseDTO<UserDTO>());
+
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ex.Message, StatusCode = 500 });
             }
         }
 
         [HttpPost("manage/connectionid")]
-        public async Task<IActionResult> Post(string user_id, string connectionid)
+        public async Task<IActionResult> Post([FromBody] UserRequest data)
         {
             try
             {
-                AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
-                user!.ConnectionId = connectionid;
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id);
+                user!.ConnectionId = data.connectionid;
                 user!.Status = ValidStatus.Valid_Status.available;
                 _context.AspNetUsers.UpdateRange(user);
                 _context.SaveChanges();
-                return Ok();
+                return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
         [HttpPut("manage/status")]
-        public async Task<IActionResult> Put(string user_id, int status)
+        public async Task<IActionResult> Put([FromBody] UserRequest data, [FromQuery] int status)
         {
             try
             {
-                AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id);
                 user!.Status = (ValidStatus.Valid_Status)status;
                 _context.AspNetUsers.UpdateRange(user);
                 _context.SaveChanges();
-                return Ok();
+                return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
     }

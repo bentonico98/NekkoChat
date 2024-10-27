@@ -22,7 +22,10 @@ import { useSearchParams } from "react-router-dom";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Inbox() {
 
-    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({ typing: false, user_id: "0" });
+    const [isTyping, setIsTyping] = useState<iTypingComponentProps>({
+        typing: false,
+        user_id: "0"
+    });
 
     const [searchParams] = useSearchParams();
     const [typeParams] = useState(searchParams.get("type") || "all");
@@ -47,7 +50,12 @@ export default function Inbox() {
             return;
         }
         setMessages((c: iChatSchema[]) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, user, msj, new Date().toJSON(), false)]);
+            [...c, new ChatSchema(
+                Math.floor(Math.random()).toString(),
+                user,
+                user,
+                msj,
+                new Date().toJSON(), false)]);
     };
 
     useEffect(() => {

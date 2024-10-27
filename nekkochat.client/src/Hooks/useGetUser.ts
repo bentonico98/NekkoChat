@@ -14,11 +14,13 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
     
     const dispatchUser = () => {
         if (UserAuthServices.isAuthenticated() && loggedUser == null) {
-            setLoggedUser( user);
-            setUser_id( loggedUser.value.id);
+            setLoggedUser(user);
+            setUser_id(loggedUser.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
             MessageServicesClient.getAllUsersChats(loggedUser.value.id, type).then((res) => {
-                setconversations(res);
+                if (res.success) {
+                    setconversations(res.user);
+                }
             });
             setLoggedUser(user);
             setUser_id(loggedUser.value.id);
@@ -33,6 +35,3 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
 
     return { conversations, loggedUser, user_id };
 }
-
-//dispatch(getUserData());
-//const dispatch = useAppDispatch();

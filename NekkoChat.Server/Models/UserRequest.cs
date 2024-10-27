@@ -7,5 +7,7 @@
         public string? user_id { get; set; }
         public string? operation { get; set; }
         public string? status { get; set; }
+
+        public string? connectionid { get; set; }
     }
 }

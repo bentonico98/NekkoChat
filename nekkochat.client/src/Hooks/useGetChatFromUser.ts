@@ -10,12 +10,14 @@ export default function useGetChatFromUser(user_id:string) {
 
     const setCurrentConversation = async (chat_id: number) => {
         const res = await MessageServicesClient.getChatFromUser(chat_id);
-        console.log(res);
-        setcurrentConvo(res);
-        setChatID(res[0]._id);
-        var filter = res[0].participants.filter((i: iparticipants) => i.id !== user_id);
-        setMessages(res[0].messages);
-        setReceiverID(filter[0].id);
+        if (res.success) {
+            setcurrentConvo(res.user);
+            setChatID(res.user[0]._id);
+            var filter = res.user[0].participants.filter((i: iparticipants) => i.id !== user_id);
+            setMessages(res.user[0].messages);
+            setReceiverID(filter[0].id);
+        }
+        
     };
 
     return { messages, setMessages, chatID, receiverID, currentConvo, fetchMessage: setCurrentConversation };

@@ -7,10 +7,16 @@ export default function useGetUserFriendList(user_id: string | null) {
 
     const [friend, setFriend] = useState<iUserViewModel[]>([]);
 
+    const [friendRequest, setFriendRequest] = useState<iUserViewModel[]>([]);
+
     const getFriendsList = async (id:string) => {
-        let res = await UserAuthServices.GetUserFriends(id);
+        let res = await UserAuthServices.GetUserFriends(id,"any");
+        let fReq = await UserAuthServices.GetUserFriends(id,"requests");
         if (res.success) {
             setFriend([...res.user]);  
+        }
+        if (fReq.success) {
+            setFriendRequest([...fReq.user]);
         }
     }
 
@@ -20,6 +26,6 @@ export default function useGetUserFriendList(user_id: string | null) {
         }
     }, [user_id]);
 
-    return { friend, value, setValue, setFriend };
+    return { friend, friendRequest, value, setValue, setFriend };
 
 }

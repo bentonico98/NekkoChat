@@ -11,7 +11,7 @@ import useSearchUserByName from "../../Hooks/useSearchUserByName";
 export default function Index() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
-    const { friend, value, setValue } = useGetUserFriendList(user.value.id);
+    const { friend, friendRequest, value, setValue } = useGetUserFriendList(user.value.id);
     const { searchFriends, searchFromList, resetSearch } = useSearchUserByName();
 
     return (
@@ -30,11 +30,21 @@ export default function Index() {
             </Container>
 
             <Row style={{ overflowY: "auto", overflowX: "hidden" }}>
+                {friendRequest.length > 0 && <div>
+                    <h3>Pending Friend Requests</h3>
+                    {friendRequest.map((el: iUserViewModel, idx: number) => {
+                        return <Col xs={4}>
+                            <FriendButton name={el.userName} id={el.id} idx={idx} item={el} />
+                        </Col>
+                    })}
+                    <hr />
+
+                </div>}
                 {searchFriends.length > 0 && <div>
                     <h5>Search Results</h5>
                     {searchFriends.map((el: iUserViewModel, idx: number) => {
                         return <Col xs={4}>
-                            <FriendButton name={el.userName} id={el.id} idx={idx} />
+                            <FriendButton name={el.userName} id={el.id} idx={idx} item={el} />
                         </Col>
                     })}
                     <hr />
@@ -43,7 +53,7 @@ export default function Index() {
                 <h5>My Friends</h5>
                 {friend.length > 0 && friend.map((el: iUserViewModel, idx: number) => {
                     return <Col xs={4}>
-                        <FriendButton name={el.userName} id={el.id} idx={idx} />
+                        <FriendButton name={el.userName} id={el.id} idx={idx} item={el} />
                     </Col>
                 })}
             </Row>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { iConversationClusterProps, iuserStore } from "../../Constants/Types/CommonTypes";
+import { iConversationClusterProps, iServeResponseTypes, iuserStore } from "../../Constants/Types/CommonTypes";
 import { UserState } from "../../Store/Slices/userSlice";
 
 export default function useGetUser(user: UserState |iuserStore | any ) {
@@ -17,8 +17,11 @@ export default function useGetUser(user: UserState |iuserStore | any ) {
             setLoggedUser(user);
             setUser_id(loggedUser!.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
-            MessageServicesClient.getAllGroupsChats(loggedUser.value.id).then((res: iConversationClusterProps[]) => {
-                setconversations(res);
+            MessageServicesClient.getAllGroupsChats(loggedUser.value.id).then((res: iServeResponseTypes) => {
+                if (res.success) {
+                    setconversations(res.user);
+                }
+
             });
             setLoggedUser(user);
             setUser_id(loggedUser.value.id);

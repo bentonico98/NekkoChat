@@ -11,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMaximize } from "@fortawesome/free-solid-svg-icons";
 import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
-
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
+import { Container } from '@mui/material';
 
 export default function ChatMessages({
     messages,
@@ -27,7 +28,6 @@ export default function ChatMessages({
     return (
         <>
             {messages.length > 0 ?
-
                 <ChatContainer className="flexibleContainer">
 
                     {/*Chat Header*/}
@@ -36,8 +36,8 @@ export default function ChatMessages({
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
                             src={avatar}
-                            name={groupName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()} />
+                            name={FirstLetterUpperCase(groupName)} />
+                        <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
@@ -84,10 +84,21 @@ export default function ChatMessages({
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToGroup(receiver, sender, groupName, groupType, groupDesc, groupPhoto, e) }} />
+                        onSend={async (e) => {
+                            await MessageServicesClient.sendMessageToGroup({
+                                group_id: receiver,
+                                sender_id: sender,
+                                groupname: groupName,
+                                grouptype: groupType,
+                                groupdesc: groupDesc,
+                                groupphoto: groupPhoto,
+                                value: e
+                            })
+                        }} />
                 </ChatContainer>
-                : <ChatContainer className="flexibleContainer">
-                </ChatContainer>}
+                : <Container style={{ minHeight: "100vh" }}>
+                        <h1>NekkoChat</h1>
+                </Container>}
         </>
     );
 }

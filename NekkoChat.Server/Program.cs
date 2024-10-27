@@ -7,12 +7,16 @@ using NekkoChat.Server.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using NekkoChat.Server.Models;
+using Microsoft.OpenApi.Any;
+using NekkoChat.Server.Constants.Interfaces;
+using NekkoChat.Server.Utils;
 //using BlazorServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -55,26 +59,22 @@ builder.Services.AddCors(options =>
                    .AllowAnyMethod()
                    .AllowCredentials();
         });
-});
+}); 
+
+//Necessary Injections
+builder.Services.AddScoped<iMessageService, MessageServices>();
+builder.Services.AddScoped<iGroupChatMessageService, GroupChatMessageServices>();
+
+//Signal R Config
 builder.Services.AddSignalR();
 
-
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
-
-
-/*var elasticUsername = configuration["Authentication:ElasticSearch:Username"];
-var elasticPassword = configuration["Authentication:ElasticSearch:Password"];
-
-var elasticSettings = new ElasticsearchClientSettings(new Uri("https://localhost:9200"))
-    .Authentication(new BasicAuthentication("bento", "papibento"));
-
-var elasticClient = new ElasticsearchClient(elasticSettings);*/
+//AutoMapper Config
+builder.Services.AddAutoMapper((cfg) =>
+{
+    cfg.CreateMap<AspNetUsers, UserDTO>();
+});
 
 var app = builder.Build();
-
-//app.MapIdentityApi<AspNetUsers>();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -99,7 +99,8 @@ app.UseCors("AllowSpecificOrigin");
 //app.UseSignalR();
 
 app.MapFallbackToFile("/index.html");
-//Map de los Hub -- NOTA:Proximamente hay que cambiar la ruta em base a la ruta del chat con el cual estamos trabajando
+
+//Map de los Hub
 app.MapHub<PrivateChatHub>("/privatechathub");
 app.MapHub<GroupChatHub>("/groupchathub");
 

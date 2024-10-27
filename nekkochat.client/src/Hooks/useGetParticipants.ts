@@ -1,17 +1,12 @@
-import { useEffect, useState } from "react";
+import {  useCallback } from "react";
 import { iparticipants } from "../Constants/Types/CommonTypes";
 
-export default function useGetParticipants(participants: iparticipants[], user:string) {
-    const [participantName, setParticipantName] = useState("");
+export default function useGetParticipants(user: string) {
 
-    const getParticpant = () => {
+    const getParticipant = useCallback((participants: iparticipants[]) => {
         const username = participants ? participants.filter((p: iparticipants) => p.id != user) : [{ name: "Unknown", id: "0" }];
-        setParticipantName(username[0].name);
-    }
+        return username[0].name;
+    }, [user])
 
-    useEffect(() => {
-        getParticpant();
-    }, [participants]);
-
-    return { participantName };
+    return { getParticipantName: getParticipant };
 }

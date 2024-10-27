@@ -1,62 +1,68 @@
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import timeAgo from "../Utils/TimeFormatter";
 import MessageServicesClient from "../Utils/MessageServicesClient";
 import GetUserStatusService from "../Utils/GetUserStatusService";
-import { UserStatus } from "@chatscope/chat-ui-kit-react/src/types/unions";
-import { iChatSchema } from "../Constants/Types/CommonTypes";
+import { iChatSchema, iparticipants } from "../Constants/Types/CommonTypes";
 
-export default function useGetReceiver(user: string, messages: iChatSchema[]) {
-    const [receiverName, setReceiverName] = useState("");
-    const [receiverStatus, setReceiverStatus] = useState<UserStatus>("unavailable");
-    const [lastOnline, setLastOnline] = useState<string | undefined>();
-    const [startDate, setStartDate] = useState<string | undefined>();
-    const [unreadMsj, setUnreadMsj] = useState<number | undefined>();
+export default function useGetReceiver(user: string) {
 
-    const fetchUser = async (filter: iChatSchema[]) => {
-        const id: string = filter[0].user_id || "0";
+    const fetchUser = async (id: string) => {
         const res = await MessageServicesClient.getUserById(id);
-        setReceiverStatus(GetUserStatusService(res.status));
-    }
-    const getUnreadMessages = () => {
-        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false && i.user_id !== user);
-        setUnreadMsj(message.length);
-    }
+        if (res.success) {
+            return GetUserStatusService(res.singleUser.status);
+        }
+    };
+    const fetchUserByParticipantId = async (participants: iparticipants[]) => {
+        const filter: iparticipants[] = participants.filter((p) => p.id !== user);
 
-    const getChatStartDate = (filter: iChatSchema[]) => {
+        const id: string = filter[0].id;
+
+        const res = await MessageServicesClient.getUserById(id);
+        if (res.success) {
+            return GetUserStatusService(res.singleUser.status);
+        }
+    };
+    const getUnreadMessages = useCallback((messages: iChatSchema[]) => {
+        const filter = getParticipants(messages);
+        if (filter.length <= 0) return;
+
+        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false);
+        return message.length;
+    }, [user])
+
+    const getChatStartDate = useCallback((messages: iChatSchema[]) => {
+        const filter = getParticipants(messages);
+        if (filter.length <= 0) return;
+
         const date: string = filter[0]?.created_at || new Date().toJSON();
 
         const formattedDate = timeAgo(date);
 
-        if (formattedDate) {
-            setStartDate(formattedDate);
-        }
-    }
+        return formattedDate;
+    }, [user]);
 
-    const getLastOnline = (filter: iChatSchema[]) => {
+    const getLastOnline = useCallback((messages: iChatSchema[]) => {
+        const filter = getParticipants(messages);
+        if (filter.length <= 0) return;
+
         const date: string = filter[filter.length - 1]?.created_at || new Date().toJSON();
 
         const formattedDate = timeAgo(date);
 
-        if (formattedDate) {
-            setLastOnline(formattedDate);
-        }
-    }
-    const getReceiver = () => {
-        const filter = messages.filter((i: iChatSchema) => i.user_id !== user);
+        return formattedDate;
 
+    }, [user])
+
+    const getReceiverName = useCallback((messages: iChatSchema[]) => {
+        const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
-        const username = filter[0]?.username || "";
-        setReceiverName(username);
-        fetchUser(filter);
-        getLastOnline(filter);
-        getChatStartDate(filter);
-        getUnreadMessages();
+        return filter[0]?.username || "";
+    }, [user]);
+
+    const getParticipants = (messages: iChatSchema[]) => {
+        return messages.filter((i: iChatSchema) => i.user_id !== user);
     }
 
-    useEffect(() => {
-        getReceiver();
-    }, [user, messages]);
-
-    return { receiverName, unreadMsj, lastOnline, startDate, receiverStatus, getReceiver };
+    return { getLastOnline, getUserStatus: fetchUser, getParticipantStatus: fetchUserByParticipantId, getReceiverName, getUnreadMessages, getChatStartDate };
 }

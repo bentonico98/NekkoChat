@@ -9,9 +9,11 @@ export default function useGetChatFromUser() {
 
     const setCurrentConversation = useCallback((group_id: number) => {
         MessageServicesClient.getGroupFromUser(group_id).then((res) => {
-            setcurrentConvo(res);
-            setMessages(res[0].messages);
-            setChatID(res[0]._id);
+            if (res.success) {
+                setcurrentConvo(res.user);
+                setMessages(res.user[0].messages);
+                setChatID(res.user[0]._id);
+            }
         });
     }, []);
 

@@ -37,7 +37,12 @@ export default function Chat() {
             return;
         }
         setMessages((c: iChatSchema[]) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, username, msj, new Date().toJSON(), false)]);
+            [...c, new ChatSchema(
+                Math.floor(Math.random()).toString(),
+                user,
+                username,
+                msj,
+                new Date().toJSON(), false)]);
     };
 
     const { loggedUser, user_id } = useGetUser(user);
@@ -48,11 +53,19 @@ export default function Chat() {
     useEffect(() => {
         dispatch(getUserData());
         fetchMessage(parseInt(chat_id));
-        MessageServicesClient.sendReadMessageGroup(parseInt(chat_id), user_id, groupName);
+        MessageServicesClient.sendReadMessageGroup({
+            group_id: parseInt(chat_id),
+            sender_id: user_id,
+            groupname: groupName
+        });
     }, []);
 
     useEffect(() => {
-        MessageServicesClient.sendReadMessageGroup(parseInt(chat_id), user_id, groupName);
+        MessageServicesClient.sendReadMessageGroup({
+            group_id: parseInt(chat_id),
+            sender_id: user_id,
+            groupname: groupName
+        });
     }, [user_id]);
 
     return (

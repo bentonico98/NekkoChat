@@ -1,4 +1,5 @@
 import * as signalR from "@microsoft/signalr";
+import { iServerRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
@@ -35,16 +36,16 @@ export default class PrivateChatsServerServices {
         }
         return this.conn.connectionId;
     }
-    public static SendMessageToUserInvoke(sender_id: string, receiver_id: string, msj: string) {
+    public static SendMessageToUserInvoke(data: iServerRequestTypes) {
         try {
-            this.conn.invoke("SendMessage", sender_id, receiver_id, msj);
+            this.conn.invoke("SendMessage", data.sender_id, data.receiver_id, data.value);
         } catch (er) {
             console.log(er);
         }
     }
-    public static SendTypingSignal(sender_id:string, receiver_id: string) {
+    public static SendTypingSignal(data: iServerRequestTypes) {
         try {
-            this.conn.invoke("SendTypingSignal", sender_id,  receiver_id);
+            this.conn.invoke("SendTypingSignal", data.sender_id,  data.receiver_id);
         } catch (er) {
             console.log(er);
         }

@@ -1,127 +1,112 @@
 import axios from 'axios';
 import ServerLinks from "../Constants/ServerLinks";
-import MessageSchema from "../Schemas/MessageSchema";
 import PrivateChatsServerServices from './PrivateChatsServerServices';
-import GroupMessageSchema from '../Schemas/GroupMessageSchema';
 import GroupChatsServerServices from './GroupChatsServerServices';
+import { iGroupRequestTypes, iServerRequestTypes } from '../Constants/Types/CommonTypes';
+import ResponseViewModel from '../Model/ReponseViewModel';
 export default class MessageServicesClient {
 
 
     ///////////////// PRIVATES CHATS SERVICES
 
 
-    public static async sendMessageToUser(chat_id: number, sender_id: string, receiver_id: string, msj: string) {
+    public static async sendMessageToUser(data: iServerRequestTypes) {
 
-        let url = ServerLinks.getSendMessageUrl(new MessageSchema(chat_id, sender_id, receiver_id, msj, sender_id, "user", new Date("YYYY-MM-DD HH:mm:ss").toJSON()));
-        const value = msj;
-        const result = await axios.put(url,
-            value, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        await PrivateChatsServerServices.SendMessageToUserInvoke(sender_id, receiver_id, msj);
-        return result;
-    }
-
-    public static async sendReadMessage(chat_id: string | undefined, sender_id: string) {
-        if (!sender_id) return false;
-      
-        let url = ServerLinks.getReadMessageUrl(chat_id, sender_id);
-
-        const result = await axios.put(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
+        let url = ServerLinks.getSendMessageUrl();
+        const result = await axios.put(url, data).then((res) => {
             console.log(res.status);
-        }).catch(err => {
-            console.error(err);
-        });
-
-        return result;
-    }
-
-    public static async deleteMessageFromChat(chat_id: number | undefined, message_id:string, sender_id: string) {
-        if (!sender_id) return false;
-
-        let url = ServerLinks.getDeleteMessageUrl(chat_id, message_id, sender_id);
-
-        const result = await axios.delete(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            data: {
-                id:chat_id
-            }
-        }).then((res) => {
-            console.log(res.status);
-        }).catch(err => {
-            console.error(err);
-        });
-
-        return result;
-    }
-
-    public static async deleteChat(chat_id: number | undefined, message_id: string, sender_id: string) {
-        if (!sender_id) return false;
-
-        let url = ServerLinks.getDeleteMessageUrl(chat_id, message_id, sender_id);
-
-        const result = await axios.delete(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            console.log(res.status);
-        }).catch(err => {
-            console.error(err);
-        });
-
-        return result;
-    }
-
-    public static async deleteUserChat(chat_id: number | undefined,  sender_id: string) {
-        if (!sender_id) return false;
-        if (!chat_id) return false;
-    }
-
-    public static async manageChat(operation:string, chat_id: number | undefined, user_id: string, status:boolean) {
-        if (!user_id) return false;
-
-        let url = ServerLinks.getManageChatUrl(operation, chat_id, user_id, status);
-
-        const result = await axios.put(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            console.log(res.status);
-        }).catch(err => {
-            console.error(err);
-        });
-
-        return result;
-    }
-
-    public static async createChat(sender_id: string, receiver_id: string, msj: string) {
-        let url = ServerLinks.getCreateChatUrl(sender_id, receiver_id, msj);
-
-        const result = await axios.post(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            console.log(res);
             return res.data;
         }).catch(err => {
             console.error(err);
-            return { success: false, error: err };
+            return new ResponseViewModel(false, 500, null, null, err);
+        });;
+        await PrivateChatsServerServices.SendMessageToUserInvoke(data);
+        return result;
+    }
+
+    public static async sendReadMessage(data: iServerRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getReadMessageUrl(data.chat_id);
+
+        const result = await axios.put(url, data).then((res) => {
+            console.log(res.status);
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
         });
 
         return result;
     }
 
+    public static async deleteMessageFromChat(data: iServerRequestTypes | any) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getDeleteMessageUrl(data.chat_id);
+
+        const result = await axios.delete(url, data).then((res) => {
+            console.log(res.status);
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+
+    public static async deleteChat(data: iServerRequestTypes | any) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getDeleteMessageUrl(data);
+
+        const result = await axios.delete(url, data).then((res) => {
+            console.log(res.status);
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+
+    public static async deleteUserChat(data: iServerRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.chat_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+    }
+
+    public static async manageChat(data: iServerRequestTypes) {
+        if (!data.user_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getManageChatUrl(data.chat_id);
+
+        const result = await axios.put(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+
+    public static async createChat(data: iServerRequestTypes) {
+        let url = ServerLinks.getCreateChatUrl();
+
+        const result = await axios.post(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+
+
+    //// USER SERVICES
     public static async getUserById(user_id: string) {
         let url = ServerLinks.getUserById(user_id);
 
@@ -129,7 +114,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return err;
+            return new ResponseViewModel(false, 500, null, null, err);
         });
 
         return result;
@@ -140,17 +125,15 @@ export default class MessageServicesClient {
         let url = ServerLinks.getAllUsersChatUrl(user_id,type);
 
         const result = await axios.get(url).then((res) => {
-            //console.log(res);
-
             return res.data;
         }).catch(function (error) {
             // handle error
             console.log(error);
+            return new ResponseViewModel(false, 500, null, null, error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
         });
-        //console.log(result);
 
         return result;
     }
@@ -159,19 +142,17 @@ export default class MessageServicesClient {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-
+            console.log(res);
             return res.data;
         }).catch(function (error) {
             // handle error
             console.log(error);
+            return new ResponseViewModel(false, 500, null, null, error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
         });
 
-        //console.log(result);
-
-      
         return result;
     }
 
@@ -179,15 +160,15 @@ export default class MessageServicesClient {
     ///////////////// GROUPS SERVICES
 
     public static async getGroupById(group_id: number) {
-        if (!group_id) return;
+        if (!group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
         let url = ServerLinks.getGroupById(group_id);
 
         const result = await axios.get(url).then((res) => {
-            console.log(res);
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return err;
+            return new ResponseViewModel(false, 500, null, null, err);
         });
 
         return result;
@@ -198,16 +179,15 @@ export default class MessageServicesClient {
         let url = ServerLinks.getAllGroupsChatUrl(user_id);
 
         const result = await axios.get(url).then((res) => {
-            //console.log(res);
             return res.data;
         }).catch(function (error) {
             // handle error
             console.log(error);
+            return new ResponseViewModel(false, 500, null, null, error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
         });
-        //console.log(result);
 
         return result;
     }
@@ -216,71 +196,63 @@ export default class MessageServicesClient {
         let url = ServerLinks.getOneGroupChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-            //console.log(res);
-
             return res.data;
         }).catch(function (error) {
             // handle error
             console.log(error);
+            return new ResponseViewModel(false, 500, null, null, error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
         });
 
-        //console.log(result);
-
 
         return result;
     }
 
-    public static async sendMessageToGroup(group_id: number, sender_id: string, groupname: string, grouptype: string, groupdesc: string, groupphoto: string, msj: string) {
+    public static async sendMessageToGroup(data: iGroupRequestTypes) {
 
-        let url = ServerLinks.getSendMessageToGroupUrl(new GroupMessageSchema(group_id, groupname, grouptype, groupdesc, groupphoto, msj, sender_id));
-        const value = msj;
-        const result = await axios.put(url,
-            value, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        await GroupChatsServerServices.SendMessageToGroupInvoke(sender_id, group_id, msj);
-        return result;
-    }
+        let url = ServerLinks.getSendMessageToGroupUrl(data.group_id);
 
-    public static async sendReadMessageGroup(group_id: number, sender_id: string, groupname:string | undefined) {
-        if (!sender_id) return false;
-        if (!group_id) return false;
-        if (!groupname) return false;
-
-        let url = ServerLinks.getReadGroupMessageUrl(group_id, sender_id, groupname);
-
-        const result = await axios.put(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            console.log(res);
+        const result = await axios.put(url, data).then((res) => {
+            return res.data;
         }).catch(err => {
             console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        await GroupChatsServerServices.SendMessageToGroupInvoke(data);
+        return result;
+    }
+
+    public static async sendReadMessageGroup(data: iGroupRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getReadGroupMessageUrl(data.group_id);
+
+        const result = await axios.put(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
         });
 
         return result;
     }
-    public static async addParticipantToGroup(group_id: number | undefined, sender_id: string, groupname: string) {
-        if (!sender_id) return false;
-        if (!group_id) return false;
-        if (!groupname) return false;
+    public static async addParticipantToGroup(data: iGroupRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getAddParticipantToGroupUrl(group_id, sender_id, groupname);
+        let url = ServerLinks.getAddParticipantToGroupUrl(data.group_id);
 
-        const result = await axios.put(url, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then((res) => {
-            console.log(res);
+        const result = await axios.put(url, data).then((res) => {
+            return res.data;
         }).catch(err => {
             console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
         });
 
         return result;

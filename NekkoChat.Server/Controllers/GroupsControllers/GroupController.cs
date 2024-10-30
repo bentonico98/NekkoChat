@@ -24,7 +24,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
-        public IActionResult Get(string user_id)
+        public IActionResult Get([FromQuery] string user_id)
         {
             try
             {
@@ -115,7 +115,7 @@ namespace NekkoChat.Server.Controllers
             {
                 return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok(new ResponseDTO<Groups>());
+            return Ok(new ResponseDTO<int> { SingleUser = messageSent});
         }
 
         // PUT groupschat/chat/send/{id} --- Ruta para envio de mensaje a un chat existente
@@ -156,6 +156,41 @@ namespace NekkoChat.Server.Controllers
             return Ok(new ResponseDTO<Groups>());
         }
 
+        // PUT groupschat/chat/manage/{id} --- Ruta para envio de mensaje a un chat existente
+        [HttpPut("chat/manage/{chat_id}")]
+        public IActionResult PutManageChat([FromRoute] int group_id, [FromBody] ChatRequest data)
+        {
+            bool managed = false;
+
+            if (data.operation == "archive")
+            {
+                managed = _messageServices.archiveMessage(group_id, data);
+
+            }
+            else if (data.operation == "favorite")
+            {
+                managed = _messageServices.favoriteMessage(group_id, data);
+            }
+
+            if (!managed)
+            {
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            }
+
+            return Ok(new ResponseDTO<bool>());
+        }
+
+        // DELETE groupschat/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)
+        [HttpDelete("chat/message/delete/{id}")]
+        public IActionResult DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
+        {
+            bool messageDeleted = _messageServices.deleteMessage(id, data);
+            if (!messageDeleted)
+            {
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            }
+            return Ok(new ResponseDTO<bool>());
+        }
 
         // DELETE groupschat/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]

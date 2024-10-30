@@ -16,9 +16,9 @@ namespace NekkoChat.Server.Controllers
     [ApiController]
     [Route("[controller]")]
     public class UserController(
-        ILogger<UserController> logger, 
-        ApplicationDbContext context, 
-        IMapper mapper, 
+        ILogger<UserController> logger,
+        ApplicationDbContext context,
+        IMapper mapper,
         IServiceProvider serviceProvider) : ControllerBase
     {
         private readonly ILogger<UserController> _logger = logger;
@@ -28,12 +28,29 @@ namespace NekkoChat.Server.Controllers
         // /User/users?user_id="user_id"
 
         [HttpGet("users")]
-        public async Task<IActionResult> Get([FromQuery] string user_id)
+        public async Task<IActionResult> Get([FromQuery] string user_id, [FromQuery] string sender_id)
         {
             try
             {
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
                 UserDTO userView = _mapper.Map<UserDTO>(user);
+                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                {
+                    Friend_List friendsList = ctx.friend_list.Where((c) =>
+                    c.sender_id == userView.Id && c.receiver_id == sender_id && c.isAccepted == true
+                    ||
+                    c.sender_id == sender_id && c.receiver_id == userView.Id && c.isAccepted == true).FirstOrDefault();
+                    
+                    if(friendsList is not null)
+                    {
+                        userView.isFriend = (bool)friendsList!.isAccepted;
+                    }
+                }
+                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                {
+                    bool isSender = ctx.friend_list.Any((f) => f.sender_id == userView.Id && f.isAccepted == false);
+                    userView.isSender = (bool)isSender || false;
+                }
                 return Ok(new ResponseDTO<UserDTO> { Success = true, SingleUser = userView, StatusCode = 200 });
             }
             catch (Exception ex)
@@ -50,9 +67,9 @@ namespace NekkoChat.Server.Controllers
             {
                 List<UserDTO> searchRes = new();
 
-                var user = _context.AspNetUsers.FirstOrDefault((c) => c.UserName.Contains(name));
+                //var user = _context.AspNetUsers.FirstOrDefault((c) => c.UserName.Contains(name.ToLower()));
                 IQueryable<AspNetUsers> results = from c in _context.AspNetUsers select c;
-                results = results.Where((c) => c.UserName.Contains(name));
+                results = results.Where((c) => c.UserName!.ToLower().Contains(name.ToLower()));
 
                 foreach (var search in results)
                 {
@@ -93,14 +110,11 @@ namespace NekkoChat.Server.Controllers
                         AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id);
                         if (!string.IsNullOrEmpty(user!.Id))
                         {
-                            //var config = new MapperConfiguration(cfg => cfg.CreateMap<AspNetUsers, UserDTO>());
-                            //var mapper = new Mapper(config);
                             UserDTO userView = _mapper.Map<UserDTO>(user);
                             if (operation == "requests")
                             {
                                 userView.isFriend = false;
                                 userView.isSender = true;
-
                             }
                             else
                             {

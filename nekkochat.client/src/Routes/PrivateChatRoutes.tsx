@@ -3,13 +3,11 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import WelcomePage from "../Pages/Welcome/Index";
 
 import Inbox from "../Pages/PrivateChats/Inbox";
-import Chat from "../Pages/PrivateChats/Chat";
 
 import Login from "../Pages/Login/Login";
 import Register from "../Pages/Login/Register";
 
 import InboxGroup from "../Pages/GroupChats/Inbox";
-import ChatGroup from "../Pages/GroupChats/Chat";
 
 import FriendList from "../Pages/Friend/Index";
 import FriendProfile from "../Pages/Friend/Account";
@@ -31,13 +29,11 @@ export default function PrivateChatRoutes() {
 
                     <Route path="chats">
                         <Route index element={<Inbox />} />
-                        <Route path="chat/:chat_id" element={<Chat />} />
                         <Route path="video" element={<VideoChats />} />
                     </Route>
 
                     <Route path="groupchats">
                         <Route index element={<InboxGroup />} />
-                        <Route path="chat/:chat_id" element={<ChatGroup />} />
                     </Route>
 
                     <Route path="friends">

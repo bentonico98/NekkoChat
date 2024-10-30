@@ -3,14 +3,14 @@ import UserAuthServices from "../Utils/UserAuthServices";
 import { iUserViewModel } from "../Constants/Types/CommonTypes";
 import UserViewModel from "../Model/UserViewModel";
 
-export default function useSearchUserByName() {
+export default function useSearchUserByName(user_id: string) {
 
     const [searchFriends, setSearchFriends] = useState<iUserViewModel[]>([]);
 
     const handleSearch = async (stringSearch: string, friends: iUserViewModel[] = [new UserViewModel()]) => {
         const res = await UserAuthServices.SearchUserByName(stringSearch);
         if (res.success) {
-            let searchRes: iUserViewModel[] = res.user.user;
+            let searchRes: iUserViewModel[] = res.user.filter((r: iUserViewModel) => r.id !== user_id);
             if (friends.length > 0) {
                 searchRes.forEach((el: iUserViewModel) => {
                     friends.forEach((fr: iUserViewModel) => {
@@ -20,7 +20,6 @@ export default function useSearchUserByName() {
                     });
                 });
             }
-
             setSearchFriends(searchRes);
         }
     }
@@ -35,5 +34,10 @@ export default function useSearchUserByName() {
         setSearchFriends([]);
     }
 
-    return { searchFriends, searchUserByName: handleSearch, searchFromList: handleSearchFromList, resetSearch };
+    return {
+        searchFriends,
+        searchUserByName: handleSearch,
+        searchFromList: handleSearchFromList,
+        resetSearch
+    };
 }

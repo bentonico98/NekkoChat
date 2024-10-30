@@ -41,7 +41,7 @@ namespace NekkoChat.Server.Utils
                     conversation = parseMessage(data);
                     Groups_Messages newUm = fetchUsersMessages(data.group_id);
                     newUm.content = conversation;
-                    await _context.groups_messages.AddRangeAsync(newUm);
+                    _context.groups_messages.Add(newUm);
                     _context.SaveChanges();
 
                     return true;
@@ -49,7 +49,7 @@ namespace NekkoChat.Server.Utils
                 conversation = parseMessage(data);
                 Groups_Messages um = fetchUsersMessages(data.group_id);
                 um.content = conversation;
-                _context.groups_messages.UpdateRange(um);
+                _context.groups_messages.Update(um);
                 _context.SaveChanges();
 
                 return chatExists;
@@ -83,18 +83,42 @@ namespace NekkoChat.Server.Utils
                     profilePhotoUrl = data.groupphoto
                 };
 
-                _context.groups.Add(newChat);
-
-                _context.SaveChanges();
+                await _context.groups.AddAsync(newChat);
+                await _context.SaveChangesAsync();
 
                 int chat_id = newChat.id;
 
-                bool umCreated = await createUserMessage(chat_id, data.sender_id, data.group_id, data.groupname, data.value);
+                data.user_id = data.sender_id;
+                bool umCreated = await createUserMessage(chat_id, data);
+                bool gmCreated = await createMembership(chat_id, data.user_id);
 
                 if (!umCreated)
                 {
                     Groups_Messages um = fetchUsersMessages(chat_id);
+
+                    if (data!.participants!.Count() <= 0) return um.group_id;
+
+                    foreach (var participant in data!.participants)
+                    {
+                        if (gmCreated)
+                        {
+                            data.user_id = participant.id;
+                            await addParticipantToGroup(data, um.group_id);
+                        }
+                    }
+
                     return um.group_id;
+                }
+
+                if (data!.participants!.Count() <= 0) return chat_id;
+
+                foreach (var participant in data!.participants)
+                {
+                    if (gmCreated)
+                    {
+                        data.user_id = participant.id;
+                        await addParticipantToGroup(data, chat_id);
+                    }
                 }
 
                 return chat_id;
@@ -131,22 +155,92 @@ namespace NekkoChat.Server.Utils
             }
             return true;
         }
-        public bool favoriteMessage() {
+        public bool favoriteMessage(int group_id, ChatRequest data)
+        {
+            bool chatExisted = chatExist(group_id);
+
+            using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                if (!chatExisted) return false;
+
+                IQueryable<User_Group_Preferences> chats = _context.user_group_preferencess.Where((pref) => pref.group_id == group_id && pref.user_id == data.user_id);
+
+                if (chats.Count() <= 0) return false;
+
+                foreach (var chat in chats)
+                {
+                    chat!.isFavorite = data.favorite;
+                    _context.user_group_preferencess.Update(chat);
+                }
+                _context.SaveChanges();
+
+            }
             return true;
         }
-        public bool archiveMessage() { 
+        public bool archiveMessage(int group_id, ChatRequest data)
+        {
+            bool chatExisted = chatExist(group_id);
+
+            using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                if (!chatExisted) return false;
+
+                IQueryable<User_Group_Preferences> chats = _context.user_group_preferencess.Where((pref) => pref.group_id == group_id && pref.user_id == data.user_id);
+
+                if (chats.Count() <= 0) return false;
+
+                foreach (var chat in chats)
+                {
+                    chat!.isArchived = data.archive;
+                    _context.user_group_preferencess.Update(chat);
+                }
+                _context.SaveChanges();
+            }
             return true;
         }
-        public bool deleteMessage() {
+        public bool deleteMessage(int chat_id, ChatRequest data)
+        {
+            if (chat_id <= 0) return false;
+
+            using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                Groups_Messages filteredConvo = fetchUsersMessages(chat_id);
+                var chats = filteredConvo.content;
+                GroupMessageSchemas parseConvo = JsonSerializer.Deserialize<GroupMessageSchemas>(chats);
+                IEnumerable<GroupChatSchemas> messages = parseConvo!.messages;
+
+                bool isUserMessage = belongToUser(messages, data);
+
+                if (!isUserMessage) return false;
+
+                List<GroupChatSchemas> newConvoAfterDeletion = new();
+
+                foreach (var message in messages)
+                {
+                    if (message.id != data.message_id)
+                    {
+                        newConvoAfterDeletion.Add(message);
+                    }
+                }
+
+                string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+
+                filteredConvo.content = payload;
+
+                _context.groups_messages.Update(filteredConvo);
+                _context.SaveChanges();
+            }
+
             return true;
         }
-        public bool deleteChat() {
+        public bool deleteChat()
+        {
             return true;
         }
 
-        public async Task<bool> addParticipantToGroup([FromBody] GroupRequest data, int group_id)
+        public async Task<bool> addParticipantToGroup(GroupRequest data, int group_id)
         {
-            if(string.IsNullOrEmpty(data.user_id)) return false;
+            if (string.IsNullOrEmpty(data.user_id)) return false;
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
@@ -165,7 +259,7 @@ namespace NekkoChat.Server.Utils
                 var messages = parsedMessage.messages.ToImmutableArray();
                 var allParticipants = parsedMessage.participants.ToImmutableArray();
 
-                var newParticipants = allParticipants.AddRange(new ParticipantsSchema
+                var newParticipants = allParticipants.Add(new ParticipantsSchema
                 {
                     id = participants.Id,
                     name = participants.UserName,
@@ -176,12 +270,15 @@ namespace NekkoChat.Server.Utils
 
                 group.content = payload;
                 _context.groups_messages.UpdateRange(group);
-                _context.SaveChanges();
 
-                Groups_Members newMember = new Groups_Members { group_id = group_id, user_id = data.user_id };
+                Groups_Members newMember = new Groups_Members
+                {
+                    group_id = group_id,
+                    user_id = data.user_id
+                };
 
-                _context.groups_members.AddRange(newMember);
-                _context.SaveChanges();
+                await _context.groups_members.AddAsync(newMember);
+                await _context.SaveChangesAsync();
             }
             return true;
         }
@@ -189,6 +286,15 @@ namespace NekkoChat.Server.Utils
 
         /// /////////////// FUNCIONES PRIVADAS -- DEBAJO DE ESTA LINEA
 
+
+        private bool belongToUser(IEnumerable<GroupChatSchemas> messages, ChatRequest data)
+        {
+            var exist = messages.Where((m) => m.id == data.message_id && m.user_id == data.user_id);
+
+            if (!exist.Any()) return false;
+
+            return true;
+        }
 
 
         /// <summary>
@@ -211,7 +317,7 @@ namespace NekkoChat.Server.Utils
 
                 AspNetUsers user = _context.AspNetUsers.Find(data.sender_id);
 
-                var newMessages = messages.AddRange(new GroupChatSchemas
+                var newMessages = messages.Add(new GroupChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
                     content = data.value,
@@ -275,32 +381,29 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- Id del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje del Usario
         /// <returns> bool (true/false) -- en base a si la operacion fue exitosa o no</returns>
-        private async Task<bool> createUserMessage(int chat_id, string sender_id, int group_id, string groupname, string msj)
+        private async Task<bool> createUserMessage(int chat_id, GroupRequest data)
         {
-            if (string.IsNullOrEmpty(sender_id) || group_id <=0 ) return false;
+            if (string.IsNullOrEmpty(data.sender_id)) return false;
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-
-
-
-                AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
+                AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
 
                 if (sender == null || chat_id <= 0) return false;
 
-                object[] newMessages = [new GroupChatSchemas
+                GroupChatSchemas[] newMessages = [new GroupChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
-                    content = msj,
-                    user_id = sender_id.ToString(),
+                    content = data.value,
+                    user_id = data.sender_id.ToString(),
                     username = sender!.UserName,
                     created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     read = false,
-                    groupname = groupname
+                    groupname = data.groupname
                 }];
 
-                object[] newParticipants = [new ParticipantsSchema
+                ParticipantsSchema[] newParticipants = [new ParticipantsSchema
                 {
-                    id = sender_id,
+                    id = sender.Id,
                     name= sender.UserName,
                     connectionid= sender.ConnectionId
                 }];
@@ -308,11 +411,11 @@ namespace NekkoChat.Server.Utils
                 Groups_Messages userMsj = new Groups_Messages
                 {
                     group_id = chat_id,
-                    content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"groupname\":\"{groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
+                    content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
                 };
 
-                await _context.groups_messages.AddRangeAsync(userMsj);
-                _context.SaveChanges();
+                await _context.groups_messages.AddAsync(userMsj);
+                await _context.SaveChangesAsync();
 
                 int umId = userMsj.id;
 
@@ -324,6 +427,27 @@ namespace NekkoChat.Server.Utils
                 return true;
             }
         }
+        private async Task<bool> createMembership(int group_id, string user_id)
+        {
+            using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                Groups_Members newMessages = new Groups_Members
+                {
+                    group_id = group_id,
+                    user_id = user_id
+                };
 
+                await _context.groups_members.AddAsync(newMessages);
+                await _context.SaveChangesAsync();
+
+                int umId = newMessages.id;
+
+                if (umId <= 0)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
     }
 }

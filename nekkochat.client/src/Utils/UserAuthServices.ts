@@ -9,8 +9,7 @@ export default class UserAuthServices {
         const url = ServerLinks.getLoginUrl();
 
         const result = await axios.post(url, payload).then((res) => {
-            console.log(res.status);
-            console.log(res.data);
+            console.log(res);
             return res.data;
         }).catch((err) => {
             console.log(err);
@@ -54,7 +53,7 @@ export default class UserAuthServices {
         const url = ServerLinks.getSetConnectionIdUrl();
 
         const result = await axios.post(url, data).then((res) => {
-            return res.status;
+            return res.data;
         }).catch((err) => {
             console.log(err);
             return new ResponseViewModel(false, 500, null, null, err);
@@ -86,7 +85,21 @@ export default class UserAuthServices {
 
         const result = await axios.get(url).then((res) => {
             console.log(res);
-            return { success: true, user: res.data, status: res.status };
+            return res.data;
+        }).catch((err) => {
+            console.log(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+
+    public static async SearchUserById(id: string,sender_id:string) {
+        const url = ServerLinks.getUserById(id, sender_id);
+
+        const result = await axios.get(url).then((res) => {
+            console.log(res);
+            return res.data;
         }).catch((err) => {
             console.log(err);
             return new ResponseViewModel(false, 500, null, null, err);

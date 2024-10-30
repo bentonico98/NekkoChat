@@ -4,7 +4,7 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { iChatSchema } from "../../Constants/Types/CommonTypes";
 
 export default function useGetGroup(user: string, messages: iChatSchema[], group_id: number) {
-    const [groupName, setGroupName] = useState<string>("");
+    const [groupName, setGroupName] = useState<string>("Unknown");
     const [groupType, setGroupType] = useState<string>("");
     const [groupDesc, setGroupDesc] = useState<string>("");
     const [groupPhoto, setGroupPhoto] = useState<string>("");
@@ -18,9 +18,12 @@ export default function useGetGroup(user: string, messages: iChatSchema[], group
     }
     const getGroup = async (group_id: number) => {
         const res = await MessageServicesClient.getGroupById(group_id);
-        setGroupType(res.type);
-        setGroupDesc(res.description);
-        setGroupPhoto(res.profilePhotoUrl);
+        if (res.success) {
+            setGroupType(res.singleUser.type);
+            setGroupDesc(res.singleUser.description);
+            setGroupPhoto(res.singleUser.profilePhotoUrl);
+            setGroupName(res.singleUser.name);
+        }
     }
     const getChatStartDate = (filter: iChatSchema[]) => {
         const date: string = filter[0]?.created_at || new Date().toJSON();
@@ -31,9 +34,7 @@ export default function useGetGroup(user: string, messages: iChatSchema[], group
     }
     
     const getReceiver = () => {
-        const filter = messages.filter((i: iChatSchema) => i.user_id != user);
-        const groupname = filter[0]?.groupname || "Unknown";
-        setGroupName(groupname);
+        const filter = messages.filter((i: iChatSchema) => i.user_id !== user);
         getChatStartDate(filter);
         getUnreadMessages();
         getGroup(group_id);

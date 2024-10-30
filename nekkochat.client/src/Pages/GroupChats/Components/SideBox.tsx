@@ -10,16 +10,19 @@ import useGetReceiver from "../../../Hooks/useGetReceiver";
 export default function SideBox({ messages, user, setCurrentConversation }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user);
-
+    console.log(messages);
     return (
-        <Sidebar position="left" scrollable={false} style={{ minHeight: "100vh" }}>
+        <Sidebar
+            position="left"
+            scrollable={false}
+            style={{ minHeight: "100vh" }}>
             <ProfileHeader />
             <Search placeholder="Search..." />
             <ConversationList>
                 {messages.map((el: iConversationClusterProps, idx: number) => {
                     return (<Conversation
                         key={idx}
-                        name={FirstLetterUpperCase(el.groupname || "Unknown")}
+                        name={FirstLetterUpperCase(el.messages[0].groupname || el.groupname || "Unknown")}
                         lastSenderName={el.messages[el.messages.length - 1].username}
                         info={el.messages[el.messages.length - 1].content}
                         unreadCnt={getUnreadMessages(el.messages)}

@@ -12,7 +12,7 @@ export default function Index() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const { friend, friendRequest, value, setValue } = useGetUserFriendList(user.value.id);
-    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName();
+    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id);
 
     return (
         <Container className="h-100"  >

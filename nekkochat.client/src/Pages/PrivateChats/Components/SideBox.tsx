@@ -1,4 +1,4 @@
-import { Sidebar, Search, ConversationList, Conversation, Avatar, UserStatus } from '@chatscope/chat-ui-kit-react';
+import { Sidebar, Search, ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import ProfileHeader from "../../Shared/ProfileHeader";
 import { iConversationClusterProps, iSideBoxProps } from "../../../Constants/Types/CommonTypes";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
@@ -16,9 +16,6 @@ export default function SideBox({ messages, user, setCurrentConversation }: iSid
     const { getUnreadMessages } = useGetReceiver(user);
 
     const { getParticipantName } = useGetParticipants(user);
-
-    const [status] = useState<UserStatus>("unavailable");
-
 
     const [chat_id, setChat_id] = useState<number>();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

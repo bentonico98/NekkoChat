@@ -107,8 +107,8 @@ export default class MessageServicesClient {
 
 
     //// USER SERVICES
-    public static async getUserById(user_id: string) {
-        let url = ServerLinks.getUserById(user_id);
+    public static async getUserById(user_id: string, sender_id:string) {
+        let url = ServerLinks.getUserById(user_id, sender_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -249,6 +249,22 @@ export default class MessageServicesClient {
         let url = ServerLinks.getAddParticipantToGroupUrl(data.group_id);
 
         const result = await axios.put(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err);
+        });
+
+        return result;
+    }
+    public static async createGroup(data: iGroupRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getCreateGroupChatUrl();
+
+        const result = await axios.post(url, data).then((res) => {
+            console.log(res);
             return res.data;
         }).catch(err => {
             console.error(err);

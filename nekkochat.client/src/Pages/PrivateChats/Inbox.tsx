@@ -18,9 +18,11 @@ import { closeModal, getUserData } from "../../Store/Slices/userSlice";
 import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 export default function Inbox() {
+
+    const { state } = useLocation();
 
     const [isTyping, setIsTyping] = useState<iTypingComponentProps>({
         typing: false,
@@ -60,11 +62,25 @@ export default function Inbox() {
 
     useEffect(() => {
         dispatch(getUserData());
+        if (state) {
+            fetchMessage(state.id);
+        }
     }, []);
 
-    const { conversations, loggedUser, user_id } = useGetUser(user, typeParams);
+    const {
+        conversations,
+        loggedUser,
+        user_id
+    } = useGetUser(user, typeParams);
     const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, currentConvo, chatID, receiverID, fetchMessage } = useGetChatFromUser(user_id);
+    const {
+        messages,
+        setMessages,
+        currentConvo,
+        chatID,
+        receiverID,
+        fetchMessage
+    } = useGetChatFromUser(user_id);
 
     return (
         <>

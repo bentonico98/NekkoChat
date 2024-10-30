@@ -35,15 +35,15 @@ export default function FriendButton({ name, id, idx, item }: incomingProps) {
 
         if (operation === "accept") {
             const res = await UserAuthServices.GetManageFriendRequest({ operation, sender_id, receiver_id });
-            console.log(res);
+            console.log(res.success);
             return res.success;
         } else if (operation === "decline") {
             const res = await UserAuthServices.GetManageFriendRequest({ operation, sender_id, receiver_id });
-            console.log(res);
+            console.log(res.success);
             return res.success;
         } else {
             const res = await UserAuthServices.GetSendFriendRequest({ sender_id, receiver_id });
-            console.log(res);
+            console.log(res.success);
             return res.success;
         }
     }
@@ -55,7 +55,7 @@ export default function FriendButton({ name, id, idx, item }: incomingProps) {
             value: msj
         });
         if (res.success) {
-            navigate(`/chats/chat/${res.chatId}`);
+            navigate(`/inbox`, { state: {id: res.singleUser} });
         }
     }
 

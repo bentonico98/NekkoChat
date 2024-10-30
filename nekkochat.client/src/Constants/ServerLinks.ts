@@ -39,7 +39,7 @@
          const url = `group/chat/create`
          return `${this.ServerUrl}${url}`;
      };
-     public static getSendMessageToGroupUrl(id: number) {
+     public static getSendMessageToGroupUrl(id: number | undefined) {
          const url = `group/chat/send/${id}`
          return `${this.ServerUrl}${url}`;
      };
@@ -57,6 +57,22 @@
      }
      public static getAddParticipantToGroupUrl(id: number) {
          const url = `group/chat/add/${id}`
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getManageGroupUrl(id: number) {
+         const url = `group/chat/manage/${id}`
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getDeleteMessageFromGroupUrl(id: number | undefined) {
+         const url = `group/chat/message/delete/${id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getSetConnectionIdForGroupUrl() {
+         const url = `group/manage/connectionid`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getGroupById(group_id: number) {
+         const url = `group/groups/${group_id}`;
          return `${this.ServerUrl}${url}`;
      }
 
@@ -85,8 +101,8 @@
          const url = `user/manage/status?status=${status}`;
          return `${this.ServerUrl}${url}`;
      }
-     public static getUserById(user_id: string) {
-         const url = `user/users?user_id=${user_id}`;
+     public static getUserById(user_id: string, sender_id:string) {
+         const url = `user/users?user_id=${user_id}&sender_id=${sender_id}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserByName(name: string) {
@@ -105,18 +121,6 @@
          const url = `user/manage/friendrequest/response`;
          return `${this.ServerUrl}${url}`;
      }
-
-
-     ////////////// GROUP ROUTES
-     public static getSetConnectionIdForGroupUrl() {
-         const url = `group/manage/connectionid`;
-         return `${this.ServerUrl}${url}`;
-     }
-     public static getGroupById(group_id: number) {
-         const url = `group/groups/${group_id}`;
-         return `${this.ServerUrl}${url}`;
-     }
-
 }
 
 export default ServerLinks;

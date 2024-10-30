@@ -22,16 +22,17 @@ export interface iServerRequestTypes {
     value?: string,
     favorite?: boolean,
     archive?: boolean,
-    connectionid?: string
+    connectionid?: string | null | undefined
 }
 export interface iGroupRequestTypes {
     sender_id?: string,
-    group_id: number,
+    group_id?: number,
     groupname?: string,
     grouptype?: string,
     groupdesc?: string,
     groupphoto?: string,
     value?: string,
+    participants?: iparticipants[] 
 }
 export interface iparticipants {
     id: string,

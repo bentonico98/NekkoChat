@@ -35,7 +35,7 @@ export default function ChatMessages({
                     <ConversationHeader>
                         <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
-                            src={avatar}
+                            src={groupPhoto || avatar}
                             name={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>

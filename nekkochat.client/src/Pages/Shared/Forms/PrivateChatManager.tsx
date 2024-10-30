@@ -9,8 +9,17 @@ import useSearchUserByName from '../../../Hooks/useSearchUserByName';
 export default function PrivateChatManager() {
 
     const user: iuserStore | any = useAppSelector((state) => state.user);
-    const { friend, value, setValue} = useGetUserFriendList(user.value.id);
-    const { searchFriends, searchUserByName, searchFromList, resetSearch } = useSearchUserByName();
+
+    const {
+        friend,
+        value,
+        setValue } = useGetUserFriendList(user.value.id);
+
+    const {
+        searchFriends,
+        searchUserByName,
+        searchFromList,
+        resetSearch } = useSearchUserByName(user.value.id);
 
     return (
         <div >

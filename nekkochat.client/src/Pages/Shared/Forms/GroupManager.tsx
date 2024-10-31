@@ -2,10 +2,8 @@ import { Modal, Button, Container, Row, Col, Form } from 'react-bootstrap';
 import { Search, } from '@chatscope/chat-ui-kit-react';
 import GroupButton from '../GroupButton';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
-import useGetUserFriendList from '../../../Hooks/Friends/useGetUserFriendList';
 import { iGroupRequestTypes, iparticipants, iuserStore, iUserViewModel } from '../../../Constants/Types/CommonTypes';
-import { closeModal } from '../../../Store/Slices/userSlice';
-import useSearchUserByName from '../../../Hooks/useSearchUserByName';
+import { closeModal, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../../Store/Slices/userSlice';
 import { useEffect, useState } from 'react';
 import MessageServicesClient from '../../../Utils/MessageServicesClient';
 
@@ -15,6 +13,10 @@ import { Box, Paper, Typography, MobileStepper } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import useGetUserFriendList from '../../../Hooks/Friends/useGetUserFriendList';
+import useSearchUserByName from '../../../Hooks/useSearchUserByName';
+import useDisplayMessage from '../../../Hooks/useDisplayMessage';
+import RegularSkeleton from '../Skeletons/RegularSkeleton';
 interface iGroupRequestTypesv2 {
     sender_id?: string,
     group_id?: number,
@@ -35,8 +37,24 @@ export default function GroupManager() {
     const user: iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const { friend, value, setValue } = useGetUserFriendList(user.value.id);
-    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id);
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
+
+    const { friend, value, setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
+    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     const [isValid, setValid] = useState<boolean>(false);
 
@@ -105,14 +123,34 @@ export default function GroupManager() {
         }
         if (!isValid) return 0;
 
+        setDisplayInfo({isLoading: true});
+
         const res = await MessageServicesClient.createGroup(info);
         if (res.success) {
             navigate("/groupchats/chat/"+res.singleUser);
+            setDisplayInfo({
+                hasMsj: true,
+                msj: res.message,
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return setDisplayInfo({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            setDisplayInfo({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
         }
-        return res;
+        return res.success;
     };
 
     const addParticipant = (id: string, name: string, isChecked: boolean) => {
+        setDisplayInfo({ isLoading: true });
+
         if (isChecked) {
             if (groupInfo.participants?.length > 0) {
                 let exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
@@ -126,12 +164,15 @@ export default function GroupManager() {
                     connectionid: "0000000000000"
                 }]
             });
+            setDisplayInfo({ isLoading: false });
+
         } else {
             if (groupInfo!.participants?.length > 0) {
                 const newArray = groupInfo?.participants?.filter((el: iparticipants) => el.id !== id);
                 setGroupInfo({
                     ...groupInfo, participants: newArray
                 });
+                setDisplayInfo({ isLoading: false });
             }
         }
     };
@@ -194,13 +235,13 @@ export default function GroupManager() {
 
                     <h5>My Friends</h5>
                     <hr />
-                    {friend.length > 0 && friend.map((el: iUserViewModel, idx: number) => {
+                    {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
                         return <GroupButton
                             item={el}
                             idx={idx}
                             key={idx}
                             func={addParticipant} />
-                    })}
+                    }): <RegularSkeleton />}
                 </Container>
 
                 <Box sx={{ maxWidth: 400, flexGrow: 1 }}>

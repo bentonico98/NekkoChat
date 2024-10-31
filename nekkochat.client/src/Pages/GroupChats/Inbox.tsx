@@ -9,16 +9,19 @@ import ChatMessages from "./Components/ChatMessages";
 import ChatSchema from "../../Schemas/ChatSchema";
 
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
-import useSignalServer from "../../Hooks/Group/useSignalServer";
-import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
-import useGetUser from "../../Hooks/Group/useGetUser";
 
-import { getUserData,  closeModal } from "../../Store/Slices/userSlice";
+
+import { getUserData, closeModal, toggleErrorModal, toggleMsjModal, toggleNotification, toggleLoading } from "../../Store/Slices/userSlice";
 
 import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import GroupManager from "../Shared/Forms/GroupManager";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import useGetUser from "../../Hooks/Group/useGetUser";
+import useSignalServer from "../../Hooks/Group/useSignalServer";
+import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
+import useDisplayMessage from "../../Hooks/useDisplayMessage";
+import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
 
 Modal.setAppElement("#root");
 export default function Inbox() {
@@ -31,17 +34,32 @@ export default function Inbox() {
     const user = useAppSelector((state) => state.user);
     const modalOpened = useAppSelector(state => state.user.modalOpened);
     const dispatch = useAppDispatch();
-  
+
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
     function afterOpenModal() {
         // references are now sync'd and can be accessed.
-       // subtitle.style.color = '#f00';
+        // subtitle.style.color = '#f00';
     }
 
     function close() {
         dispatch(closeModal());
     }
 
-    const addToChat = (user: string, username: string, msj: string, { typing, user_id, username:userN }: iTypingComponentProps) => {
+    const addToChat = (user: string, username: string, msj: string, { typing, user_id, username: userN }: iTypingComponentProps) => {
         if (!msj && !user) {
             setIsTyping({ typing: typing, user_id: user_id, username: userN });
             setTimeout(() => {
@@ -53,13 +71,23 @@ export default function Inbox() {
             [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, username, msj, new Date().toJSON(), false)]);
     };
 
-    const { conversations, loggedUser, user_id } = useGetUser(user);
-    const { connected } = useSignalServer(loggedUser, addToChat);
-    const { messages, setMessages, chatID,  fetchMessage } = useGetGroupsFromUser();
+    const {
+        conversations,
+        loggedUser,
+        user_id } = useGetUser(user, setDisplayInfo);
+
+    const { connected } = useSignalServer(loggedUser, addToChat, setDisplayInfo);
+
+    const {
+        messages,
+        setMessages,
+        chatID,
+        fetchMessage } = useGetGroupsFromUser(setDisplayInfo);
 
     useEffect(() => {
         dispatch(getUserData());
     }, []);
+
     return (
         <>
             <MainContainer  >
@@ -67,15 +95,18 @@ export default function Inbox() {
                     messages={conversations}
                     user={user_id}
                     setCurrentConversation={fetchMessage}
-                    />
-                <ChatMessages
-                    messages={messages}
-                    connected={connected}
-                    sender={user_id}
-                    receiver={chatID}
-                    isTyping={isTyping}
+                    DisplayMessage={setDisplayInfo}
                 />
-                
+                {messages.length > 0 &&
+                    <ChatMessages
+                        messages={messages}
+                        connected={connected}
+                        sender={user_id}
+                        receiver={chatID}
+                        isTyping={isTyping}
+                        DisplayMessage={setDisplayInfo}
+                    />}
+
             </MainContainer>
             <Modal
                 isOpen={modalOpened}
@@ -84,9 +115,9 @@ export default function Inbox() {
                 style={customStyles}
                 contentLabel="Example Modal"
             >
-                <GroupManager/>
+                <GroupManager />
             </Modal>
         </>
-        
+
     );
 }

@@ -2,14 +2,32 @@ import { useCallback } from "react";
 import timeAgo from "../Utils/TimeFormatter";
 import MessageServicesClient from "../Utils/MessageServicesClient";
 import GetUserStatusService from "../Utils/GetUserStatusService";
-import { iChatSchema, iparticipants } from "../Constants/Types/CommonTypes";
+import { iChatSchema, iDisplayMessageTypes, iparticipants } from "../Constants/Types/CommonTypes";
 
-export default function useGetReceiver(user: string) {
-
+export default function useGetReceiver(user: string, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+    
     const fetchUser = async (id: string) => {
-        const res = await MessageServicesClient.getUserById(id);
+        DisplayMessage({ isLoading: true });
+
+        const res = await MessageServicesClient.getUserById(id, user);
         if (res.success) {
+            DisplayMessage({
+                hasMsj: true,
+                msj: `${res.singleUser.userName} is ${res.singleUser.status}.`,
+                isLoading: false
+            });
             return GetUserStatusService(res.singleUser.status);
+        } else {
+            if (res.internalMessage) return DisplayMessage({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            DisplayMessage({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
         }
     };
     const fetchUserByParticipantId = async (participants: iparticipants[]) => {
@@ -17,7 +35,7 @@ export default function useGetReceiver(user: string) {
 
         const id: string = filter[0].id;
 
-        const res = await MessageServicesClient.getUserById(id);
+        const res = await MessageServicesClient.getUserById(id,user);
         if (res.success) {
             return GetUserStatusService(res.singleUser.status);
         }

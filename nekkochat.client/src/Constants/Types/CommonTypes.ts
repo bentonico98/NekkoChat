@@ -4,7 +4,15 @@ export interface ErrorInterface {
     password?: string,
     confirmpassword?: string,
 }
-
+export interface iDisplayMessageTypes {
+    hasError?: boolean,
+    error?: string,
+    hasMsj?: boolean,
+    msj?: string,
+    hasNotification?: boolean,
+    notification?: string,
+    isLoading?: boolean,
+}
 export interface iServeResponseTypes {
     success: boolean,
     user: iConversationClusterProps[],
@@ -84,27 +92,14 @@ export interface iConversationClusterProps {
 export interface iSideBoxProps {
     messages: iConversationClusterProps[],
     user: string,
-    setCurrentConversation: (arg: any) => void
+    setCurrentConversation: (arg: any) => void,
+    DisplayMessage: (obj: iDisplayMessageTypes) => void
 }
-export interface iSideBoxCardProps {
-    chat: iConversationClusterProps,
-    user: string,
-    setCurrentConversation: (arg: string) => void
-}
-
 export interface iTypingComponentProps {
     typing: boolean,
     user_id: string,
     username?: string
 }
-
-export interface iChatBoxProps {
-    connected: boolean,
-    sender: string,
-    receiver: string,
-    chat: number
-}
-
 export interface iChatMessagesProps {
     messages: iChatSchema[],
     connected: boolean,
@@ -112,7 +107,8 @@ export interface iChatMessagesProps {
     sender: string,
     receiver: string | number,
     participants: iparticipants[],
-    isTyping: iTypingComponentProps
+    isTyping: iTypingComponentProps,
+    DisplayMessage: (obj: iDisplayMessageTypes)=> void
 }
 export interface iGroupChatMessagesProps {
     messages: iChatSchema[],
@@ -121,5 +117,7 @@ export interface iGroupChatMessagesProps {
     sender: string,
     receiver: number,
     participants?: iparticipants[],
-    isTyping: iTypingComponentProps
+    isTyping: iTypingComponentProps,
+    DisplayMessage: (obj: iDisplayMessageTypes) => void
+
 }

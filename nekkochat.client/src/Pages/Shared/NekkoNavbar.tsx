@@ -6,7 +6,7 @@ import { faStar, faArchive, faSignOutAlt, faUserFriends, faVideoCamera, faPeople
 
 import { useAppDispatch, useAppSelector } from '../../Hooks/storeHooks';
 
-import { logout, UserState } from "../../Store/Slices/userSlice";
+import { logout, toggleLoading, UserState } from "../../Store/Slices/userSlice";
 
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
@@ -22,6 +22,7 @@ function NekkoNavbar() {
     }
 
     const handleLogout = async () => {
+        dispatch(toggleLoading(true));
         await UserAuthServices.Logout(user.value.id);
         dispatch(logout());
         navigate();
@@ -29,6 +30,7 @@ function NekkoNavbar() {
 
     React.useLayoutEffect(() => {
         if (!UserAuthServices.isAuthenticated()) {
+            dispatch(toggleLoading(true));
             navigate();
         } 
     }, []);

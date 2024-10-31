@@ -9,17 +9,19 @@ import ChatMessages from "./Components/ChatMessages";
 import ChatSchema from "../../Schemas/ChatSchema";
 
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
-import useSignalServer from "../../Hooks/useSignalServer";
-import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
-import useGetUser from "../../Hooks/useGetUser";
 
-import { closeModal, getUserData } from "../../Store/Slices/userSlice";
+import { closeModal, getUserData, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from "../../Store/Slices/userSlice";
 
 import Modal from "react-modal";
 import customStyles from "../../Constants/Styles/ModalStyles";
 import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
+import useGetUser from "../../Hooks/useGetUser";
+import useSignalServer from "../../Hooks/useSignalServer";
+import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
+import useDisplayMessage from "../../Hooks/useDisplayMessage";
+import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
 export default function Inbox() {
 
     const { state } = useLocation();
@@ -35,6 +37,7 @@ export default function Inbox() {
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
     const modalOpened = useAppSelector(state => state.user.modalOpened);
+
     function afterOpenModal() {
         // references are now sync'd and can be accessed.
         // subtitle.style.color = '#f00';
@@ -67,12 +70,30 @@ export default function Inbox() {
         }
     }, []);
 
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
+
     const {
         conversations,
         loggedUser,
         user_id
-    } = useGetUser(user, typeParams);
-    const { connected } = useSignalServer(loggedUser, addToChat);
+    } = useGetUser(user, typeParams, setDisplayInfo);
+
+    const { connected } = useSignalServer(loggedUser, addToChat, setDisplayInfo);
+
     const {
         messages,
         setMessages,
@@ -80,7 +101,7 @@ export default function Inbox() {
         chatID,
         receiverID,
         fetchMessage
-    } = useGetChatFromUser(user_id);
+    } = useGetChatFromUser(user_id, setDisplayInfo);
 
     return (
         <>
@@ -88,7 +109,8 @@ export default function Inbox() {
                 <SideBox
                     messages={conversations}
                     user={user_id}
-                    setCurrentConversation={fetchMessage} />
+                    setCurrentConversation={fetchMessage}
+                    DisplayMessage={setDisplayInfo} />
 
                 {currentConvo.length > 0 && <ChatMessages
                     messages={messages}
@@ -98,7 +120,9 @@ export default function Inbox() {
                     receiver={receiverID}
                     chat={chatID}
                     isTyping={isTyping}
+                    DisplayMessage={setDisplayInfo}
                 />}
+
             </MainContainer>
             <Modal
                 isOpen={modalOpened}
@@ -107,9 +131,9 @@ export default function Inbox() {
                 style={customStyles}
                 contentLabel="Example Modal"
             >
-                <PrivateChatManager/>
+                <PrivateChatManager />
             </Modal>
         </>
-        
+
     );
 }

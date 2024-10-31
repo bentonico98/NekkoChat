@@ -1,17 +1,16 @@
 ﻿import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 import avatar from "../../../assets/avatar.png";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
-import useGetReceiver from "../../../Hooks/useGetReceiver";
 import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
 
 import { useNavigate } from "react-router-dom";
-import useGetParticipants from "../../../Hooks/useGetParticipants";
 import { useState } from "react";
 import { Container, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
 import { iChatMessagesProps, iChatSchema } from "../../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
-
+import useGetReceiver from '../../../Hooks/useGetReceiver';
+import useGetParticipants from '../../../Hooks/useGetParticipants';
 export default function ChatMessages(
     {
         messages,
@@ -20,10 +19,11 @@ export default function ChatMessages(
         sender,
         receiver,
         participants,
-        isTyping
+        isTyping,
+        DisplayMessage
     }: iChatMessagesProps) {
 
-    const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender);
+    const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender, DisplayMessage);
     const { getParticipantName } = useGetParticipants(sender);
 
     const navigate = useNavigate();
@@ -60,9 +60,28 @@ export default function ChatMessages(
         if (!message_id) return;
         if (!user_id) return;
 
-        const deleted = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
+        DisplayMessage({ isLoading: true });
 
-        console.log(deleted);
+        const res = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
+
+        if (res.success) {
+            DisplayMessage({
+                hasMsj: true,
+                msj: "Deletion " + res.message,
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return DisplayMessage({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            DisplayMessage({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
+        }
     }
 
     return (
@@ -272,7 +291,7 @@ export default function ChatMessages(
                             })
                         }} />
                 </ChatContainer>
-                : <Container style={{ minHeight: "100vh", zIndex:90000 }}>
+                : <Container style={{ minHeight: "100vh", zIndex: 90000 }}>
                     <h1>NekkoChat Privado</h1>
                 </Container>}
         </>

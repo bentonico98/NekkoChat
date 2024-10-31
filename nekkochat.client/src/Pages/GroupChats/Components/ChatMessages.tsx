@@ -5,7 +5,6 @@ import avatar from "../../../assets/avatar.png";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
 
-import useGetGroup from "../../../Hooks/Group/useGetGroup";
 import { useNavigate } from 'react-router-dom';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,15 +12,24 @@ import { faMaximize } from "@fortawesome/free-solid-svg-icons";
 import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import { Container } from '@mui/material';
+import useGetGroup from '../../../Hooks/Group/useGetGroup';
+
 
 export default function ChatMessages({
     messages,
     connected,
     sender,
     receiver,
-    isTyping }: iGroupChatMessagesProps) {
+    isTyping,
+    DisplayMessage
+}: iGroupChatMessagesProps) {
 
-    const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
+    const {
+        groupName,
+        groupType,
+        groupDesc,
+        groupPhoto,
+        startDate } = useGetGroup(sender, messages, receiver, DisplayMessage);
 
     const navigate = useNavigate();
 

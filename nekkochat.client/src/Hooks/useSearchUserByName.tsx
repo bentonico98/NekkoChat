@@ -1,13 +1,15 @@
 import { useCallback, useState } from "react";
 import UserAuthServices from "../Utils/UserAuthServices";
-import { iUserViewModel } from "../Constants/Types/CommonTypes";
+import { iDisplayMessageTypes, iUserViewModel } from "../Constants/Types/CommonTypes";
 import UserViewModel from "../Model/UserViewModel";
 
-export default function useSearchUserByName(user_id: string) {
+export default function useSearchUserByName(user_id: string, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
 
     const [searchFriends, setSearchFriends] = useState<iUserViewModel[]>([]);
 
     const handleSearch = async (stringSearch: string, friends: iUserViewModel[] = [new UserViewModel()]) => {
+        DisplayMessage({ isLoading: true });
+
         const res = await UserAuthServices.SearchUserByName(stringSearch);
         if (res.success) {
             let searchRes: iUserViewModel[] = res.user.filter((r: iUserViewModel) => r.id !== user_id);
@@ -21,6 +23,22 @@ export default function useSearchUserByName(user_id: string) {
                 });
             }
             setSearchFriends(searchRes);
+            DisplayMessage({
+                hasMsj: true,
+                msj: searchRes.length + " Result (s)",
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return DisplayMessage({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            DisplayMessage({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
         }
     }
     const handleSearchFromList = useCallback((stringSearch: string, list: iUserViewModel[]) => {

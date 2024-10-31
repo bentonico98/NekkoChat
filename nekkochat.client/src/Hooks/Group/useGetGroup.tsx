@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import timeAgo from "../../Utils/TimeFormatter";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { iChatSchema } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iDisplayMessageTypes } from "../../Constants/Types/CommonTypes";
 
-export default function useGetGroup(user: string, messages: iChatSchema[], group_id: number) {
+export default function useGetGroup(user: string, messages: iChatSchema[], group_id: number, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [groupName, setGroupName] = useState<string>("Unknown");
     const [groupType, setGroupType] = useState<string>("");
     const [groupDesc, setGroupDesc] = useState<string>("");
@@ -17,12 +17,27 @@ export default function useGetGroup(user: string, messages: iChatSchema[], group
         setUnreadMsj(message.length);
     }
     const getGroup = async (group_id: number) => {
+        DisplayMessage({ isLoading: true });
+
         const res = await MessageServicesClient.getGroupById(group_id);
         if (res.success) {
             setGroupType(res.singleUser.type);
             setGroupDesc(res.singleUser.description);
             setGroupPhoto(res.singleUser.profilePhotoUrl);
             setGroupName(res.singleUser.name);
+            DisplayMessage({ isLoading: false });
+
+        } else {
+            if (res.internalMessage) return DisplayMessage({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            DisplayMessage({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
         }
     }
     const getChatStartDate = (filter: iChatSchema[]) => {

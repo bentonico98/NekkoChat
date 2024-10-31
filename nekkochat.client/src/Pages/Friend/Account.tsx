@@ -9,13 +9,31 @@ import { useEffect, useState } from "react";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { UserState } from "../../Store/Slices/userSlice";
+import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from "../../Store/Slices/userSlice";
 import { iuserStore } from "../../Constants/Types/CommonTypes";
-import { useAppSelector } from "../../Hooks/storeHooks";
+import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
+import useDisplayMessage from "../../Hooks/useDisplayMessage";
 
 export default function Account() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
+
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
 
     const navigate = useNavigate();
 
@@ -33,15 +51,29 @@ export default function Account() {
     });
 
     useEffect(() => {
+        setDisplayInfo({ isLoading: true });
+
         UserAuthServices.SearchUserById(user_id, user.value.id).then((res) => {
             if (res.success) {
                 setUserInfo(res.singleUser);
+                setDisplayInfo({ isLoading: false });
+            } else {
+                if (res.internalMessage) return setDisplayInfo({
+                    hasError: true,
+                    error: res.internalMessage,
+                    isLoading: true
+                });
+                setDisplayInfo({
+                    hasError: true,
+                    error: res.error,
+                    isLoading: true
+
+                });
             }
         });
     }, [user_id]);
 
     const handlePhoneButton = () => { }
-
 
     const handleManageFriendButton = async (
         operation: string = 'add',
@@ -51,6 +83,8 @@ export default function Account() {
         if (receiver_id == null || sender_id == null) return false;
         if (receiver_id.length <= 0 || sender_id.length <= 0) return false;
 
+        setDisplayInfo({ isLoading: true });
+
         if (operation === "accept") {
             const res = await UserAuthServices.GetManageFriendRequest(
                 {
@@ -58,27 +92,87 @@ export default function Account() {
                     sender_id,
                     receiver_id
                 });
-            console.log(res.success);
+
+            if(res.success){
+                setDisplayInfo({
+                    hasMsj: true,
+                    msj: res.message + " Accepted Request.",
+                    isLoading: false
+                });
+            } else {
+                if (res.internalMessage) return setDisplayInfo({
+                    hasError: true,
+                    error: res.internalMessage,
+                    isLoading: true
+                });
+                setDisplayInfo({
+                    hasError: true,
+                    error: res.error,
+                    isLoading: true
+                });
+            }
+
             return res.success;
         } else if (operation === "decline") {
+
             const res = await UserAuthServices.GetManageFriendRequest({
                 operation,
                 sender_id,
                 receiver_id
             });
-            console.log(res.success);
+
+            if (res.success) {
+                setDisplayInfo({
+                    hasMsj: true,
+                    msj: res.message + " Decline Request.",
+                    isLoading: false
+                });
+            } else {
+                if (res.internalMessage) return setDisplayInfo({
+                    hasError: true,
+                    error: res.internalMessage,
+                    isLoading: true
+                });
+                setDisplayInfo({
+                    hasError: true,
+                    error: res.error,
+                    isLoading: true
+                });
+            }
             return res.success;
         } else {
+
             const res = await UserAuthServices.GetSendFriendRequest({
                 sender_id,
                 receiver_id
             });
-            console.log(res.success);
+
+            if (res.success) {
+                setDisplayInfo({
+                    hasMsj: true,
+                    msj: res.message + " Friend Request.",
+                    isLoading: false
+                });
+            } else {
+                if (res.internalMessage) return setDisplayInfo({
+                    hasError: true,
+                    error: res.internalMessage,
+                    isLoading: true
+                });
+                setDisplayInfo({
+                    hasError: true,
+                    error: res.error,
+                    isLoading: true
+                });
+            }
+
             return res.success;
         }
     }
 
     const handleMessageButton = async (sender_id: string, receiver_id: string, msj: string) => {
+        setDisplayInfo({ isLoading: true });
+
         const res = await MessageServicesClient.createChat({
             sender_id,
             receiver_id,
@@ -86,9 +180,25 @@ export default function Account() {
         });
         if (res.success) {
             navigate(`/inbox`, { state: { id: res.singleUser } });
+            setDisplayInfo({
+                hasMsj: true,
+                msj: res.message + " Created Group.",
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return setDisplayInfo({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            setDisplayInfo({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+
+            });
         }
     }
-    console.log(userInfo.profilePhotoUrl);
     return (
         <Container>
             <Row>

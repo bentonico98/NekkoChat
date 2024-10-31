@@ -5,7 +5,8 @@ import { useState, useEffect } from "react";
 import { ErrorInterface } from '../../Constants/Types/CommonTypes';
 import { useAppDispatch } from '../../Hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../Store/Slices/userSlice';
+import { login, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../Store/Slices/userSlice';
+import useDisplayMessage from '../../Hooks/useDisplayMessage';
 
 export default function Register() {
 
@@ -16,14 +17,48 @@ export default function Register() {
 
     const navigate = useNavigate();
 
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
+
     const handleSubmit = async (values: RegisterSchemas) => {
+        setDisplayInfo({ isLoading: true });
+
         const res = await UserAuthServices.Register(values);
         setLoggedIn(res.success);
         setCurrentUser(res);
         if (res.success) {
             await UserAuthServices.SetUserStatusTo(res.user.id, 0);
+            setDisplayInfo({
+                hasMsj: true,
+                msj: res.message + " Registration.",
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return setDisplayInfo({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            setDisplayInfo({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
         }
-        return res;
+        return res.success;
     }
     useEffect(() => {
         if (loggedIn) {

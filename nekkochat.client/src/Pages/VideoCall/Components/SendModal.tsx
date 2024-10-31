@@ -8,6 +8,7 @@ import Grid from '@mui/material/Grid2';
 import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import CircularProgress from '@mui/material/CircularProgress';
+import { VideoCallButton } from './VideoCallButtom';
 //import useGetUser from '../../../Hooks/useGetUser';
 //import { useAppSelector } from '../../../Hooks/storeHooks';
 
@@ -24,32 +25,24 @@ const style = {
     p: 4,
 };
 
-/*[
-  {
-    "id": "19a6819f-d3fa-45cd-823c-ff2938ae6900",
-    "profilePhotoUrl": null,
-    "userName": "Manuel"
-  },
-  {
-    "id": "234f48b2-2b62-45ca-a763-8acd6bccabf6",
-    "profilePhotoUrl": null,
-    "userName": "Garcia"
-  }
-] */
-
 export type IUserData = {
     id: string,
     profilePhotoUrl: string | null,
     userName: string,
 }
+export type IProfileData = {
+    name: string,
+    photo?: string
+}
 
 interface ISendModal {
     Users: IUserData[],
+    data: IProfileData
     loading?: boolean,
     error?: boolean,
 }
 
-export const SendModal: React.FC<ISendModal> = ({ Users, loading, error }) => {
+export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data }) => {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -71,14 +64,13 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error }) => {
         }
     }, [connected, connection]);
 
-    const handleInvokeVideoNotification = (receiver_id:string) => {
-        console.log("se mando este invoke")
-        VideocallServerServices.SendVideoNotification( sender_id, receiver_id)
+    const handleInvokeVideoNotification = (receiver_id: string, data: IProfileData) => {
+        VideocallServerServices.SendVideoNotification( sender_id, receiver_id, JSON.stringify(data))
     }
 
     return (
         <div>
-            <Button onClick={handleOpen}><SendIcon/></Button>
+            <VideoCallButton onClick={handleOpen}><SendIcon /></VideoCallButton>
             <Modal
                 sx={{ width: "auto" }}
                 open={open}
@@ -106,7 +98,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error }) => {
                               </Grid>
                                 <Grid size={4}>
                                     <Button onClick={() => {
-                                        handleInvokeVideoNotification(user.id);
+                                        handleInvokeVideoNotification(user.id, data);
                                         console.log("sendModal " + sender_id + " " + user.id);
                                         console.log("connection ", conn?.connectionId)
                                     }}><SendIcon /></Button>

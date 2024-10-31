@@ -1,13 +1,16 @@
 import React, {useEffect, useRef, useState } from 'react';
 import Button from '@mui/material/Button';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
-import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import {  useDispatch } from "react-redux"
 import { setAnswered } from '../../../Store/Slices/videocallSlice';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
+import CallIcon from '@mui/icons-material/Call';
+import CallEndIcon from '@mui/icons-material/CallEnd';
+import Box from '@mui/material/Box';
+import { IProfileData } from './SendModal';
+import Typography from '@mui/material/Typography';
 
 //import { useAppSelector } from '../../../Hooks/storeHooks';
 //import useGetUser from '../../../Hooks/useGetUser';
@@ -20,6 +23,7 @@ export default function SimpleSnackbar() {
     const navigate = useNavigate();
 
     const [senderId, setSenderId] = useState<string | null>();
+    const [profileData, setProfileData] = useState<IProfileData | null>(null)
 
 
     peerConnection.current = new RTCPeerConnection()
@@ -34,12 +38,13 @@ export default function SimpleSnackbar() {
     useEffect(() => {
         if (connected) {
             connection = conn?.connection;
-            connection.on('videonotification', (sender_id: string, receiver_id: string) => {
+            connection.on('videonotification', (sender_id: string, receiver_id: string, data:string) => {
                 console.log("esta es la videonotificacion");
                 try {
                     if (Receiver_id == receiver_id) {
                         setSenderId(sender_id);
                         setOpen(true);
+                        setProfileData(JSON.parse(data));
                     }
                 } catch (error) {
                     console.error('Error en la notificacion:', error);
@@ -54,54 +59,58 @@ export default function SimpleSnackbar() {
 
     const userDispatch = useDispatch();
 
-    const handleClose = (
+    const handleClose = async (
         _event: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
     ) => {
         if (reason === 'clickaway') {
             return;
         }
-
+        await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id, false);
         setOpen(false);
     };
 
     const handleAnswer = async () => {
         setOpen(false);
         userDispatch(setAnswered(true));
-        console.log("invoco SEND OFFER")
-        //navigate("/chats/videocall/", { replace: true });
-        console.log(senderId, Receiver_id);
-        await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id);
-       // navigate(0)
-       
+        navigate("/chats/videocall/", { replace: true });
+        await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id, true);
+        navigate(0)
     };
 
     const action = (
         <React.Fragment>
-            <Button color="secondary" size="small" onClick={handleClose}>
-                UNDO
+            <Box
+                sx={{ borderRadius:"50%", width:"3rem", height:"3rem"}}
+                component="img"
+                alt="User profile photo"
+                src={profileData?.photo != null ? profileData.photo : "../../../../public/defaultAvatar.jpg"}
+            />
+            <Typography sx={{ margin: "0 4rem 0 1rem", }} variant="subtitle1">{profileData?.name != null ? profileData.name : "Unknown"}</Typography>
+            <Button size="small" sx={{ margin: "0 1rem", borderRadius: "50%", width: "1rem", height: "3rem", backgroundColor: "#ff4343", color: "white", "&:hover": { backgroundColor: "#ff6666" } }} onClick={handleClose}>
+                <CallEndIcon sx={{ color: "white", fontSize:"0.9rem" }}></CallEndIcon>
             </Button>
-            <Button color="secondary" size="small" onClick={handleAnswer}>
-                ANSWER
+            <Button sx={{ borderRadius: "50%", width: "1rem", height: "3rem", backgroundColor: "#0083ff", color: "white", "&:hover": { backgroundColor: "#00b9ff" } }} size="small" onClick={handleAnswer}>
+                <CallIcon sx={{ color: "white", fontSize:"0.9rem" }}></CallIcon>
             </Button>
-            <IconButton
-                size="small"
-                aria-label="close"
-                color="inherit"
-                onClick={handleClose}
-            >
-                <CloseIcon fontSize="small" />
-            </IconButton>
         </React.Fragment>
     );
 
     return (
         <div>
             <Snackbar
+                ContentProps={{
+                    sx: {
+                        background: "white",
+                        color:"black"
+                    }
+                }}
+                
                 open={open}
+                anchorOrigin={{ vertical: "top", horizontal:"right"}}
                 autoHideDuration={6000}
                 onClose={handleClose}
-                message="Note archived"
+                message=""
                 action={action}
             />
         </div>

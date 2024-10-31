@@ -8,7 +8,7 @@ export default class VideocallServerServices {
         .build();*/
 
     public static conn: signalR.HubConnection = new signalR.HubConnectionBuilder() //devtunel
-        .withUrl("https://9843tknk-7198.use2.devtunnels.ms/videocallhub", { withCredentials: false })
+        .withUrl("https://4m6gjv0p-7198.use2.devtunnels.ms/videocallhub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 
@@ -48,16 +48,16 @@ export default class VideocallServerServices {
             console.log(er);
         }
     }
-    public static async SendVideoNotification(sender_id: string, receiver_id: string) {
+    public static async SendVideoNotification(sender_id: string, receiver_id: string, data: string) {
         try {
-            this.conn.invoke("VideoNotification", sender_id, receiver_id);
+            this.conn.invoke("VideoNotification", sender_id, receiver_id, data);
         } catch (er) {
             console.log(er);
         }
     }
-    public static async SendOfferVideoNotification(sender_id: string, receiver_id: string) {
+    public static async SendOfferVideoNotification(sender_id: string, receiver_id: string, isAccepted: boolean) {
         try {
-            this.conn.invoke("OfferVideoNotification", sender_id, receiver_id);
+            this.conn.invoke("OfferVideoNotification", sender_id, receiver_id, isAccepted);
         } catch (er) {
             console.log(er);
         }
@@ -79,6 +79,20 @@ export default class VideocallServerServices {
     public static async SendAnswerIceCandidate(sender_id: string, receiver_id: string, candidate: string) {
         try {
             this.conn.invoke("SendAnswerIceCandidate", sender_id, receiver_id, candidate);
+        } catch (er) {
+            console.log(er);
+        }
+    }
+    public static async SendRenegotiation(sender_id: string, receiver_id: string, sdp:string) {
+        try {
+            this.conn.invoke("SendRenegotiation", sender_id, receiver_id, sdp);
+        } catch (er) {
+            console.log(er);
+        }
+    }
+    public static async SendCallExit(sender_id: string, receiver_id: string) {
+        try {
+            this.conn.invoke("SendCallExit", sender_id, receiver_id);
         } catch (er) {
             console.log(er);
         }

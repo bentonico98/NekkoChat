@@ -8,157 +8,77 @@ using System;
 
 namespace NekkoChat.Server.Hubs
 {
-    public class VideoCallHub(ApplicationDbContext context) : Hub
+    public class VideoCallHub : Hub
     {
-        private readonly ApplicationDbContext _context = context;
-        public async Task<Task> Offer(string sender_id, string receiver_id, string sdp)
+        private readonly ApplicationDbContext _context;
+
+        public VideoCallHub(ApplicationDbContext context)
         {
-            
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
-
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
-
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("offer", sdp);
+            _context = context;
         }
 
-        public async Task<Task> Answer(string sender_id, string receiver_id, string sdp)
+        private async Task<(string senderConnectionId, string receiverConnectionId)> GetConnectionIdsAsync(string senderId, string receiverId)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+            var sender = await _context.AspNetUsers.FindAsync(senderId);
+            var receiver = await _context.AspNetUsers.FindAsync(receiverId);
 
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
+            string senderConnectionId = sender?.ConnectionId ?? string.Empty;
+            string receiverConnectionId = receiver?.ConnectionId ?? string.Empty;
 
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("answer", sdp);
+            return (senderConnectionId, receiverConnectionId);
         }
 
-        public async Task<Task> VideoNotification(string sender_id, string receiver_id)
+        public async Task Offer(string senderId, string receiverId, string sdp)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
-
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
-
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("videonotification", sender_id, receiver_id);
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("offer", sdp);
         }
 
-        public async Task<Task> OfferVideoNotification(string sender_id, string receiver_id)
+        public async Task Answer(string senderId, string receiverId, string sdp)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
-
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
-
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("offervideonotification", sender_id, receiver_id);
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("answer", sdp);
         }
 
-        public async Task<Task> ConnectedVideoNotification(string sender_id, string receiver_id)
+        public async Task VideoNotification(string senderId, string receiverId, string data)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
-
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
-
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("connectedvideonotification", sender_id, receiver_id);
-
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("videonotification", senderId, receiverId, data);
         }
 
-        public async Task<Task> SendOfferIceCandidate(string sender_id, string receiver_id, string candidate)
+        public async Task OfferVideoNotification(string senderId, string receiverId, bool isAccepted)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
-
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
-
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
-
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("offericecandidate", candidate);
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("offervideonotification", senderId, receiverId, isAccepted);
         }
 
-        public async Task<Task> SendAnswerIceCandidate(string sender_id, string receiver_id, string candidate)
+        public async Task ConnectedVideoNotification(string senderId, string receiverId)
         {
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("connectedvideonotification", senderId, receiverId);
+        }
 
-            string senderconnectionid = "";
-            string receiverconnectionid = "";
+        public async Task SendOfferIceCandidate(string senderId, string receiverId, string candidate)
+        {
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("offericecandidate", candidate);
+        }
 
-            if (sender != null)
-            {
-                senderconnectionid = sender!.ConnectionId;
-            }
+        public async Task SendAnswerIceCandidate(string senderId, string receiverId, string candidate)
+        {
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("answericecandidate", candidate);
+        }
 
-            if (receiver != null)
-            {
-                receiverconnectionid = receiver!.ConnectionId;
-            }
-
-            return Clients.Clients(receiverconnectionid, senderconnectionid).SendAsync("answericecandidate", candidate);
+        public async Task SendRenegotiation(string senderId, string receiverId, string sdp)
+        {
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("renegotiation", senderId, receiverId, sdp);
+        }
+        public async Task SendCallExit(string senderId, string receiverId)
+        {
+            var (senderConnectionId, receiverConnectionId) = await GetConnectionIdsAsync(senderId, receiverId);
+            await Clients.Clients(receiverConnectionId, senderConnectionId).SendAsync("callexit");
         }
     }
 }
-

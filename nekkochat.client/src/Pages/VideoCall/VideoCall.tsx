@@ -1,17 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Box from '@mui/material/Box';
 import React, { useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
-import SendIcon from '@mui/icons-material/Send';
+//import SendIcon from '@mui/icons-material/Send';
 //import { useParams } from 'react-router-dom';
 import VideocallServerServices from '../../Utils/VideoCallService'
 import { VideoCallButton } from './Components/VideoCallButtom';
-import { IUserData, SendModal } from './Components/SendModal';
+import { IUserData, SendModal, IProfileData } from './Components/SendModal';
 import useVideocallSignalServer from '../../Hooks/useVideocallSignalR';
 import ServerLinks from '../../Constants/ServerLinks';
 import axios from 'axios';
+import useTheme from "@mui/material/styles/useTheme";
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { AlertSnackbar, AlertSnackbarType } from './Components/AlertSnackbar';
 //import { useAppSelector } from '../../Hooks/storeHooks';
 //import useGetUser from '../../Hooks/useGetUser';
 
@@ -22,6 +28,7 @@ export const VideoCall: React.FC = () => {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+    const receiverId = useRef<string>("");
     let [isOfferState] = useState<boolean>(true);
     let [isConnectionStablish] = useState<boolean>(false);
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
@@ -29,15 +36,25 @@ export const VideoCall: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<boolean>(false);
     const [data, setData] = useState<IUserData[]>([{ id: "", profilePhotoUrl: null, userName: "" }]);
-    const [videoTrackState, setVideoTrackState] = useState<MediaStreamTrack | undefined>(undefined);
+   // const [videoTrackState, setVideoTrackState] = useState<MediaStreamTrack | undefined>(undefined);
     const [audioTrackState, setAudioTrackState] = useState<MediaStreamTrack | undefined>(undefined);
+    const [probando, setProbando] = useState<boolean>(false)
+    const [isRenegotiated, setIsRenegotiated] = useState<boolean>(false);
     //const [isRemoteVideoSender, setIsRemoteVideoSender] = useState<boolean>(false);
+    const [alertSnackbarData, setAlertSnackbarData] = useState<AlertSnackbarType>({ message: "", isOpen: false, severity:"info" });
+    const navigate = useNavigate();
+
+    const theme = useTheme();
+    const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
     
+    const user = JSON.parse(localStorage.getItem("user") || '{}');
 
-    const user = JSON.parse(localStorage.getItem("user") || '{}')
-
+    const user_name = user.userName;
+    const user_photo = user.profilePhotoUrl
     const user_id = user.id;
 
+    const user_data: IProfileData = { name: user_name, photo: user_photo };
+    
     const { connected, conn } = useVideocallSignalServer();
 
     let connection: any
@@ -60,7 +77,7 @@ export const VideoCall: React.FC = () => {
     let offerCandidate: RTCIceCandidateInit | null = null;
     let AnswerCandidate: RTCIceCandidateInit | null = null;
 
-    useEffect(() => {
+        useEffect(() => {
         if (connected) {
             connection = conn?.connection;
             connection.on('offer', async (sdp: string) => {
@@ -73,11 +90,36 @@ export const VideoCall: React.FC = () => {
                 }
             });
 
-            connection.on('offervideonotification', async (sender_id: string, receiver_id: string) => {
+            connection.on('renegotiation', async (sender_id: string, receiver_id: string, sdp: string) => {
+                handleRenegotiation(sender_id, receiver_id, sdp);
+            });
+
+            connection.on('callexit', async () => {
+                handleAlertSnackbar("DISCONNECTED");
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = null; 
+                }
+
+                if (peerConnection.current) {
+                    peerConnection.current.close(); 
+                    peerConnection.current = null; 
+                }
+            });
+
+            connection.on('offervideonotification', async (sender_id: string, receiver_id: string, isAccepted:boolean) => {
                 console.log("lo mando, MANDO EL CONNECT NOTIFICATION");
-                setTimeout(() => {
-                    VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
-                }, 5000);
+                if (isAccepted) {
+                    receiverId.current = receiver_id;
+                    setTimeout(() => {
+                        VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
+                    }, 5000);
+                }
+                else {
+                    if (user_id === sender_id) {
+                        handleAlertSnackbar("REJECTION");
+                    }
+                    
+                }
             });
 
             connection.on('connectedvideonotification', (sender_id: string, receiver_id: string) => {
@@ -87,7 +129,7 @@ export const VideoCall: React.FC = () => {
                     console.log("yo conteste ");
                     setTimeout(() => {
                         handleAnswer(sender_id, receiver_id);
-                    }, 1000);
+                    }, 2000);
                 } else if (user_id === sender_id) {
                     console.log("hice la llamada");
                     handleCall(sender_id, receiver_id);
@@ -104,164 +146,173 @@ export const VideoCall: React.FC = () => {
                 AnswerCandidate = JSON.parse(candidate);
             });
 
-            // Cleanup function to remove event listeners
             return () => {
                 connection.off('offer');
+                connection.off('callexit');
                 connection.off('offervideonotification');
                 connection.off('connectedvideonotification');
                 connection.off('offericecandidate');
                 connection.off('answericecandidate');
+                connection.off('renegotiation');
+                
             };
-        }
-    }, [connected, connection]);
+            }
+        }, [connected, connection, isRenegotiated]);
 
     useEffect(() => {
-        //aqui los datos principales de video y sonido, aqui es donde se piden
-        //TODO: no se pueden desactivar el sonido y el audio juntos, solo uno a la vez
         peerConnection.current = new RTCPeerConnection()
         navigator.mediaDevices.getUserMedia({
-            video: isVideoOn,
-            audio: isMicOn,
+            video: true,
+            audio: true,
         })
             .then(stream => {
-                //si hay un stream de video local lo establece
                 localStream.current = stream;
-                const video = videoRef.current;
-                if (video && isVideoOn) {
-                    //se pasa el src con el stream
-                    video.srcObject = stream;
-                    video.play();
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.play();
                 }
-                if (!peerConnection.current) {
-                    peerConnection.current = new RTCPeerConnection();
+                if (peerConnection.current) {
+                    stream.getTracks().forEach(track => {
+                        peerConnection.current!.addTrack(track, stream);
+                    });
                 }
-                stream.getTracks().forEach(track => {
-                    //se greagan los tracks, estos son los otros videos
-                    peerConnection.current?.addTrack(track, stream);
-                });
             })
             .catch(error => console.error('Error obteniendo los datos del video:', error));
 
-       /* peerConnection.current.onconnectionstatechange = event => {
-           console.log("connection state", event)
-        };*/
-      
-        peerConnection.current.oniceconnectionstatechange = (event) => {
-            console.log('Cambio de estado de la conexión ICE: ' + event, peerConnection.current?.iceConnectionState);
-        };
-
-        //Hacer un mejor manejo de errores y crear reconexion
-        peerConnection.current.onicecandidateerror = (event) => {
-            console.log('error conexión ICE: ', event);
-        };
-
-        //En este track se agrega el video remoto
-        peerConnection.current.ontrack = event => {
-            if (event.streams.length > 0) {
-                const stream = event.streams[0];
-                const remoteVideo = remoteVideoRef.current;
-                if (remoteVideo) {
-                    remoteVideo.srcObject = stream;
-                    //seTimeOut es para esperar un poco para que el video remoto pueda cambiar
-                    setTimeout(() => {
-                        remoteVideo.play();
-                    }, 100);
-                }
-
-                
+        peerConnection.current.onnegotiationneeded = async () => {
+            if (probando) {
+                peerConnection.current!.createOffer()
+                    .then((offer) => peerConnection.current!.setLocalDescription(offer))
+                    .then(() =>
+                        VideocallServerServices.SendRenegotiation(user_id, receiverId.current, JSON.stringify({
+                            type: peerConnection.current!.localDescription?.type,
+                            sdp: peerConnection.current!.localDescription?.sdp,
+                        })
+                        )).catch((err) => {
+                            console.log(err);
+                        });
             }
         };
+
+        peerConnection.current.ontrack = event => {
+            event.streams.forEach(stream => {
+                const remoteVideo = remoteVideoRef.current;
+                if (remoteVideo) {
+                    console.log("Stream recibido:", stream);
+                    console.log("Tracks del stream:", stream.getTracks());
+                    console.log("Tracks de video:", stream.getVideoTracks());
+                   
+                    if (remoteVideo.srcObject) {
+                        console.log("Reemplazando el stream remoto.");
+                        remoteVideo.pause(); 
+                        remoteVideo.srcObject = stream;
+                        
+                    } else {
+                        console.log("Asignando el stream remoto por primera vez.");
+                        remoteVideo.srcObject = stream;
+                        remoteVideo.addEventListener('loadedmetadata', () => {
+                            remoteVideo.play().catch(error => {
+                                console.error("Error al intentar reproducir el video:", error);
+                            });
+                        }, { once: true });
+                    }
+                }
+            });
+        };
+        
        
 
-    }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate]);
+    }, [isVideoOn, isMicOn, connection, isOfferState, isConnectionStablish, AnswerCandidate, offerCandidate, user_id, probando, isRenegotiated]);
+
+    const createOfferAndSend = async () => {
+        try {
+            const offerAnswer: string = await new Promise((resolve) => {
+                connection?.on('answer', (sdp: string) => {
+                    resolve(sdp);
+                });
+            });
+            const answerDescription = JSON.parse(offerAnswer);
+            await peerConnection.current!.setRemoteDescription(new RTCSessionDescription(answerDescription));
+        } catch (error) {
+            console.error("Error creando y enviando la oferta:", error);
+        }
+    };
+
+    const handleRenegotiation = async (sender_id: string, receiver_id: string, sdp: string) => {
+        if (user_id == sender_id) {
+            console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            setIsRenegotiated(true);
+            await createOfferAndSend();
+        } else {
+            setTimeout(() => {
+                handleAnswer(sender_id, receiver_id, sdp);
+            }, 2000);
+        }
+    };
 
     const handleMicState = () => {
         if (localStream.current) {
             const audioTrack = localStream.current.getAudioTracks()[0];
             setAudioTrackState(audioTrack);
-            if (audioTrack && isMicOn == true) {
-                localStream.current.removeTrack(audioTrack)
+            if (audioTrack && isMicOn) {
+                localStream.current.removeTrack(audioTrack);
                 setIsMicOn(!isMicOn);
                 audioTrack.stop();
-                return
+                return;
             }
             setIsMicOn(!isMicOn);
-            if (audioTrackState != undefined) {
+            if (audioTrackState) {
                 localStream.current.addTrack(audioTrackState);
             }
-
-
         }
     };
 
     const handleVideoState = async () => {
-        
         if (localStream.current) {
             const videoTrack = localStream.current.getVideoTracks()[0];
-            setVideoTrackState(videoTrack);
-            if (videoTrack && isVideoOn == true) {
-                localStream.current.removeTrack(videoTrack)
-                setIsVideoOn(!isVideoOn);
-                videoTrack.stop();
-                return
+            setProbando(true);
+
+            if (videoTrack) {
+                if (isVideoOn) {
+                    videoTrack.enabled = false;
+                } else {
+                    videoTrack.enabled = true; 
+                }
             }
             setIsVideoOn(!isVideoOn);
-            if (videoTrackState != undefined) {
-                localStream.current.addTrack(videoTrackState);
-            }
-            
-           
         }
     };
 
     const handleCall = async (sender_id: string, receiver_id: string) => {
-        console.log("HANDLE CALLLLLLLL INICIAL")
         if (peerConnection.current) {
             try {
-                
-                console.log("HANDLE CALLLLLLLL")
-                //Si esta en el estado de have-remote-offer no se vuelve a crear la oferta
                 if (peerConnection.current.signalingState === 'have-remote-offer') {
                     console.error('La conexion ya tiene una descripcion de sesión SDP remota establecida');
                     return;
                 }
 
-                //identificador para saber quien es el ofertante
                 isOfferState = true;
-
-                //Se crea la oferta
                 const offer: RTCLocalSessionDescriptionInit = await peerConnection.current.createOffer();
-
-                // se establece la descripcion local
                 await peerConnection.current.setLocalDescription({ type: 'offer', sdp: offer.sdp });
 
-                //se toma el iceCandidate del dispostivo que llama,ICE es (Interactive Connectivity Establishment)
-                //es necesario el ice al final del establecimiento de la oferta y respuesta
-                peerConnection.current.onicecandidate = event => {
+                 peerConnection.current.onicecandidate = async (event) => {
                     if (event.candidate) {
                         console.log("SendOfferIceCandidate")
-                        VideocallServerServices.SendOfferIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
+                       await VideocallServerServices.SendOfferIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
                     }
                 };
-
-                //se invoca el offer con los datos de la oferta, esta busca enviarle la offerta al segundo dispositivo
                 await VideocallServerServices.SendOffer(sender_id, receiver_id, JSON.stringify(offer));
 
-                //Este se mantiene escuchando hasta que handleAnswer envie la respuesta de la conexion
                 const offerAnswer:string = await new Promise((resolve) => {
                     connection?.on('answer', (sdp: string) => {
                         resolve(sdp);
                     });
                 });
-
-                //Se usa esa respuesta y se establece la conexion
-                // Se establece la conexion remota
-                //Ya aqui los dos dispositivos saben quienen son y como llamarse
                 const answerDescription = JSON.parse(offerAnswer);
                 await peerConnection.current.setRemoteDescription(answerDescription);
 
-                //Se establecen los ICE candidate, mas informacion aqui https://developer.mozilla.org/en-US/docs/Glossary/ICE
                 isConnectionStablish = true;
+                console.log("FINALIZADO")
                 handleStablishIce();
 
             } catch (error) {
@@ -270,33 +321,37 @@ export const VideoCall: React.FC = () => {
         }
     };
 
-    const handleAnswer = async (sender_id: string, receiver_id: string) => {
-        console.log("HANDLE ANSWER INICIAL")
-        if (peerConnection.current && answer) {
+    const handleAnswer = async (sender_id: string, receiver_id: string, sdp:string | null = null) => {
+        if (peerConnection.current ) {
             try {
-                console.log("HANDLE ANSWER")
-                isOfferState = false;
+                if (!sdp) {
+                    isOfferState = false;
+                    await peerConnection.current.setRemoteDescription(answer);
+                    const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
+                    await peerConnection.current.setLocalDescription(answerAnswer);
 
-                //Usa la respuesta del offertante que se paso por signal R
-                //Se establece la descripcion remota del dispositivo 1 y se crea una respuesta
-                //se establece la descripcion local con todos los datos
-                await peerConnection.current.setRemoteDescription(answer);
-                const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
-                await peerConnection.current.setLocalDescription(answerAnswer);
+                    peerConnection.current.onicecandidate = async event => {
+                        if (event.candidate) {
+                            await VideocallServerServices.SendAnswerIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
+                        }
+                    };
+                    await VideocallServerServices.SendAnswer(sender_id, receiver_id, JSON.stringify(answerAnswer));
 
-                //Se envia el ice candidate, este se guarda para cuando sea necesario
-                peerConnection.current.onicecandidate = event => {
-                    if (event.candidate) {
-                        console.log("SendAnswerIceCandidate")
-                        VideocallServerServices.SendAnswerIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
-                    }
-                };
+                    isConnectionStablish = true;
+                    handleStablishIce();
+                }
+                else {
+                    await peerConnection.current.setRemoteDescription(new RTCSessionDescription(JSON.parse(sdp)));
+                    const answerAnswer: RTCLocalSessionDescriptionInit = await peerConnection.current.createAnswer()
+                    await peerConnection.current.setLocalDescription(answerAnswer);
 
-                //Se envia la respuesta creada a create answer
-                await VideocallServerServices.SendAnswer(sender_id, receiver_id, JSON.stringify(answerAnswer));
-
-                isConnectionStablish = true;
-                handleStablishIce();
+                    peerConnection.current.onicecandidate = async event => {
+                        if (event.candidate) {
+                            await VideocallServerServices.SendAnswerIceCandidate(sender_id, receiver_id, JSON.stringify(event.candidate));
+                        }
+                    };
+                    await VideocallServerServices.SendAnswer(sender_id, receiver_id, JSON.stringify(answerAnswer));
+                }
 
             } catch (error) {
                 console.error('Error enviando la respuesta:', error);
@@ -305,21 +360,73 @@ export const VideoCall: React.FC = () => {
     };
 
     const handleStablishIce = () => {
-        //Si la conexion esta establecida se aplican cada uno de los ice candidate
-        if (isConnectionStablish == true) {
-            if (isOfferState == true) {
-                console.log("aplique el offer ice que necesito", AnswerCandidate)
-                peerConnection.current?.addIceCandidate(new RTCIceCandidate(AnswerCandidate!));
-            }
-            else {
-                console.log("aplique el answer ice que necesito", offerCandidate)
-                peerConnection.current?.addIceCandidate(new RTCIceCandidate(offerCandidate!));
+        if (isConnectionStablish) {
+            if (isOfferState && AnswerCandidate) {
+                peerConnection.current?.addIceCandidate(new RTCIceCandidate(AnswerCandidate));
+            } else if (!isOfferState && offerCandidate) {
+                peerConnection.current?.addIceCandidate(new RTCIceCandidate(offerCandidate));
             }
         }
+    };
+
+
+    const handleLeaveCall = async () => {
+        const result = await Swal.fire({
+            title: 'Estas seguro?',
+            text: "Quieres salir de la llamada?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Si, salir',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            if (localStream.current) {
+                localStream.current.getTracks().forEach(track => {
+                    track.stop(); 
+                });
+            }
+
+            if (peerConnection.current) {
+                peerConnection.current.close();
+                peerConnection.current = null; 
+            }
+
+            if (videoRef.current) {
+                videoRef.current.srcObject = null; 
+            }
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = null; 
+            }
+
+            await VideocallServerServices.SendCallExit(user_id, receiverId.current);
+
+            navigate("/");
+        }
+    };
+
+    const handleAlertSnackbar = (type:string) => {
+        if (type == "DISCONNECTED") {
+            setAlertSnackbarData({ message: "El usuario se ha desconectado", isOpen: true, severity: "warning" })
+        }
+        if (type == "REJECTION") {
+            setAlertSnackbarData({ message: "La conexion ha sido rechazada", isOpen: true, severity: "error" })
+        }
     }
+
     
     return (
-            <Box sx={{ margin: 0, padding:0, height: "auto", width: "100vw", backgroundColor: "#555",  }}>
+        <Box sx={{
+            margin: 0,
+            padding: 0,
+            height: "100vh",
+            width: "100vw",
+            backgroundColor: "#DBDBDB",
+            overflowY: "hidden",
+        }}>
+             <AlertSnackbar message={alertSnackbarData!.message} isOpen={alertSnackbarData!.isOpen} severity={alertSnackbarData!.severity}/> 
                 <Box sx={{
                     height: "80vh",
                     position:"relative",
@@ -327,18 +434,18 @@ export const VideoCall: React.FC = () => {
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: "1rem",
-                    margin: "3rem 5rem 0.5rem 5rem",
+                borderRadius: "1rem",
+                margin: isMediumScreen? "3rem 5rem 0.5rem 5rem": "-1rem 0 0 2.4rem",
 
 
                 }}>
-                    {isVideoOn ?
-                    < video id="local" style={{ borderRadius: "1rem", height: "90vh", }} autoPlay ref={videoRef}/>
+                {isVideoOn ?
+                    < video id="local" style={{ borderRadius: "1rem", height: isMediumScreen ? "90vh" : "auto", width: isMediumScreen ? "auto" : "100vw", }} autoPlay ref={videoRef} onClick={() => { console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play(); }} />
                         :
                         <Box sx={{
-                            backgroundColor: "#777",
-                            height: "75vh",
-                            width: "60vw",
+                        backgroundColor: "#777",
+                        height: isMediumScreen ? "75vh" : "60vh",
+                        width: isMediumScreen ?"60vw" : "110vw",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -357,12 +464,10 @@ export const VideoCall: React.FC = () => {
                     justifyContent: "center",
                     
             }}>
-                <SendModal Users={data} loading={loading} error={error} />
-                <VideoCallButton onClick={() => handleCall("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}><SendIcon></SendIcon></VideoCallButton>
-                <VideoCallButton onClick={() => handleAnswer("8c96b919-5494-4b1d-8d7f-78880e30fc0a", "19a6819f-d3fa-45cd-823c-ff2938ae6900")}>recibir</VideoCallButton>
+                <SendModal Users={data} loading={loading} error={error} data={user_data} />
                     <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
-                    <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
-                    <VideoCallButton>salir</VideoCallButton>
+                <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
+                <VideoCallButton bgcolor={"#ff4343"} bgcolorHover={"#ff6666"} onClick={handleLeaveCall}>salir</VideoCallButton>
                 </Box>
 
                 <Box sx={{
@@ -370,7 +475,7 @@ export const VideoCall: React.FC = () => {
                     width: "15rem",
                     position:"absolute",
                     top: "5vh",
-                    left: "75vw",
+                    left: isMediumScreen? "75vw": 0,
                     zIndex:"10",
                     display: "block",
                     alignItems: "center",
@@ -378,24 +483,9 @@ export const VideoCall: React.FC = () => {
                     borderRadius: "1rem"
 
             }}>
-                {remoteVideoRef ?
+                
+                
                     <video id='remoto' style={{ borderRadius: "1rem", width: "15rem", height: "15rem", zIndex: "2" }} autoPlay ref={remoteVideoRef}> </video>
-                    :
-                    <Box sx={{
-                        backgroundColor: "#555",
-                        height: "15rem",
-                        width: "15rem",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "1rem"
-                    }}>
-                        <VideocamOffIcon sx={{
-                            fontSize: "4rem",
-                            color: "white"
-                        }} />
-                    </Box>
-                }
                    
                 </Box>
             </Box>

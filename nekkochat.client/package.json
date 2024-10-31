@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
     "@chatscope/chat-ui-kit-react": "^2.0.3",
     "@chatscope/chat-ui-kit-styles": "^1.4.0",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@microsoft/signalr": "^8.0.7",
     "@mui/icons-material": "^6.1.1",
     "@mui/material": "^6.1.1",
@@ -30,6 +30,8 @@
     "redux-persist": "^6.0.0",
     "sdp-transform": "^2.14.2",
     "socket.io-client": "^4.8.0",
+    "sweetalert2": "^11.14.4",
+    "sweetalert2-react-content": "^5.0.7",
     "webrtc-adapter": "^9.0.1",
     "ws": "^8.18.0"
   },

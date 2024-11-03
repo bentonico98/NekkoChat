@@ -2,7 +2,6 @@ import { Button, Col, Container, Row } from "react-bootstrap";
 
 import { Search } from "@chatscope/chat-ui-kit-react";
 import FriendButton from "../Shared/FriendButton";
-//import useSearchUserByName from "../../Hooks/useSearchUserByName";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import { iuserStore, iUserViewModel } from "../../Constants/Types/CommonTypes";
 import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from "../../Store/Slices/userSlice";
@@ -11,6 +10,7 @@ import useSearchUserByName from "../../Hooks/useSearchUserByName";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
 import { useEffect } from "react";
 import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
+import { Box, Divider, Stack, Typography } from "@mui/material";
 export default function Index() {
     const dispatch = useAppDispatch();
 
@@ -44,19 +44,22 @@ export default function Index() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container className="h-100"  >
-            <h1>Friends List</h1>
-            <br />
-            <Container>
-                <Row>
-                    <Col xs={10}>
-                        <Search placeholder="Search..." onChange={(e) => setValue(e)} onClearClick={() => { setValue(""); resetSearch(); }} />
-                    </Col>
-                    <Col>
-                        <Button variant="primary" onClick={() => { searchFromList(value, friend); }} >Search</Button>
-                    </Col>
-                </Row>
-            </Container>
+        <Container>
+            <Typography variant="h3" className="my-3">Friends List</Typography>
+
+            <Divider />
+
+            <Stack direction="row" spacing={2}>
+
+                <Box sx={{ width: "100%", maxWidth: '100%' }}>
+                    <Search placeholder="Search..." onChange={(e) => setValue(e)} onClearClick={() => { setValue(""); resetSearch(); }} />
+                </Box>
+
+                <Box >
+                    <Button variant="primary" onClick={() => { searchFromList(value, friend); }} >Search</Button>
+                </Box>
+            </Stack>
+
             <Row style={{ overflowY: "auto", overflowX: "hidden" }}>
                 {friendRequest.length > 0 && <div>
                     <h3>Pending Friend Requests</h3>
@@ -64,7 +67,6 @@ export default function Index() {
                         return <Col xs={4} key={idx}>
                             <FriendButton
                                 key={idx}
-                                name={el.userName}
                                 id={el.id}
                                 idx={idx}
                                 item={el}
@@ -80,7 +82,6 @@ export default function Index() {
                         return <Col xs={4} key={idx}>
                             <FriendButton
                                 key={idx}
-                                name={el.userName}
                                 id={el.id}
                                 idx={idx}
                                 item={el}
@@ -96,7 +97,6 @@ export default function Index() {
                     return <Col xs={4} key={idx}>
                         <FriendButton
                             key={idx}
-                            name={el.userName}
                             id={el.id}
                             idx={idx}
                             item={el}

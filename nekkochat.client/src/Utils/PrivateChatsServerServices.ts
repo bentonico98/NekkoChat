@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { iServerRequestTypes } from "../Constants/Types/CommonTypes";
+import {  iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
@@ -8,7 +8,7 @@ export default class PrivateChatsServerServices {
         .withAutomaticReconnect()
         .build();
 
-    public static async Start(addToChat: any) {
+    public static async Start(currentUserId: string, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
 
         if (this.conn.state == "Disconnected") {
             try {
@@ -17,16 +17,25 @@ export default class PrivateChatsServerServices {
                 this.conn.onclose(async () => {
                     await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
                 });
+
                 this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
                     addToChat(user_id, msj, false);
                 });
+
                 this.conn.on("ReceiveTypingSignal", (user: string) => {
                     addToChat(null, null, {typing: true,user_id:user});
-                    console.log(user);
+                });
+
+                this.conn.on("ReceiveNotification", (user_id: string) => {
+                    if (currentUserId == user_id) {
+                        DisplayMessage({
+                            hasNotification: true,
+                            notification: "+1 New Notification"
+                        });
+                    }
                 });
 
             } catch (er) {
-                console.log(er);
                 setTimeout(async () => {
                     if (this.conn.state == "Disconnected") {
                         await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
@@ -48,6 +57,19 @@ export default class PrivateChatsServerServices {
             this.conn.invoke("SendTypingSignal", data.sender_id,  data.receiver_id);
         } catch (er) {
             console.log(er);
+        }
+    }
+
+    public static SendNotificationToUser(
+        data: iNotificationTypes,
+        DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+        try {
+            this.conn.invoke("SendNotificationToUser", data.user_id, data.operation);
+        } catch (er) {
+            DisplayMessage({
+                hasError: true,
+                error: "Failed To Send Notification."
+            });
         }
     }
 };

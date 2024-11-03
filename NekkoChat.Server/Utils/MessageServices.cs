@@ -388,7 +388,7 @@ namespace NekkoChat.Server.Utils
                     read = false
                 }];
 
-                object[] newParticipants = [new ParticipantsSchema
+                ParticipantsSchema[] newParticipants = [new ParticipantsSchema
                 {
                     id = data.sender_id,
                     name= sender.UserName,

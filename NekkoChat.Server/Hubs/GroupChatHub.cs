@@ -55,5 +55,18 @@ namespace NekkoChat.Server.Hubs
 
             return Clients.Clients(connectionIds).SendAsync("ReceiveSpecificMessage", sender_id, msj, sender.UserName);
         }
+        public async Task<Task> SendNotificationToUser(NotificationRequest data)
+        {
+            string receiverConnectionId = "";
+
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.user_id);
+
+            if (receiver != null)
+            {
+                receiverConnectionId = receiver.ConnectionId;
+            }
+
+            return Clients.Clients(receiverConnectionId).SendAsync("ReceiveNotification", data.user_id);
+        }
     }
 }

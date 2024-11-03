@@ -1,5 +1,5 @@
 import * as signalR from "@microsoft/signalr";
-import { iGroupRequestTypes } from "../Constants/Types/CommonTypes";
+import {  iGroupRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 

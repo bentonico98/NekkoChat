@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import UserAuthServices from "../Utils/UserAuthServices";
-import { iDisplayMessageTypes, iTypingComponentProps, iuserStore } from "../Constants/Types/CommonTypes";
+import { iDisplayMessageTypes, iuserStore } from "../Constants/Types/CommonTypes";
 import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
-export default function useSignalServer(user: iuserStore, addToChat: (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => void, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<string>("");
 
     const startServer = () => {
-        PrivateChatsServerServices.Start(addToChat).then(async (res) => {
+        PrivateChatsServerServices.Start(user.value.id, addToChat, DisplayMessage).then(async (res) => {
             setConnected(true);
             setConn(res || "");
         });
@@ -46,13 +46,11 @@ export default function useSignalServer(user: iuserStore, addToChat: (user: stri
     useEffect(() => {
         if (!connected) {
             startServer();
-        } else {
-            return;
-        }
-    }, [connected, user]);
+        } 
+    }, [user]);
 
     useEffect(() => {
-        if (user.value.id) {
+        if (user.value.id && conn.length>0) {
             setConnectionId(user.value.id, conn);
         } 
     }, [conn]);

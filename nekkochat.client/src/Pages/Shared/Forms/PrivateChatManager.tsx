@@ -9,6 +9,7 @@ import useDisplayMessage from '../../../Hooks/useDisplayMessage';
 import { useEffect } from 'react';
 import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../../Store/Slices/userSlice';
 import RegularSkeleton from '../Skeletons/RegularSkeleton';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 
 export default function PrivateChatManager() {
 
@@ -43,71 +44,62 @@ export default function PrivateChatManager() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <div >
+        <Container style={{ width: 400, maxWidth: '100%' }}>
             <Modal.Dialog>
                 <Modal.Header >
                     <Modal.Title>New Chat</Modal.Title>
                 </Modal.Header>
 
-                <Modal.Body >
-                    <Container>
-                        <Row>
-                            <Col xs={8}>
-                                <Search
-                                    placeholder="Search..."
-                                    onChange={(e) => setValue(e)}
-                                    onClearClick={() => {
-                                        setValue("");
-                                        resetSearch();
-                                    }} />
-                            </Col>
-                            <Col>
-                                <Button
-                                    variant="primary"
-                                    onClick={() => {
-                                        searchFromList(value, friend);
-                                        searchUserByName(value, friend)
-                                    }} >Search</Button>
-                            </Col>
-                        </Row>
-                    </Container>
+                <Stack direction="row" spacing={2}>
+                    <Box sx={{ width: "100%", maxWidth: '100%' }}>
+                        <Search
+                            placeholder="Search..."
+                            onChange={(e) => setValue(e)}
+                            onClearClick={() => {
+                                setValue("");
+                                resetSearch();
+                            }} />
+                    </Box>
 
+                    <Box>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                searchFromList(value, friend);
+                                searchUserByName(value, friend)
+                            }} >Search</Button>
+                    </Box>
+                </Stack>
+
+                <Modal.Body >
                     <Container style={{ overflowY: "auto", overflowX: "hidden" }}>
                         {searchFriends.length > 0 && <div>
-                            <h5>Search Results</h5>
+                            <Typography variant="h5" className="my-2">Search Results</Typography>
                             {searchFriends.map((el: iUserViewModel, idx: number) => {
-                                return <Row key={idx}>
-                                    <FriendButton
+                                return <FriendButton
                                         key={idx}
-                                        name={el.userName}
                                         id={el.id}
                                         idx={idx}
                                         item={el}
                                         DisplayMessage={setDisplayInfo} />
-                                </Row>
                             })}
                         </div>}
 
-                        <hr />
+                        <Divider />
 
-                        <h5>My Friends</h5>
-
+                        <Typography variant="h5" className="my-2">My Friends</Typography>
                         {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
-                            return <Row key={idx}>
-                                <FriendButton
+                            return <FriendButton
                                     key={idx}
-                                    name={el.userName}
                                     id={el.id}
                                     idx={idx}
                                     item={el}
                                     DisplayMessage={setDisplayInfo} />
-                            </Row>
                         }) : <RegularSkeleton />}
-
                     </Container>
-
                 </Modal.Body>
+
             </Modal.Dialog>
-        </div>
+        </Container>
     );
 }

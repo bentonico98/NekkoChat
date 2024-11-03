@@ -41,9 +41,6 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
 
             {user ? <ProfileHeader /> : <ProfileHeaderSkeleton />}
 
-            <Search
-                placeholder="Search..." />
-
             {messages && messages.length > 0 ? 
             <ConversationList>
                 {messages.map((el: iConversationClusterProps, idx: number) => {

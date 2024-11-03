@@ -18,7 +18,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });;
         await PrivateChatsServerServices.SendMessageToUserInvoke(data);
         return result;
@@ -34,7 +34,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -50,7 +50,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -66,7 +66,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -86,7 +86,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -99,7 +99,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -114,7 +114,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -168,7 +168,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -218,7 +218,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         await GroupChatsServerServices.SendMessageToGroupInvoke(data);
@@ -236,7 +236,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -252,7 +252,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -268,7 +268,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;

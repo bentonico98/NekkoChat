@@ -21,7 +21,6 @@ import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
 import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
-import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
 export default function Inbox() {
 
     const { state } = useLocation();

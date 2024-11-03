@@ -18,7 +18,6 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
             setUser_id(loggedUser.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
             DisplayMessage({ isLoading: true });
-
             MessageServicesClient.getAllUsersChats(loggedUser.value.id, type).then((res) => {
                 if (res.success) {
                     setconversations(res.user);

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 import IconButton from '@mui/material/IconButton';
@@ -36,7 +35,7 @@ export default function NotificationSnackbar() {
     );
     return (
         <Snackbar
-            open={state.notification && state.notificationModal}
+            open={state.notificationModal}
             autoHideDuration={6000}
             onClose={handleClose}
             action={action}

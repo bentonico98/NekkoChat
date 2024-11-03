@@ -4,6 +4,34 @@ export interface ErrorInterface {
     password?: string,
     confirmpassword?: string,
 }
+
+export interface iLoginTypes {
+    email: string,
+    password: string,
+    remember: boolean
+}
+
+export interface iRegisterTypes {
+    email: string;
+    fname: string;
+    lname: string;
+    password: string;
+    confirmPassword: string;
+    phoneNumber?: string;
+    remember: boolean;
+    profilePhotoUrl?: string;
+    about?: string;
+}
+
+export interface iNotificationTypes {
+    user_id?: string
+    notification_id?: string
+    operation?: string
+    type?: number
+    from?: string
+    from_id?:string
+    url?: string
+}
 export interface iDisplayMessageTypes {
     hasError?: boolean,
     error?: string,
@@ -18,7 +46,7 @@ export interface iServeResponseTypes {
     user: iConversationClusterProps[],
     message: string,
     error: string,
-    statusCode:number
+    statusCode: number
 }
 export interface iServerRequestTypes {
     sender_id?: string,
@@ -40,7 +68,7 @@ export interface iGroupRequestTypes {
     groupdesc?: string,
     groupphoto?: string,
     value?: string,
-    participants?: iparticipants[] 
+    participants?: iparticipants[]
 }
 export interface iparticipants {
     id: string,
@@ -56,6 +84,8 @@ export interface iuserStore {
 export interface iUserViewModel {
     id: string,
     userName: string,
+    fname: string,
+    lname: string,
     connectionId: string,
     profilePhotoUrl: string,
     friends_Count?: number,
@@ -66,11 +96,11 @@ export interface iUserViewModel {
 }
 
 export interface iResponseViewModel {
-    Success?: boolean | null;
-    User?: iUserViewModel | null;
-    Message?: string | null;
-    Error?: string | null;
-    Status?: number | null;
+    success?: boolean | null;
+    user?: iUserViewModel | null;
+    message?: string | null;
+    error?: string | null;
+    status?: number | null;
 }
 export interface iChatSchema {
     id: string,
@@ -86,7 +116,7 @@ export interface iConversationClusterProps {
     messages: iChatSchema[],
     participants: iparticipants[],
     groupname?: string,
-    status?:string
+    status?: string
 }
 
 export interface iSideBoxProps {
@@ -108,7 +138,7 @@ export interface iChatMessagesProps {
     receiver: string | number,
     participants: iparticipants[],
     isTyping: iTypingComponentProps,
-    DisplayMessage: (obj: iDisplayMessageTypes)=> void
+    DisplayMessage: (obj: iDisplayMessageTypes) => void
 }
 export interface iGroupChatMessagesProps {
     messages: iChatSchema[],

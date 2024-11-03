@@ -1,5 +1,4 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
 
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
@@ -36,7 +35,7 @@ export default function RegularSnackbar() {
     );
     return (
         <Snackbar
-            open={state.message && state.msjModalOpened}
+            open={state.msjModalOpened}
             autoHideDuration={6000}
             onClose={handleClose}
             action={action}

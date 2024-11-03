@@ -23,19 +23,20 @@ builder.Services.AddSwaggerGen();
 
 
 //Configuracion para SignalR
-builder.Services.AddResponseCompression(options=>
+builder.Services.AddResponseCompression(options =>
 {
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
 });
 
 //Config DB Context
-builder.Services.AddDbContext<ApplicationDbContext>(options => 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDb") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
 
 //Config for Identity
 builder.Services.AddIdentity<AspNetUsers, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddAuthorization();
-builder.Services.Configure<IdentityOptions>(options => {
+builder.Services.Configure<IdentityOptions>(options =>
+{
     options.SignIn.RequireConfirmedPhoneNumber = false;
     options.SignIn.RequireConfirmedEmail = false;
     options.SignIn.RequireConfirmedAccount = false;
@@ -59,11 +60,13 @@ builder.Services.AddCors(options =>
                    .AllowAnyMethod()
                    .AllowCredentials();
         });
-}); 
+});
 
 //Necessary Injections
 builder.Services.AddScoped<iMessageService, MessageServices>();
 builder.Services.AddScoped<iGroupChatMessageService, GroupChatMessageServices>();
+builder.Services.AddScoped<iNotificationService, NotificationService>();
+builder.Services.AddTransient<iFriendRequestService, FriendRequestService>();
 
 //Signal R Config
 builder.Services.AddSignalR();
@@ -103,7 +106,6 @@ app.MapFallbackToFile("/index.html");
 //Map de los Hub
 app.MapHub<PrivateChatHub>("/privatechathub");
 app.MapHub<GroupChatHub>("/groupchathub");
-
 
 app.Run();
 

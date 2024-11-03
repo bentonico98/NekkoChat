@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { iDisplayMessageTypes, iTypingComponentProps, iuserStore } from "../../Constants/Types/CommonTypes";
+import { iDisplayMessageTypes, iuserStore } from "../../Constants/Types/CommonTypes";
 import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 import UserAuthServices from "../../Utils/UserAuthServices";
-export default function useSignalServer(user: iuserStore, addToChat: (user: string, username: string, msj: string, { typing, user_id }: iTypingComponentProps) => void, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<string | null | undefined>();
 

@@ -21,7 +21,6 @@ import useGetUser from "../../Hooks/Group/useGetUser";
 import useSignalServer from "../../Hooks/Group/useSignalServer";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
-import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
 
 Modal.setAppElement("#root");
 export default function Inbox() {

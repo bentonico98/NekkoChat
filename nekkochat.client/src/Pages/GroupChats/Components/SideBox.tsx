@@ -2,12 +2,13 @@ import { iConversationClusterProps, iSideBoxProps } from "../../../Constants/Typ
 import ProfileHeader from "../../Shared/ProfileHeader";
 import avatar from "../../../assets/avatar.png";
 
-import { Sidebar, Search, ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
+import { Sidebar,  ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import FirstLetterUpperCase from "../../../Utils/FirstLetterUpperCase";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
 import ProfileHeaderSkeleton from "../../Shared/Skeletons/ProfileHeaderSkeleton";
 import ConversationSkeleton from "../../Shared/Skeletons/ConversationSkeleton";
+import { Divider } from "@mui/material";
 export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
@@ -17,14 +18,10 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
             position="left"
             scrollable={false}
             style={{ minHeight: "100vh" }}>
-
             {user ? <ProfileHeader /> : <ProfileHeaderSkeleton />}
 
-            <Search
-                placeholder="Search..." />
-
+            <Divider />
             {messages && messages.length > 0 ? 
-
             <ConversationList>
                 {messages.map((el: iConversationClusterProps, idx: number) => {
                     return (<Conversation

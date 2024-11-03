@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper;
 using NekkoChat.Server.Constants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using NekkoChat.Server.Utils;
+using NekkoChat.Server.Constants.Interfaces;
 
 namespace NekkoChat.Server.Controllers
 {
@@ -19,11 +21,14 @@ namespace NekkoChat.Server.Controllers
         ILogger<UserController> logger,
         ApplicationDbContext context,
         IMapper mapper,
-        IServiceProvider serviceProvider) : ControllerBase
+        IServiceProvider serviceProvider,
+        iFriendRequestService friendProvider) : ControllerBase
     {
         private readonly ILogger<UserController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
         private readonly IMapper _mapper = mapper;
+        private readonly iFriendRequestService _friendProvider = friendProvider;
+
 
         // /User/users?user_id="user_id"
 
@@ -97,17 +102,73 @@ namespace NekkoChat.Server.Controllers
                 if (operation == "requests")
                 {
                     friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == false);
+                    if(!friends.Any())
+                    {
+                        IQueryable<Friend_List>  altFriends = _context.friend_list.Where((fr) => fr.sender_id == user_id && fr.isAccepted == false);
+                        foreach (var altFriend in altFriends)
+                        {
+                            using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                            {
+                                AspNetUsers user =  ctx.AspNetUsers.Find(altFriend.receiver_id);
+
+                                if (!string.IsNullOrEmpty(user!.Id))
+                                {
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    if (operation == "requests")
+                                    {
+                                        userView.isFriend = false;
+                                        userView.isSender = true;
+                                    }
+                                    else
+                                    {
+                                        userView.isFriend = true;
+                                    }
+                                    friendsList.Add(userView);
+                                }
+                            }
+                        }
+                        return Ok(new ResponseDTO<UserDTO> { Success = true, User = friendsList, StatusCode = 200 });
+                    }
                 }
                 else
                 {
                     friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == true);
+                    if (!friends.Any())
+                    {
+                        IQueryable<Friend_List> altFriends2 = _context.friend_list.Where((fr) => fr.sender_id == user_id && fr.isAccepted == true);
+                        foreach (var altFriend in altFriends2)
+                        {
+                            using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                            {
+                                AspNetUsers user = ctx.AspNetUsers.Find(altFriend.receiver_id);
+
+                                if (!string.IsNullOrEmpty(user!.Id))
+                                {
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    if (operation == "requests")
+                                    {
+                                        userView.isFriend = false;
+                                        userView.isSender = true;
+                                    }
+                                    else
+                                    {
+                                        userView.isFriend = true;
+                                    }
+                                    friendsList.Add(userView);
+                                }
+                            }
+                        }
+                        return Ok(new ResponseDTO<UserDTO> { Success = true, User = friendsList, StatusCode = 200 });
+
+                    }
                 }
 
                 foreach (var friend in friends)
                 {
                     using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                     {
-                        AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id);
+                        AspNetUsers user =  ctx.AspNetUsers.Find(friend.sender_id);
+
                         if (!string.IsNullOrEmpty(user!.Id))
                         {
                             UserDTO userView = _mapper.Map<UserDTO>(user);
@@ -123,7 +184,6 @@ namespace NekkoChat.Server.Controllers
                             friendsList.Add(userView);
                         }
                     }
-
                 }
 
                 return Ok(new ResponseDTO<UserDTO> { Success = true, User = friendsList, StatusCode = 200 });
@@ -133,13 +193,12 @@ namespace NekkoChat.Server.Controllers
             {
                 return StatusCode(500, new ResponseDTO<AspNetUsers> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
-
         }
 
         [HttpPost("manage/friendrequest/send")]
-        public async Task<IActionResult> PostFriendRequest([FromQuery] UserRequest data)
+        public async Task<IActionResult> PostFriendRequest([FromBody] UserRequest data)
         {
-            if (data.receiver_id is null && data.sender_id is null)
+            if (string.IsNullOrEmpty(data.receiver_id) || string.IsNullOrEmpty(data.sender_id))
             {
                 return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
@@ -157,8 +216,8 @@ namespace NekkoChat.Server.Controllers
                     receiver_id = receiver.Id,
                     isAccepted = false
                 };
-                _context.friend_list.Add(friendReq);
-                _context.SaveChanges();
+                await _context.friend_list.AddAsync(friendReq);
+                await _context.SaveChangesAsync();
                 return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)
@@ -171,10 +230,11 @@ namespace NekkoChat.Server.Controllers
         [HttpPatch("manage/friendrequest/response")]
         public async Task<IActionResult> PatchFriendRequest([FromBody] UserRequest data)
         {
-            if (data.receiver_id is null && data.sender_id is null)
+            if (string.IsNullOrEmpty(data.receiver_id) || string.IsNullOrEmpty(data.sender_id))
             {
                 return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
+
             try
             {
                 Friend_List friendReq = await _context.friend_list.FirstOrDefaultAsync((fr) =>
@@ -186,17 +246,28 @@ namespace NekkoChat.Server.Controllers
                 {
                     friendReq.isAccepted = true;
                     _context.friend_list.Update(friendReq);
+                    _friendProvider.IncreaseFriendCount(data.sender_id, serviceProvider);
+                    _friendProvider.IncreaseFriendCount(data.receiver_id, serviceProvider);
                 }
                 else if (data.operation == "decline" && friendReq!.id > 0)
                 {
                     _context.RemoveRange(friendReq);
+                }
+                else if (data.operation == "remove" && friendReq!.id > 0)
+                {
+                    friendReq.isAccepted = false;
+                    _context.friend_list.Update(friendReq);
+                    _context.RemoveRange(friendReq);
+
+                    _friendProvider.DecreaseFriendCount(data.sender_id, serviceProvider);
+                    _friendProvider.DecreaseFriendCount(data.receiver_id, serviceProvider);
                 }
                 else
                 {
                     return BadRequest(new ResponseDTO<Friend_List> { Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.ErrorRegular, StatusCode = 400 });
                 }
 
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return Ok(new ResponseDTO<UserDTO>());
 
             }
@@ -215,7 +286,7 @@ namespace NekkoChat.Server.Controllers
                 user!.ConnectionId = data.connectionid;
                 user!.Status = ValidStatus.Valid_Status.available;
                 _context.AspNetUsers.UpdateRange(user);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)
@@ -232,7 +303,7 @@ namespace NekkoChat.Server.Controllers
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id);
                 user!.Status = (ValidStatus.Valid_Status)status;
                 _context.AspNetUsers.UpdateRange(user);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
                 return Ok(new ResponseDTO<UserDTO>());
             }
             catch (Exception ex)

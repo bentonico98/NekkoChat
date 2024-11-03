@@ -4,12 +4,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd, faBars } from '@fortawesome/free-solid-svg-icons';
 
 import { Stack, Image, Button} from "react-bootstrap";
-import { openModal } from "../../Store/Slices/userSlice";
-import { useAppDispatch } from "../../Hooks/storeHooks";
+import { openModal, UserState } from "../../Store/Slices/userSlice";
+import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import { useNavigate } from "react-router-dom";
+import { iuserStore } from "../../Constants/Types/CommonTypes";
+import { Typography } from "@mui/material";
 
 export default function ProfileHeader() {
 
+    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -21,7 +24,8 @@ export default function ProfileHeader() {
     }
     return (
         <Stack direction="horizontal" gap={3} >
-            <Image src={avatar} roundedCircle fluid width={50} className="p-2" />
+            <Image src={user.value.profilePhotoUrl || avatar} roundedCircle fluid width={50} className="p-2" />
+            <Typography>{user.value.fname } {user.value.lname}</Typography>
             <div className="ms-auto">
                 <Button type="submit" variant="light" className="m-2" onClick={handleAddButton}  >{<FontAwesomeIcon icon={faAdd} />}</Button>
                 <Button type="submit" variant="light" className="m-2" onClick={handleSettingsButton} >{<FontAwesomeIcon icon={faBars} />}</Button>

@@ -2,7 +2,16 @@ import { Button, Navbar, Nav, Container } from 'react-bootstrap';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { faStar, faArchive, faSignOutAlt, faUserFriends, faVideoCamera, faPeopleGroup, faInbox } from '@fortawesome/free-solid-svg-icons';
+import {
+    faStar,
+    faArchive,
+    faSignOutAlt,
+    faUserFriends,
+    faVideoCamera,
+    faPeopleGroup,
+    faInbox,
+    faMailBulk
+} from '@fortawesome/free-solid-svg-icons';
 
 import { useAppDispatch, useAppSelector } from '../../Hooks/storeHooks';
 
@@ -12,14 +21,20 @@ import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
 
 import * as React from "react";
+import useDisplayMessage from '../../Hooks/useDisplayMessage';
+import NotificationBar from './NotificationBar';
 function NekkoNavbar() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
+    const [show, setShow] = React.useState<boolean>(false);
+
     const navigate = () => {
         window.location.href = "/login"
     }
+
+    const handleShow = () => setShow(true);
 
     const handleLogout = async () => {
         dispatch(toggleLoading(true));
@@ -50,9 +65,11 @@ function NekkoNavbar() {
                     <Nav.Link href="/chats?type=archived">{<FontAwesomeIcon icon={faArchive} />} Archived</Nav.Link>
                 </Nav>
                 <Nav>
-                    <Button variant="danger" onClick={handleLogout} >{<FontAwesomeIcon icon={faSignOutAlt} />}</Button>
+                    <Button className="mx-2" variant="danger" onClick={handleLogout} >{<FontAwesomeIcon icon={faSignOutAlt} />}</Button>
+                    <Button variant="primary" onClick={handleShow} >{<FontAwesomeIcon icon={faMailBulk} />}</Button>
                 </Nav>
             </Container>
+            <NotificationBar show={show} setShow={setShow} userId={user.value.id} />
         </Navbar>
     );
 }

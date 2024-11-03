@@ -8,6 +8,7 @@
         public static string Invalid { get; set; } = "Invalid";
         public static string Success { get; set; } = "Successful";
 
+        public static string WrongCredentials { get; set; } = "Wrong Credentials, Please Try Again";
         public static string MissingValues { get; set; } = "Missing Mandatory Values.";
         public static string Failed { get; set; } = "Operation Failed.";
 

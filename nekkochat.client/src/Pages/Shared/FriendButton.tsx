@@ -10,15 +10,17 @@ import { iDisplayMessageTypes, iuserStore, iUserViewModel } from "../../Constant
 import { UserState } from "../../Store/Slices/userSlice";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import UserAuthServices from "../../Utils/UserAuthServices";
+import NotificationServiceClient from "../../Utils/NotificationServiceClient";
+import GetNotificationName from "../../Utils/GetNotificationName ";
+import { Box, Stack, Typography } from "@mui/material";
 
 type incomingProps = {
     item?: iUserViewModel
-    name: any,
     id: string,
     idx: number,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
 }
-export default function FriendButton({ name, id, idx, item, DisplayMessage }: incomingProps) {
+export default function FriendButton({ id, idx, item, DisplayMessage }: incomingProps) {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
 
@@ -45,6 +47,14 @@ export default function FriendButton({ name, id, idx, item, DisplayMessage }: in
                     msj: res.message + " Accepted Request.",
                     isLoading: false
                 });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Accepted Your Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
+                });
             } else {
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
@@ -66,6 +76,14 @@ export default function FriendButton({ name, id, idx, item, DisplayMessage }: in
                     hasMsj: true,
                     msj: res.message + " Decline Request.",
                     isLoading: false
+                });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Declined Your Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
                 });
             } else {
                 if (res.internalMessage) return DisplayMessage({
@@ -89,6 +107,14 @@ export default function FriendButton({ name, id, idx, item, DisplayMessage }: in
                     msj: res.message + " Friend Request.",
                     isLoading: false
 
+                });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Sent a Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
                 });
             } else {
                 if (res.internalMessage) return DisplayMessage({
@@ -116,7 +142,7 @@ export default function FriendButton({ name, id, idx, item, DisplayMessage }: in
         });
 
         if (res.success) {
-            navigate(`/inbox`, { state: {id: res.singleUser} });
+            navigate(`/inbox`, { state: { id: res.singleUser } });
             DisplayMessage({
                 hasMsj: true,
                 msj: res.message + " Created Group.",
@@ -141,59 +167,58 @@ export default function FriendButton({ name, id, idx, item, DisplayMessage }: in
     }
 
     return (
-        <Container key={idx}>
-            <Row className={`border border-2 rounded pt-2 ${!item!.isFriend && "bg-secondary"}`}>
-                <Col lg={6} className="p-1">
-                    <Image src={avatar} roundedCircle fluid width={50} className="mx-2" />
-                    {FirstLetterUpperCase(name)}
-                </Col>
-                <Col className="pt-2">
-                    <Row>
-                        {!item!.isFriend ?
-                            <Col>
-                                {item!.isSender ?
-                                    <Button
-                                        variant="info"
-                                        onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
-                                            <FontAwesomeIcon icon={faCheck} />}
-                                    </Button>
-                                    :
-                                    <Button
-                                        variant="danger"
-                                        className="mx-1"
-                                        onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
-                                            <FontAwesomeIcon icon={faAdd} />}
-                                    </Button>}
-                                {item!.isSender ?
-                                    <Button
-                                        variant="danger"
-                                        className="mx-1"
-                                        onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
-                                            <FontAwesomeIcon icon={faCancel} />}
-                                    </Button> : 
-                                    <Button
-                                        className="mx-1"
-                                        onClick={() => {
-                                            handleMessageButton(user.value.id, id, "Hello");
-                                        }}>{
-                                            <FontAwesomeIcon icon={faMessage} />
-                                        }</Button>
-                                }
+        <Stack direction="row" className={`mx-2 border border-2 rounded pt-3 ${!item!.isFriend && "bg-secondary"}`}>
+            <Box sx={{ width: 200, maxWidth: '100%' }} className="mx-2">
+                <Image src={avatar} roundedCircle fluid width={50} />
+            </Box>
+
+            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
+            </Box>
+            
+            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                <Box>
+                    {!item!.isFriend ?
+                        <Stack direction="row" spacing={1}>
+                            {item!.isSender ?
+                                <Button
+                                    variant="info"
+                                    onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
+                                        <FontAwesomeIcon icon={faCheck} />}
+                                </Button>
+                                :
+                                <Button
+                                    variant="danger"
+                                    onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
+                                        <FontAwesomeIcon icon={faAdd} />}
+                                </Button>}
+                            {item!.isSender ?
+                                <Button
+                                    variant="danger"
+                                    onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
+                                        <FontAwesomeIcon icon={faCancel} />}
+                                </Button> :
                                 <Button
                                     onClick={() => {
-                                        handleInfoButton(id);
+                                        handleMessageButton(user.value.id, id, "Hello");
                                     }}>{
-                                        <FontAwesomeIcon icon={faInfoCircle} />}
-                                </Button>
-                            </Col> : <Col>
-                                <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faPhone} />}</Button>
-                                <Button className="mx-1" onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
-                                <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>
-                            </Col>
-                        }
-                    </Row>
-                </Col>
-            </Row>
-        </Container>
+                                        <FontAwesomeIcon icon={faMessage} />
+                                    }</Button>
+                            }
+                            <Button
+                                onClick={() => {
+                                    handleInfoButton(id);
+                                }}>{
+                                    <FontAwesomeIcon icon={faInfoCircle} />}
+                            </Button>
+                        </Stack> : <Stack direction="row" spacing={1} >
+                            <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faPhone} />}</Button>
+                            <Button  onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
+                            <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>
+                        </Stack>
+                    }
+                </Box>
+            </Box>
+        </Stack>
     );
 }

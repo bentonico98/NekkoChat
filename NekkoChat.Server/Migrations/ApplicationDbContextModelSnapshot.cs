@@ -17,7 +17,7 @@ namespace NekkoChat.Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -179,10 +179,19 @@ namespace NekkoChat.Server.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Fname")
+                        .HasColumnType("text");
+
                     b.Property<int?>("Friends_Count")
                         .HasColumnType("integer");
 
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
+
                     b.Property<string>("LastOnline")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Lname")
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -263,7 +272,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("chats");
+                    b.ToTable("chats", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Friend_List", b =>
@@ -287,7 +296,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("friend_list");
+                    b.ToTable("friend_list", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Groups", b =>
@@ -314,7 +323,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("groups");
+                    b.ToTable("groups", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Groups_Members", b =>
@@ -334,7 +343,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("groups_members");
+                    b.ToTable("groups_members", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Groups_Messages", b =>
@@ -353,7 +362,26 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("groups_messages");
+                    b.ToTable("groups_messages", (string)null);
+                });
+
+            modelBuilder.Entity("NekkoChat.Server.Models.Notifications", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Notification")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("User_Id")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("notifications", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.User_Group_Preferences", b =>
@@ -379,7 +407,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("user_group_preferencess");
+                    b.ToTable("user_group_preferencess", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Users", b =>
@@ -416,7 +444,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("users");
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("NekkoChat.Server.Models.Users_Messages", b =>
@@ -435,7 +463,7 @@ namespace NekkoChat.Server.Migrations
 
                     b.HasKey("id");
 
-                    b.ToTable("users_messages");
+                    b.ToTable("users_messages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

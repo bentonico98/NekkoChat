@@ -121,6 +121,26 @@
          const url = `user/manage/friendrequest/response`;
          return `${this.ServerUrl}${url}`;
      }
+
+
+     //////////// NOTIFICATIONS
+
+     public static getAllUserNotificationUrl(user_id:string) {
+         const url = `notifications?user_id=${user_id}`
+         return `${this.ServerUrl}${url}`;
+     };
+     public static getCreateNotificationUrl() {
+         const url = `notifications/create`
+         return `${this.ServerUrl}${url}`;
+     };
+     public static getReadNotificationUrl(id: string | undefined) {
+         const url = `notifications/read/${id}`
+         return `${this.ServerUrl}${url}`;
+     };
+     public static getDeleteNotificationUrl(id: string | undefined) {
+         const url = `notifications/delete/${id}`
+         return `${this.ServerUrl}${url}`;
+     };
 }
 
 export default ServerLinks;

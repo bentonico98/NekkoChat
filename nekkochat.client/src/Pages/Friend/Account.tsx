@@ -13,6 +13,9 @@ import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, Us
 import { iuserStore } from "../../Constants/Types/CommonTypes";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
+import NotificationServiceClient from "../../Utils/NotificationServiceClient";
+import GetNotificationName from "../../Utils/GetNotificationName ";
+import { Typography } from "@mui/material";
 
 export default function Account() {
 
@@ -42,6 +45,8 @@ export default function Account() {
     const [userInfo, setUserInfo] = useState({
         id: user_id ? user_id : "0",
         userName: "",
+        fname: "",
+        lname: "",
         about: "Hi, Let's get to know eachother.",
         phoneNumber: "Unspecified",
         friends_Count: 0,
@@ -80,7 +85,7 @@ export default function Account() {
         receiver_id: string,
         sender_id: string) => {
 
-        if (receiver_id == null || sender_id == null) return false;
+        if (!receiver_id || !sender_id) return false;
         if (receiver_id.length <= 0 || sender_id.length <= 0) return false;
 
         setDisplayInfo({ isLoading: true });
@@ -98,6 +103,14 @@ export default function Account() {
                     hasMsj: true,
                     msj: res.message + " Accepted Request.",
                     isLoading: false
+                });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Accepted Your Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
                 });
             } else {
                 if (res.internalMessage) return setDisplayInfo({
@@ -127,6 +140,41 @@ export default function Account() {
                     msj: res.message + " Decline Request.",
                     isLoading: false
                 });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Declined Your Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
+                });
+            } else {
+                if (res.internalMessage) return setDisplayInfo({
+                    hasError: true,
+                    error: res.internalMessage,
+                    isLoading: true
+                });
+                setDisplayInfo({
+                    hasError: true,
+                    error: res.error,
+                    isLoading: true
+                });
+            }
+            return res.success;
+        } else if (operation === "remove") {
+
+            const res = await UserAuthServices.GetManageFriendRequest({
+                operation,
+                sender_id,
+                receiver_id
+            });
+
+            if (res.success) {
+                setDisplayInfo({
+                    hasMsj: true,
+                    msj: res.message + " Removal Request.",
+                    isLoading: false
+                });
             } else {
                 if (res.internalMessage) return setDisplayInfo({
                     hasError: true,
@@ -141,7 +189,6 @@ export default function Account() {
             }
             return res.success;
         } else {
-
             const res = await UserAuthServices.GetSendFriendRequest({
                 sender_id,
                 receiver_id
@@ -152,6 +199,14 @@ export default function Account() {
                     hasMsj: true,
                     msj: res.message + " Friend Request.",
                     isLoading: false
+                });
+                await NotificationServiceClient.CreateNotification({
+                    user_id: receiver_id,
+                    operation: " Sent a Friend Request.",
+                    from: 'Unknown',
+                    from_id: sender_id,
+                    type: GetNotificationName('request'),
+                    url: '/friends'
                 });
             } else {
                 if (res.internalMessage) return setDisplayInfo({
@@ -211,7 +266,7 @@ export default function Account() {
                         className="p-2" />
                 </Col>
                 <Col>
-                    <h2>{FirstLetterUpperCase(userInfo.userName || "Unknown")}</h2>
+                    <Typography variant="h4">{FirstLetterUpperCase(userInfo.fname || "Unknown")} {FirstLetterUpperCase(userInfo.lname || "Unknown")}</Typography>
                 </Col>
             </Row>
             <Row>
@@ -242,7 +297,7 @@ export default function Account() {
                             <Button
                                 variant="danger"
                                 onClick={() => {
-                                    handleManageFriendButton("remove", userInfo.id, user.value.id);
+                                    handleManageFriendButton("decline", userInfo.id, user.value.id);
                                 }}
                                 className="mx-1">{
                                     <FontAwesomeIcon icon={faTrashCan} />}
@@ -250,7 +305,7 @@ export default function Account() {
                             <Button
                                 variant="danger"
                                 onClick={() => {
-                                    handleManageFriendButton("block", userInfo.id, user.value.id);
+                                    handleManageFriendButton("remove", userInfo.id, user.value.id);
                                 }}
                                 className="mx-1">{
                                     <FontAwesomeIcon icon={faStopCircle} />}

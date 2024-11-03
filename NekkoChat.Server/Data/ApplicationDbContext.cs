@@ -26,8 +26,6 @@ namespace NekkoChat.Server.Data
 
         public DbSet<NekkoChat.Server.Models.Groups_Messages> groups_messages { get; set; } = default!;
 
-
-
-
+        public DbSet<NekkoChat.Server.Models.Notifications> notifications { get; set; } = default!;
     }
 }

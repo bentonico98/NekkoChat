@@ -45,6 +45,7 @@ export const userSlice = createSlice({
         },
         logout: (state) => {
             localStorage.removeItem("user");
+            localStorage.removeItem('rmrUser');
             state.value = {};
         },
         openModal: (state) => {
@@ -55,7 +56,6 @@ export const userSlice = createSlice({
         },
         toggleMsjModal: (state, action: PayloadAction<{ status: boolean, message: string | null | undefined }>) => {
             state.msjModalOpened = action.payload.status;
-            console.log("msj");
 
             if (!action.payload.status) return;
             if (!action.payload.message) return;
@@ -65,7 +65,7 @@ export const userSlice = createSlice({
         },
         toggleErrorModal: (state, action: PayloadAction<{ status: boolean, message: string | null | undefined }>) => {
             state.errorModalOpened = action.payload.status;
-            console.log("error");
+
             if (!action.payload.status) return;
             if (!action.payload.message) return;
             if (action.payload.message === undefined) return;
@@ -74,7 +74,6 @@ export const userSlice = createSlice({
         },
         toggleNotification: (state, action: PayloadAction<{ status: boolean, message: string | null | undefined }>) => {
             state.notificationModal = action.payload.status;
-            console.log("notif");
 
             if (!action.payload.status) return;
             if (!action.payload.message) return;
@@ -106,7 +105,6 @@ export const {
     toggleErrorModal,
     toggleNotification,
     toggleLoading,
-    toggleUiLoading
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user;

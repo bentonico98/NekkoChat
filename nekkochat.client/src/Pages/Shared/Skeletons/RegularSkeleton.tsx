@@ -1,12 +1,10 @@
-import * as React from 'react';
-import Typography, { TypographyProps } from '@mui/material/Typography';
+import { Paper } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
-import Grid from '@mui/material/Grid';
 
 export default function RegularSkeleton() {
     return (
-        <div>
+        <Paper variant="outlined">
             <Skeleton variant="rounded" width={210} height={60} />
-        </div>
+        </Paper>
     );
 }

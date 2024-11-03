@@ -34,7 +34,7 @@ export default function ErrorSnackbar() {
     );
     return (
         <Snackbar
-            open={state.error && state.errorModalOpened}
+            open={state.errorModalOpened}
             autoHideDuration={6000}
             onClose={handleClose}
             action={action}

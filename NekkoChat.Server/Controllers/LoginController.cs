@@ -15,9 +15,9 @@ namespace NekkoChat.Server.Controllers
     [Route("[controller]")]
     [ApiController]
     public class LoginController(
-        SignInManager<AspNetUsers> signInManager, 
-        UserManager<AspNetUsers> userManager, 
-        ApplicationDbContext context, 
+        SignInManager<AspNetUsers> signInManager,
+        UserManager<AspNetUsers> userManager,
+        ApplicationDbContext context,
         IMapper mapper) : ControllerBase
     {
         private readonly SignInManager<AspNetUsers> _signInManager = signInManager;
@@ -31,7 +31,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByEmailAsync(data.username);
+                AspNetUsers user = await _userManager.FindByEmailAsync(data.email);
                 try
                 {
                     var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -54,10 +54,10 @@ namespace NekkoChat.Server.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.MissingValues });
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.WrongCredentials });
                 }
             }
-            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
+            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.WrongCredentials });
         }
 
         // POST /login
@@ -66,31 +66,44 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                AspNetUsers user = new AspNetUsers
+                if (data.password.Equals(data.confirmPassword))
                 {
-                    Email = data.email,
-                    UserName = data.username,
-                    EmailConfirmed = true,
-                    PhoneNumber = data.phoneNumber,
-                    PhoneNumberConfirmed = true,
-                    LastOnline = date,
-                    Status = ValidStatus.Valid_Status.available
-                };
+                    var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                var userCreated = await _userManager.CreateAsync(user, data.password);
+                    AspNetUsers user = new AspNetUsers
+                    {
+                        Email = data.email,
+                        UserName = data.fname,
+                        Fname = data.fname,
+                        Lname = data.lname,
+                        FullName = $"{data.fname} {data.lname}",
+                        EmailConfirmed = true,
+                        PhoneNumber = data.phoneNumber,
+                        PhoneNumberConfirmed = true,
+                        LastOnline = date,
+                        Status = ValidStatus.Valid_Status.available,
+                        TwoFactorEnabled = false,
+                        LockoutEnabled = false,
+                        Friends_Count = 0,
+                        About = !string.IsNullOrEmpty(data.about) ? data.about : "Available",
+                        ProfilePhotoUrl = !string.IsNullOrEmpty(data.profilePhotoUrl) ? data.profilePhotoUrl : "/src/assets/avatar.png"
 
-                if (userCreated.Succeeded)
-                {
-                    await _signInManager.SignInAsync(
-                        user,
-                        isPersistent: false);
+                    };
 
-                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                    var userCreated = await _userManager.CreateAsync(user, data.password);
 
-                    return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
+                    if (userCreated.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(
+                            user,
+                            isPersistent: false);
+
+                        UserDTO userView = _mapper.Map<UserDTO>(user);
+
+                        return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
+                    }
                 }
+
             }
             return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
         }

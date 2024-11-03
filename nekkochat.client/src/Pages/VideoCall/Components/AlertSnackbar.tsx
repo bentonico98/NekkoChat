@@ -9,7 +9,7 @@ export type AlertSnackbarType = {
     severity: AlertColor
 };
 
-export function AlertSnackbar({ message, isOpen, severity }: AlertSnackbarType) {
+export function AlertSnackbar({ message, isOpen, severity, onClose }: AlertSnackbarType & { onClose: () => void }) {
     const [open, setOpen] = React.useState(isOpen);
 
     useEffect(() => {
@@ -25,8 +25,8 @@ export function AlertSnackbar({ message, isOpen, severity }: AlertSnackbarType) 
         }
 
         setOpen(false);
+        onClose(); // Llama a la función onClose para restablecer el estado en el componente padre
     };
-
 
     return (
         <div>

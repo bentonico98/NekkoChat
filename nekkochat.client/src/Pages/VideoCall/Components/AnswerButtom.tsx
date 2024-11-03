@@ -25,7 +25,6 @@ export default function SimpleSnackbar() {
     const [senderId, setSenderId] = useState<string | null>();
     const [profileData, setProfileData] = useState<IProfileData | null>(null)
 
-
     peerConnection.current = new RTCPeerConnection()
 
     const user = JSON.parse(localStorage.getItem("user") || '{}')
@@ -39,7 +38,6 @@ export default function SimpleSnackbar() {
         if (connected) {
             connection = conn?.connection;
             connection.on('videonotification', (sender_id: string, receiver_id: string, data:string) => {
-                console.log("esta es la videonotificacion");
                 try {
                     if (Receiver_id == receiver_id) {
                         setSenderId(sender_id);

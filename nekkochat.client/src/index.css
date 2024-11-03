@@ -62,8 +62,6 @@ button:focus-visible {
   html, body {
    height: 100%;
    width: 100%;
-   overflow:hidden;
-
   }
   a:hover {
     color: #747bff;

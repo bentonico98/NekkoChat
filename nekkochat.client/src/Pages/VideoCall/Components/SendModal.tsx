@@ -9,9 +9,6 @@ import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import CircularProgress from '@mui/material/CircularProgress';
 import { VideoCallButton } from './VideoCallButtom';
-//import useGetUser from '../../../Hooks/useGetUser';
-//import { useAppSelector } from '../../../Hooks/storeHooks';
-
 
 const style = {
     position: 'absolute',
@@ -70,7 +67,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
 
     return (
         <div>
-            <VideoCallButton onClick={handleOpen}><SendIcon /></VideoCallButton>
+            <VideoCallButton margin={'0.65rem 0.3rem 0 0'} onClick={handleOpen}><SendIcon /></VideoCallButton>
             <Modal
                 sx={{ width: "auto" }}
                 open={open}
@@ -99,8 +96,6 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
                                 <Grid size={4}>
                                     <Button onClick={() => {
                                         handleInvokeVideoNotification(user.id, data);
-                                        console.log("sendModal " + sender_id + " " + user.id);
-                                        console.log("connection ", conn?.connectionId)
                                     }}><SendIcon /></Button>
                               </Grid>
                             </Grid>

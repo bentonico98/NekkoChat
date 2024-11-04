@@ -49,3 +49,4 @@ namespace NekkoChat.Server.Hubs
         }
     }
 }
+

@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { VideoCall } from "../Pages/VideoCall/VideoCall";
 
 import WelcomePage from "../Pages/Welcome/Index";
 
@@ -50,6 +51,8 @@ export default function PrivateChatRoutes() {
                     <Route path="profile" element={<FriendList />} />
 
                     <Route path="settings" element={<Settings />} />
+
+                    <Route path="/chats/videocall" element={<VideoCall />} />
                 </Route>
 
 

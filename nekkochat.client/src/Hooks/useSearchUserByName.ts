@@ -10,7 +10,7 @@ export default function useSearchUserByName() {
     const handleSearch = async (stringSearch: string, friends: iUserViewModel[] = [new UserViewModel()]) => {
         const res = await UserAuthServices.SearchUserByName(stringSearch);
         if (res.success) {
-            let searchRes: iUserViewModel[] = res.user.user;
+            const searchRes: iUserViewModel[] = res.user.user;
             if (friends.length > 0) {
                 searchRes.forEach((el: iUserViewModel) => {
                     friends.forEach((fr: iUserViewModel) => {

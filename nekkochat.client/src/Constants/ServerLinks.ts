@@ -1,5 +1,7 @@
  class ServerLinks {
-     private static ServerUrl = "https://localhost:7198/";
+     //private static ServerUrl = "https://localhost:7198/";
+
+     private static ServerUrl = "https://c3b5hzpq-7198.use2.devtunnels.ms/"; //devTunel
 
      ///////////////// PRIVATE CHATS URLS
 
@@ -114,6 +116,12 @@
      }
      public static getGroupById(group_id: number) {
          const url = `group/groups/${group_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+
+     ////////////// VIDEOCALL ROUTES
+     public static getVideocallUsersUrl(user_id: string) {
+         const url = `Videocall/users?user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
 

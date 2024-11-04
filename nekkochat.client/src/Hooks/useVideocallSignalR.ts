@@ -23,7 +23,11 @@ export default function useVideocallSignalServer() {
 
     const setConnectionId = async (id: string, conection: any) => {
         console.log("Set connection ID: " + user_id, conection?.connectionId);
-        await UserAuthServices.SetConnectionId(id, conn?.connectionId);
+         await UserAuthServices.SetConnectionId({
+            user_id: id,
+            sender_id: id,
+            connectionid: conn?.connectionId
+        });
     }
 
     //Mantiene la conexion abierta

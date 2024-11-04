@@ -1,17 +1,19 @@
 import { useState, useCallback } from "react";
-import GroupChatSchema from "../../Schemas/GroupChatSchema";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
+import { iChatSchema } from "../../Constants/Types/CommonTypes";
 
 export default function useGetChatFromUser() {
-    const [messages, setMessages] = useState<GroupChatSchema[]>([]);
-    const [chatID, setChatID] = useState<string>("0");
-    const [currentConvo, setcurrentConvo] = useState<GroupChatSchema[]>([]);
+    const [messages, setMessages] = useState<iChatSchema[]>([]);
+    const [chatID, setChatID] = useState<number>(0);
+    const [currentConvo, setcurrentConvo] = useState<iChatSchema[]>([]);
 
     const setCurrentConversation = useCallback((group_id: number) => {
         MessageServicesClient.getGroupFromUser(group_id).then((res) => {
-            setcurrentConvo(res);
-            setMessages(res[0].messages);
-            setChatID(res[0]._id);
+            if (res.success) {
+                setcurrentConvo(res.user);
+                setMessages(res.user[0].messages);
+                setChatID(res.user[0]._id);
+            }
         });
     }, []);
 

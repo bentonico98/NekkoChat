@@ -2,8 +2,6 @@ import React, {useEffect, useRef, useState } from 'react';
 import Button from '@mui/material/Button';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
 import { useNavigate } from 'react-router-dom';
-import {  useDispatch } from "react-redux"
-import { setAnswered } from '../../../Store/Slices/videocallSlice';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import CallIcon from '@mui/icons-material/Call';
@@ -55,8 +53,6 @@ export default function SimpleSnackbar() {
         }
     }, [connected, connection]);
 
-    const userDispatch = useDispatch();
-
     const handleClose = async (
         _event: React.SyntheticEvent | Event,
         reason?: SnackbarCloseReason,
@@ -70,7 +66,6 @@ export default function SimpleSnackbar() {
 
     const handleAnswer = async () => {
         setOpen(false);
-        userDispatch(setAnswered(true));
         navigate("/chats/videocall/", { replace: true });
         await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id, true);
         navigate(0)
@@ -100,7 +95,8 @@ export default function SimpleSnackbar() {
                 ContentProps={{
                     sx: {
                         background: "white",
-                        color:"black"
+                        color: "black",
+                        zIndex: 100
                     }
                 }}
                 

@@ -25,7 +25,7 @@ export function AlertSnackbar({ message, isOpen, severity, onClose }: AlertSnack
         }
 
         setOpen(false);
-        onClose(); // Llama a la función onClose para restablecer el estado en el componente padre
+        onClose(); 
     };
 
     return (

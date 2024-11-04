@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import GroupChatSchema from "../../Schemas/GroupChatSchema";
 import timeAgo from "../../Utils/TimeFormatter";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
+import { iChatSchema } from "../../Constants/Types/CommonTypes";
 
-export default function useGetGroup(user: string, messages: any, group_id:number) {
+export default function useGetGroup(user: string, messages: iChatSchema[], group_id: number) {
     const [groupName, setGroupName] = useState<string>("");
     const [groupType, setGroupType] = useState<string>("");
     const [groupDesc, setGroupDesc] = useState<string>("");
@@ -13,8 +13,8 @@ export default function useGetGroup(user: string, messages: any, group_id:number
     const [unreadMsj, setUnreadMsj] = useState<number | undefined>();
   
     const getUnreadMessages = () => {
-        const message: any = messages.filter((i: GroupChatSchema) => i.read === false && i.user_id !== user);
-        setUnreadMsj((p: any) => p = message.length);
+        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false && i.user_id !== user);
+        setUnreadMsj(message.length);
     }
     const getGroup = async (group_id: number) => {
         const res = await MessageServicesClient.getGroupById(group_id);
@@ -22,16 +22,16 @@ export default function useGetGroup(user: string, messages: any, group_id:number
         setGroupDesc(res.description);
         setGroupPhoto(res.profilePhotoUrl);
     }
-    const getChatStartDate = (filter: any) => {
-        const date: any = filter[0]?.created_at || new Date().toJSON();
+    const getChatStartDate = (filter: iChatSchema[]) => {
+        const date: string = filter[0]?.created_at || new Date().toJSON();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
-            setStartDate((c: any) => c = formattedDate);
+            setStartDate(formattedDate);
         }
     }
     
     const getReceiver = () => {
-        const filter = messages.filter((i: GroupChatSchema) => i.user_id != user);
+        const filter = messages.filter((i: iChatSchema) => i.user_id != user);
         const groupname = filter[0]?.groupname || "Unknown";
         setGroupName(groupname);
         getChatStartDate(filter);

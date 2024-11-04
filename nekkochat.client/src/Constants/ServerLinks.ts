@@ -1,5 +1,3 @@
-import GroupMessageSchema from "../Schemas/GroupMessageSchema";
-import MessageSchema from "../Schemas/MessageSchema"
  class ServerLinks {
      //private static ServerUrl = "https://localhost:7198/";
 
@@ -7,58 +5,70 @@ import MessageSchema from "../Schemas/MessageSchema"
 
      ///////////////// PRIVATE CHATS URLS
 
-     public static getCreateChatUrl(message: MessageSchema) {
-         const url = `chats/chat/create/${message.chat_id}?value=${message.content}&sender_id=${message.sender_id}&receiver_id=${message.receiver_id}`
+     public static getCreateChatUrl() {
+         const url = `chats/chat/create`
          return `${this.ServerUrl}${url}`;
      };
-     public static getSendMessageUrl(message: MessageSchema) {
-         const url = `chats/chat/send/${message.chat_id}?value=${message.content}&sender_id=${message.sender_id}&receiver_id=${message.receiver_id}`
+     public static getSendMessageUrl() {
+         const url = `chats/chat/send`
         return `${this.ServerUrl}${url}`;
      };
-     public static getAllUsersChatUrl(id:any) {
-         const url = `chats/chats?id=${id}`
+     public static getAllUsersChatUrl(id: string, type: string) {
+         const url = `chats/chats?id=${id}&type=${type}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getOneUsersChatUrl(id: any) {
+     public static getOneUsersChatUrl(id: number) {
          const url = `chats/chat/${id}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getReadMessageUrl(chat_id: string | undefined, sender_id: string) {
-         const url = `chats/chat/read/${chat_id}?sender_id=${sender_id}`
+     public static getReadMessageUrl(chat_id: number | undefined) {
+         const url = `chats/chat/read/${chat_id}`
          return `${this.ServerUrl}${url}`;
      }
 
+     public static getDeleteMessageUrl(chat_id: number | undefined) {
+         const url = `chats/chat/message/delete/${chat_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+
+     public static getManageChatUrl(chat_id: number | undefined) {
+         const url = `chats/chat/manage/${chat_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
      ///////// GROUP CHAT URLS
 
-     public static getCreateGroupChatUrl(message: GroupMessageSchema) {
-         //?sender_id=${sender_id}&=${groupname}&grouptype=${grouptype}&=${groupdesc}&=${groupphoto}&value=${value}
-         const url = `group/chat/create/${message.group_id}?value=${message.content}&sender_id=${message.sender_id}&groupname=${message.groupname}&grouptype=${message.grouptype}&groupdesc=${message.groupdesc}&groupphoto=${message.groupphoto}`
+     public static getCreateGroupChatUrl() {
+         const url = `group/chat/create`
          return `${this.ServerUrl}${url}`;
      };
-     public static getSendMessageToGroupUrl(message: GroupMessageSchema) {
-         const url = `group/chat/send/${message.group_id}?value=${message.content}&sender_id=${message.sender_id}&groupname=${message.groupname}&grouptype=${message.grouptype}&groupdesc=${message.groupdesc}&groupphoto=${message.groupphoto}`
+     public static getSendMessageToGroupUrl(id: number) {
+         const url = `group/chat/send/${id}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getAllGroupsChatUrl(id: any) {
+     public static getAllGroupsChatUrl(id: string) {
          const url = `group/chats?user_id=${id}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getOneGroupChatUrl(id: any) {
+     public static getOneGroupChatUrl(id: number) {
          const url = `group/chat/${id}`
          return `${this.ServerUrl}${url}`;
      };
-     public static getReadGroupMessageUrl(group_id: number | undefined, sender_id: string, groupname:string) {
-         const url = `group/chat/read/${group_id}?sender_id=${sender_id}&groupname=${groupname}`
+     public static getReadGroupMessageUrl(id:number) {
+         const url = `group/chat/read/${id}`
          return `${this.ServerUrl}${url}`;
      }
-     public static getAddParticipantToGroupUrl(group_id: number | undefined, sender_id: string, groupname: string) {
-         const url = `group/chat/add/${group_id}?sender_id=${sender_id}&groupname=${groupname}`
+     public static getAddParticipantToGroupUrl(id: number) {
+         const url = `group/chat/add/${id}`
          return `${this.ServerUrl}${url}`;
      }
 
      ////////////// AUTH URL
      public static getLoginUrl() {
          const url = `login`;
+         return `${this.ServerUrl}${url}`;
+     };
+     public static getLogoutUrl() {
+         const url = `logout`;
          return `${this.ServerUrl}${url}`;
      };
      public static getRegisterUrl() {
@@ -69,18 +79,39 @@ import MessageSchema from "../Schemas/MessageSchema"
 
 
      ////////////// USER ROUTES
-     public static getSetConnectionIdUrl(user_id: string, connectionid: string|any) {
-         const url = `user/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;
+     public static getSetConnectionIdUrl() {
+         const url = `user/manage/connectionid`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getSetUserStatusUrl(status: number) {
+         const url = `user/manage/status?status=${status}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserById(user_id: string) {
          const url = `user/users?user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
+     public static getUserByName(name: string) {
+         const url = `user/user?name=${name}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getUserFriends(user_id:string, operation:string) {
+         const url = `user/friends?user_id=${user_id}&operation=${operation}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getSendFriendRequest() {
+         const url = `user/manage/friendrequest/send`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getManageFriendRequest() {
+         const url = `user/manage/friendrequest/response`;
+         return `${this.ServerUrl}${url}`;
+     }
+
 
      ////////////// GROUP ROUTES
-     public static getSetConnectionIdForGroupUrl(user_id: string, connectionid: string | any) {
-         const url = `group/manage/connectionid?connectionid=${connectionid}&user_id=${user_id}`;
+     public static getSetConnectionIdForGroupUrl() {
+         const url = `group/manage/connectionid`;
          return `${this.ServerUrl}${url}`;
      }
      public static getGroupById(group_id: number) {

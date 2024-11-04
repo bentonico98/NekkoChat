@@ -1,22 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 using System.Globalization;
 using NekkoChat.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using NekkoChat.Server.Models;
 using NekkoChat.Server.Utils;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using NekkoChat.Server.Constants;
+using NekkoChat.Server.Constants.Interfaces;
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class GroupController(ILogger<GroupController> logger, ApplicationDbContext context) : ControllerBase
+    public class GroupController(
+        ILogger<GroupController> logger, 
+        ApplicationDbContext context,
+        iGroupChatMessageService messageServices) : ControllerBase
     {
         private readonly ILogger<GroupController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
-        private readonly GroupChatMessageServices _messageServices = new GroupChatMessageServices(context);
+        private readonly iGroupChatMessageService _messageServices = messageServices;
 
         // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
@@ -28,7 +32,7 @@ namespace NekkoChat.Server.Controllers
                 List<object> ChatsContent = new();
 
                 IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
-                
+
                 conversations = conversations.Where((c) => c.user_id == user_id);
                 foreach (var conversation in conversations)
                 {
@@ -47,15 +51,15 @@ namespace NekkoChat.Server.Controllers
 
                 if (ChatsContent == null)
                 {
-                    return NotFound(new { Message = "No index found" });
+                    return NotFound(new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 }
 
-                return Ok(ChatsContent);
+                return Ok(new ResponseDTO<object> { User = ChatsContent });
 
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -75,78 +79,81 @@ namespace NekkoChat.Server.Controllers
                 {
                     currentChats.Add(JsonDocument.Parse(c.content));
                 }
-                return Ok(currentChats);
+
+                return Ok(new ResponseDTO<object> { User = currentChats });
+
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
-        // /group/groups/group_id
+        // /group/groups/{group_id}
 
         [HttpGet("groups/{group_id}")]
-        public async Task<IActionResult> GetGroupById(int group_id)
+        public async Task<IActionResult> GetGroupById([FromRoute] int group_id)
         {
             try
             {
                 Groups group = await _context.groups.FindAsync(group_id);
-                return Ok(group);
+
+                return Ok(new ResponseDTO<Groups> { SingleUser = group });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
-        // POST groupschat/chat/create?sender_id=${sender_id}&groupname=${groupname}&grouptype=${grouptype}&groupdesc=${groupdesc}&groupphoto=${groupphoto}&value=${value} -- Ruta para creacion de un chat que tdv no exista
+        // POST groupschat/chat/create-- Ruta para creacion de un chat que tdv no exista
         [HttpPost("chat/create")]
-        public async Task<IActionResult> Post(string value, string sender_id, int group_id, string groupname, string grouptype, string groupdesc, string groupphoto)
+        public async Task<IActionResult> Post([FromBody] GroupRequest data)
         {
-            int messageSent = await _messageServices.createChat(sender_id, group_id, groupname, grouptype, groupdesc, groupphoto,value);
+            int messageSent = await _messageServices.createChat(data);
             if (messageSent <= 0)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok();
+            return Ok(new ResponseDTO<Groups>());
         }
 
-        // PUT groupschat/chat/send/{id}?sender_id=${sender_id}&groupname=${groupname}&grouptype=${grouptype}&groupdesc=${groupdesc}&groupphoto=${groupphoto}&value=${value}--- Ruta para envio de mensaje a un chat existente
+        // PUT groupschat/chat/send/{id} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/send/{id}")]
-        public async Task<IActionResult> Put(int id, string value, string sender_id, string groupname, string grouptype, string groupdesc, string groupphoto)
+        public async Task<IActionResult> Put([FromBody] GroupRequest data)
         {
-            bool messageSent = await _messageServices.sendMessage(id, sender_id, groupname, grouptype, groupdesc, groupphoto, value);
+            bool messageSent = await _messageServices.sendMessage(data);
             if (!messageSent)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok();
+            return Ok(new ResponseDTO<Groups>());
         }
 
 
-        // PUT groupschat/chat/read/{id}?sender_id=${sender_id}&groupname=groupname --- Ruta para envio de mensaje a un chat existente
+        // PUT groupschat/chat/read/{id} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/read/{group_id}")]
-        public IActionResult PutMessageRead(int group_id, string sender_id, string groupname)
+        public IActionResult PutMessageRead([FromBody] GroupRequest data, [FromRoute] int group_id)
         {
-            bool messageSent = _messageServices.readMessage(group_id, sender_id, groupname);
+            bool messageSent = _messageServices.readMessage(data, group_id);
             if (!messageSent)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok();
+            return Ok(new ResponseDTO<Groups>());
         }
 
 
-        // PUT groupschat/chat/add/{id}?sender_id=${sender_id}&groupname=groupname --- Ruta para agregar nuevo integrante al grupo
+        // PUT groupschat/chat/add/{id} --- Ruta para agregar nuevo integrante al grupo
         [HttpPut("chat/add/{group_id}")]
-        public async Task< IActionResult> PutAddParticipant(int group_id, string sender_id, string groupname)
+        public async Task<IActionResult> PutAddParticipant([FromBody] GroupRequest data, [FromRoute] int group_id)
         {
-            bool messageSent = await _messageServices.addParticipantToGroup(sender_id, group_id, groupname);
+            bool messageSent = await _messageServices.addParticipantToGroup(data, group_id);
             if (!messageSent)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = "Unable to send message" });
+                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok();
+            return Ok(new ResponseDTO<Groups>());
         }
 
 

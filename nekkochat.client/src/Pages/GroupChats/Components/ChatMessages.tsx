@@ -1,35 +1,49 @@
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, Button, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 
 import avatar from "../../../assets/avatar.png";
-
-import ChatSchema from "../../../Schemas/ChatSchema";
 
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
 
 import useGetGroup from "../../../Hooks/Group/useGetGroup";
+import { useNavigate } from 'react-router-dom';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMaximize } from "@fortawesome/free-solid-svg-icons";
+import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
+import { Container } from '@mui/material';
 
-
-export default function ChatMessages({ messages, connected, sender, receiver, isTyping }: any) {
+export default function ChatMessages({
+    messages,
+    connected,
+    sender,
+    receiver,
+    isTyping }: iGroupChatMessagesProps) {
 
     const { groupName, groupType, groupDesc, groupPhoto, startDate } = useGetGroup(sender, messages, receiver);
+
+    const navigate = useNavigate();
 
     return (
         <>
             {messages.length > 0 ?
-
                 <ChatContainer className="flexibleContainer">
 
                     {/*Chat Header*/}
 
                     <ConversationHeader>
-                        <ConversationHeader.Back />
-                        <Avatar src={avatar} name={groupName.toLocaleUpperCase()} />
-                        <ConversationHeader.Content userName={groupName.toLocaleUpperCase()}  />
+                        <ConversationHeader.Back onClick={() => { navigate(-1); }} />
+                        <Avatar
+                            src={avatar}
+                            name={FirstLetterUpperCase(groupName)} />
+                        <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
+                            <Button
+                                icon={<FontAwesomeIcon icon={faMaximize} />}
+                                onClick={() => { navigate("/groupchats/chat/" + receiver); }} />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>
@@ -38,7 +52,7 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
 
                     <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
-                        {messages.map((el: ChatSchema, idx: number) => {
+                        {messages.map((el: iChatSchema, idx: number) => {
                             return (
                                 <Message key={idx} model={{
                                     message: `${el.content}`,
@@ -70,11 +84,21 @@ export default function ChatMessages({ messages, connected, sender, receiver, is
                                 return;
                             }
                         }}
-                        onSend={async (e) => { await MessageServicesClient.sendMessageToGroup(receiver, sender, groupName, groupType,groupDesc,groupPhoto, e) }} />
+                        onSend={async (e) => {
+                            await MessageServicesClient.sendMessageToGroup({
+                                group_id: receiver,
+                                sender_id: sender,
+                                groupname: groupName,
+                                grouptype: groupType,
+                                groupdesc: groupDesc,
+                                groupphoto: groupPhoto,
+                                value: e
+                            })
+                        }} />
                 </ChatContainer>
-                : <ChatContainer className="flexibleContainer">
-                    <div>NekkoChat</div>
-                </ChatContainer>}
+                : <Container style={{ minHeight: "100vh" }}>
+                        <h1>NekkoChat</h1>
+                </Container>}
         </>
     );
 }

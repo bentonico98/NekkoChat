@@ -2,12 +2,14 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../userStore";
 
-interface UserState {
-    value: object
+export interface UserState {
+    value: object,
+    modalOpened: boolean
 }
 
 const initialState: UserState = {
-    value: {}
+    value: JSON.parse(localStorage.getItem("user") || '{}'),
+    modalOpened : false
 }
 
 export const userSlice = createSlice({
@@ -29,11 +31,17 @@ export const userSlice = createSlice({
         logout: (state) => {
             localStorage.removeItem("user");
             state.value = {};
+        }, 
+        openModal: (state) => {
+            state.modalOpened = true;
+        },
+        closeModal: (state) => {
+            state.modalOpened = false;
         }
     }
 });
 
-export const { getUserData, login, logout } = userSlice.actions;
+export const { getUserData, login, logout, openModal, closeModal } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user;
 

@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NekkoChat.Server.Constants;
 using NekkoChat.Server.Constants.Types;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
@@ -12,11 +14,16 @@ namespace NekkoChat.Server.Controllers
 {
     [Route("[controller]")]
     [ApiController]
-    public class LoginController(SignInManager<AspNetUsers> signInManager, UserManager<AspNetUsers> userManager, ApplicationDbContext context) : ControllerBase
+    public class LoginController(
+        SignInManager<AspNetUsers> signInManager, 
+        UserManager<AspNetUsers> userManager, 
+        ApplicationDbContext context, 
+        IMapper mapper) : ControllerBase
     {
         private readonly SignInManager<AspNetUsers> _signInManager = signInManager;
         private readonly UserManager<AspNetUsers> _userManager = userManager;
         private readonly ApplicationDbContext _context = context;
+        private readonly IMapper _mapper = mapper;
 
         // POST /login
         [HttpPost("/login")]
@@ -31,22 +38,26 @@ namespace NekkoChat.Server.Controllers
                     user!.LastOnline = date;
                     user!.Status = ValidStatus.Valid_Status.available;
 
-                    var result = await _signInManager.PasswordSignInAsync(user, data!.password, isPersistent: true, lockoutOnFailure: false);
+                    var result = await _signInManager.PasswordSignInAsync(
+                        user,
+                        data!.password,
+                        isPersistent: true,
+                        lockoutOnFailure: false);
 
                     if (result.Succeeded)
                     {
-                        object payload = new { success = true, user = user };
                         _context.AspNetUsers.Update(user);
                         _context.SaveChanges();
-                        return Ok(payload);
+                        UserDTO userView = _mapper.Map<UserDTO>(user);
+                        return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
                     }
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, new { success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = "Please, All fiels are required." });
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.MissingValues });
                 }
             }
-            return StatusCode(500, new { success = false, Message = "An error ocurred", Error = "Please, All fiels are required." });
+            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
         }
 
         // POST /login
@@ -57,45 +68,58 @@ namespace NekkoChat.Server.Controllers
             {
                 var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                AspNetUsers user = new AspNetUsers { Email = data.email, UserName = data.username, EmailConfirmed = true, PhoneNumber = data.phoneNumber, PhoneNumberConfirmed = true, LastOnline = date, Status = ValidStatus.Valid_Status.available };
+                AspNetUsers user = new AspNetUsers
+                {
+                    Email = data.email,
+                    UserName = data.username,
+                    EmailConfirmed = true,
+                    PhoneNumber = data.phoneNumber,
+                    PhoneNumberConfirmed = true,
+                    LastOnline = date,
+                    Status = ValidStatus.Valid_Status.available
+                };
+
                 var userCreated = await _userManager.CreateAsync(user, data.password);
 
                 if (userCreated.Succeeded)
                 {
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    object payload = new { success = true, user = user };
-                    return Ok(payload);
+                    await _signInManager.SignInAsync(
+                        user,
+                        isPersistent: false);
+
+                    UserDTO userView = _mapper.Map<UserDTO>(user);
+
+                    return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
                 }
             }
-            return StatusCode(500, new { success = false, Message = "An error ocurred", Error = "Please, All fiels are required." });
+            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
         }
 
         // DELETE /logout/5
         [HttpPut("/logout")]
-        public async Task<IActionResult> Logout(string user_id)
+        public async Task<IActionResult> Logout([FromBody] UserRequest data)
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByIdAsync(user_id);
+                AspNetUsers user = await _userManager.FindByIdAsync(data.user_id);
                 try
                 {
                     user!.Status = ValidStatus.Valid_Status.unavailable;
 
                     await _signInManager.SignOutAsync();
 
-                    object payload = new { success = true };
-
                     _context.AspNetUsers.Update(user);
                     _context.SaveChanges();
 
-                    return Ok(payload);
+                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                    return Ok(new ResponseDTO<UserDTO>());
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, new { success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = "Please, All fiels are required." });
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.MissingValues });
                 }
             }
-            return StatusCode(500, new { success = false, Message = "An error ocurred", Error = "Please, All fiels are required." });
+            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues });
         }
     }
 }

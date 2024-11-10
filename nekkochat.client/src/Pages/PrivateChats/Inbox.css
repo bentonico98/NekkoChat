@@ -12,6 +12,3 @@ div{
     display:flex;
     justify-content:space-between;
 }
-.flexibleContainer {
-    height: 97vh;
-}

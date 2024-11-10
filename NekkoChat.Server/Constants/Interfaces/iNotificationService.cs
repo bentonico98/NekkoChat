@@ -4,8 +4,8 @@ namespace NekkoChat.Server.Constants.Interfaces
 {
     public interface iNotificationService
     {
-        public  bool CreateNotification(NotificationRequest data);
-        public  bool ReadNotification(NotificationRequest data);
-        public  bool DeleteNotification(NotificationRequest data);
+        public Task<bool> CreateNotification(NotificationRequest data);
+        public Task<bool> ReadNotification(NotificationRequest data);
+        public Task<bool> DeleteNotification(NotificationRequest data);
     }
 }

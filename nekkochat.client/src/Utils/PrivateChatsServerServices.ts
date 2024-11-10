@@ -1,75 +1,102 @@
-import * as signalR from "@microsoft/signalr";
-import {  iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
+//import * as signalR from "@microsoft/signalr";
+import ServerInstance from "../Constants/ServerInstance";
+import { privateServer } from "../Constants/ServerInstance";
+import { iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
-    public static conn = new signalR.HubConnectionBuilder()
+    /*public static conn = new signalR.HubConnectionBuilder()
         .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
         .withAutomaticReconnect()
-        .build();
+        .build();*/
 
-    public static async Start(currentUserId: string, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+    public static dispatchFunction: (obj: iDisplayMessageTypes) => void;
 
-        if (this.conn.state == "Disconnected") {
+    public static async Listen(addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+
+        this.dispatchFunction = DisplayMessage;
+
+        if (privateServer.state != "Disconnected") {
+
             try {
-                await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
 
-                this.conn.onclose(async () => {
-                    await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
-                });
-
-                this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
+                privateServer.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
                     addToChat(user_id, msj, false);
                 });
 
-                this.conn.on("ReceiveTypingSignal", (user: string) => {
-                    addToChat(null, null, {typing: true,user_id:user});
+                privateServer.on("ReceiveTypingSignal", (user: string) => {
+                    addToChat(null, null, { typing: true, user_id: user });
                 });
-
-                this.conn.on("ReceiveNotification", (user_id: string) => {
-                    if (currentUserId == user_id) {
-                        DisplayMessage({
-                            hasNotification: true,
-                            notification: "+1 New Notification"
-                        });
-                    }
+                privateServer.on("ReceiveNotification", (user_id: string) => {
+                    DisplayMessage({
+                        hasNotification: true,
+                        notification: "+1 New Notification"
+                    });
+                    return user_id;
                 });
-
             } catch (er) {
+                DisplayMessage({
+                    hasError: true,
+                    error: "Server Is Down, Try Again."
+                });
                 setTimeout(async () => {
-                    if (this.conn.state == "Disconnected") {
-                        await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
+                    if (privateServer.state == "Disconnected") {
+                        await ServerInstance.StartPrivateServer();
+                        return { success: true, conn: privateServer.connectionId };
                     }
-                }, 3000);
+                }, 1500);
+            }
+            return { success: true, conn: privateServer.connectionId };
+        } else if (privateServer.state == "Disconnected") {
+
+            const connection = await ServerInstance.StartGroupServer();
+            return { success: true, conn: connection.connectionId };
+        } else {
+            try {
+                const connection = await ServerInstance.StartGroupServer();
+
+                return { success: true, conn: connection.connectionId };
+            } catch (ex) {
+                return { success: false, conn: null };
             }
         }
-        return this.conn.connectionId;
     }
-    public static SendMessageToUserInvoke(data: iServerRequestTypes) {
+
+    public static async SendMessageToUserInvoke(data: iServerRequestTypes) {
         try {
-            this.conn.invoke("SendMessage", data.sender_id, data.receiver_id, data.value);
+            privateServer.invoke("SendMessage", data.sender_id, data.receiver_id, data.value);
         } catch (er) {
-            console.log(er);
+            this.dispatchFunction({
+                hasError: true,
+                error: "Error Sending Message."
+            });
+            await ServerInstance.StartPrivateServer();
         }
     }
-    public static SendTypingSignal(data: iServerRequestTypes) {
+    public static async SendTypingSignal(data: iServerRequestTypes) {
         try {
-            this.conn.invoke("SendTypingSignal", data.sender_id,  data.receiver_id);
+            privateServer.invoke("SendTypingSignal", data.sender_id, data.receiver_id);
         } catch (er) {
-            console.log(er);
+            this.dispatchFunction({
+                hasError: true,
+                error: "Server Is Down, Try Again."
+            });
+            await ServerInstance.StartPrivateServer();
         }
     }
 
-    public static SendNotificationToUser(
+    public static async SendNotificationToUser(
         data: iNotificationTypes,
         DisplayMessage: (obj: iDisplayMessageTypes) => void) {
         try {
-            this.conn.invoke("SendNotificationToUser", data.user_id, data.operation);
+            privateServer.invoke("SendNotificationToUser", data);
         } catch (er) {
             DisplayMessage({
                 hasError: true,
                 error: "Failed To Send Notification."
             });
+            await ServerInstance.StartPrivateServer();
         }
     }
+   
 };

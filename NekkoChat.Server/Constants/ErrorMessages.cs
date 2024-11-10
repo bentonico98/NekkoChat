@@ -5,6 +5,9 @@
         public static string ErrorRegular { get; set; } = "An Error Ocured.";
         public static string ErrorMessage { get; set; } = "Something Went Wrong.";
         public static string NoExist { get; set; } = "Record Doesnt Exist";
+        public static string FriendAlready { get; set; } = "User Already In Friend List";
+        public static string FriendRequestAlready { get; set; } = "Friend Already Sent";
+
         public static string Invalid { get; set; } = "Invalid";
         public static string Success { get; set; } = "Successful";
 

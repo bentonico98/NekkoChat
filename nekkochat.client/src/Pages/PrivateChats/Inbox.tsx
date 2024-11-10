@@ -59,7 +59,8 @@ export default function Inbox() {
                 user,
                 user,
                 msj,
-                new Date().toJSON(), false)]);
+                new Date().toJSON(),
+                false)]);
     };
 
     useEffect(() => {

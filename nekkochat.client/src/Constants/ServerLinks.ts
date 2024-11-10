@@ -7,8 +7,8 @@
          const url = `chats/chat/create`
          return `${this.ServerUrl}${url}`;
      };
-     public static getSendMessageUrl() {
-         const url = `chats/chat/send`
+     public static getSendMessageUrl(chat_id: number | undefined) {
+         const url = `chats/chat/send/${chat_id}`
         return `${this.ServerUrl}${url}`;
      };
      public static getAllUsersChatUrl(id: string, type: string) {
@@ -105,8 +105,8 @@
          const url = `user/users?user_id=${user_id}&sender_id=${sender_id}`;
          return `${this.ServerUrl}${url}`;
      }
-     public static getUserByName(name: string) {
-         const url = `user/user?name=${name}`;
+     public static getUserByName(name: string, user_id:string) {
+         const url = `user/user?name=${name}&user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserFriends(user_id:string, operation:string) {
@@ -130,15 +130,15 @@
          return `${this.ServerUrl}${url}`;
      };
      public static getCreateNotificationUrl() {
-         const url = `notifications/create`
+         const url = `notifications/create`;
          return `${this.ServerUrl}${url}`;
      };
-     public static getReadNotificationUrl(id: string | undefined) {
-         const url = `notifications/read/${id}`
+     public static getReadNotificationUrl() {
+         const url = `notifications/read`;
          return `${this.ServerUrl}${url}`;
      };
-     public static getDeleteNotificationUrl(id: string | undefined) {
-         const url = `notifications/delete/${id}`
+     public static getDeleteNotificationUrl() {
+         const url = `notifications/delete`;
          return `${this.ServerUrl}${url}`;
      };
 }

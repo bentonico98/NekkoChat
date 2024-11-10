@@ -51,7 +51,7 @@ namespace NekkoChat.Server.Controllers
 
                 if (ChatsContent == null)
                 {
-                    return NotFound(new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 }
 
                 return Ok(new ResponseDTO<object> { User = ChatsContent });
@@ -59,7 +59,7 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -85,7 +85,7 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -102,7 +102,7 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -113,7 +113,7 @@ namespace NekkoChat.Server.Controllers
             int messageSent = await _messageServices.createChat(data);
             if (messageSent <= 0)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<int> { SingleUser = messageSent});
         }
@@ -125,7 +125,7 @@ namespace NekkoChat.Server.Controllers
             bool messageSent = await _messageServices.sendMessage(data);
             if (!messageSent)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<Groups>());
         }
@@ -138,7 +138,7 @@ namespace NekkoChat.Server.Controllers
             bool messageSent = _messageServices.readMessage(data, group_id);
             if (!messageSent)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<Groups>());
         }
@@ -151,7 +151,7 @@ namespace NekkoChat.Server.Controllers
             bool messageSent = await _messageServices.addParticipantToGroup(data, group_id);
             if (!messageSent)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<Groups>());
         }
@@ -174,7 +174,7 @@ namespace NekkoChat.Server.Controllers
 
             if (!managed)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
 
             return Ok(new ResponseDTO<bool>());
@@ -187,7 +187,7 @@ namespace NekkoChat.Server.Controllers
             bool messageDeleted = _messageServices.deleteMessage(id, data);
             if (!messageDeleted)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
         }

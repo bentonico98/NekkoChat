@@ -4,13 +4,12 @@ import { iDisplayMessageTypes, iuserStore } from "../Constants/Types/CommonTypes
 import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
 export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
-    const [conn, setConn] = useState<string>("");
+    const [conn, setConn] = useState<string | null | undefined>();
 
-    const startServer = () => {
-        PrivateChatsServerServices.Start(user.value.id, addToChat, DisplayMessage).then(async (res) => {
-            setConnected(true);
-            setConn(res || "");
-        });
+    const startServer = async () => {
+        const res = await PrivateChatsServerServices.Listen(addToChat, DisplayMessage);
+        setConnected(res.success)
+        setConn(res.conn);
     }
 
     const setConnectionId = async (id: string, conn: string) => {
@@ -20,7 +19,7 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
             connectionid: conn
         });
 
-        DisplayMessage({isLoading: true});
+        DisplayMessage({ isLoading: true });
 
         if (res.success) {
             DisplayMessage({
@@ -47,13 +46,15 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
         if (!connected) {
             startServer();
         } 
-    }, [user]);
+    }, [connected, user]);
 
     useEffect(() => {
-        if (user.value.id && conn.length>0) {
+        if (user.value.id && conn) {
             setConnectionId(user.value.id, conn);
-        } 
+        } else {
+            DisplayMessage({ isLoading:true });
+        }
     }, [conn]);
 
-    return {connected, conn};
+    return { connected, conn };
 }

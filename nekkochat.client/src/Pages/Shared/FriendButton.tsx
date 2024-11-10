@@ -1,4 +1,4 @@
-import { Button, Col, Container, Row, Image } from "react-bootstrap";
+import { Button, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,6 +13,8 @@ import UserAuthServices from "../../Utils/UserAuthServices";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
 import GetNotificationName from "../../Utils/GetNotificationName ";
 import { Box, Stack, Typography } from "@mui/material";
+import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
+import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 
 type incomingProps = {
     item?: iUserViewModel
@@ -47,7 +49,8 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     msj: res.message + " Accepted Request.",
                     isLoading: false
                 });
-                await NotificationServiceClient.CreateNotification({
+
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Accepted Your Friend Request.",
                     from: 'Unknown',
@@ -55,6 +58,33 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Accepted Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Accepted Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+                } else {
+                    DisplayMessage({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
+
             } else {
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
@@ -77,7 +107,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     msj: res.message + " Decline Request.",
                     isLoading: false
                 });
-                await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Declined Your Friend Request.",
                     from: 'Unknown',
@@ -85,6 +115,33 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Declined Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Declined Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+                } else {
+                    DisplayMessage({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
+
             } else {
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
@@ -108,7 +165,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     isLoading: false
 
                 });
-                await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Sent a Friend Request.",
                     from: 'Unknown',
@@ -116,6 +173,33 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Sent a Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Sent a Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, DisplayMessage);
+                } else {
+                    DisplayMessage({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
+
             } else {
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
@@ -167,7 +251,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
     }
 
     return (
-        <Stack direction="row" className={`mx-2 border border-2 rounded pt-3 ${!item!.isFriend && "bg-secondary"}`}>
+        <Stack key={idx} direction="row" className={`mx-2 border border-2 rounded pt-3 ${!item!.isFriend && "bg-secondary"}`}>
             <Box sx={{ width: 200, maxWidth: '100%' }} className="mx-2">
                 <Image src={avatar} roundedCircle fluid width={50} />
             </Box>
@@ -175,36 +259,32 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
             <Box sx={{ width: 500, maxWidth: '100%' }}>
                 <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
             </Box>
-            
+
             <Box sx={{ width: 500, maxWidth: '100%' }}>
                 <Box>
                     {!item!.isFriend ?
                         <Stack direction="row" spacing={1}>
-                            {item!.isSender ?
+
+                            {item!.canSendRequest && !item!.alreadyRequest && <Button
+                                variant="info"
+                                onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
+                                    <FontAwesomeIcon icon={faAdd} />}
+                            </Button>}
+
+                            {item!.isSender &&
                                 <Button
                                     variant="info"
                                     onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
                                         <FontAwesomeIcon icon={faCheck} />}
-                                </Button>
-                                :
-                                <Button
-                                    variant="danger"
-                                    onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
-                                        <FontAwesomeIcon icon={faAdd} />}
                                 </Button>}
-                            {item!.isSender ?
+
+                            {item!.alreadyRequest &&
                                 <Button
                                     variant="danger"
                                     onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
                                         <FontAwesomeIcon icon={faCancel} />}
-                                </Button> :
-                                <Button
-                                    onClick={() => {
-                                        handleMessageButton(user.value.id, id, "Hello");
-                                    }}>{
-                                        <FontAwesomeIcon icon={faMessage} />
-                                    }</Button>
-                            }
+                                </Button>}
+                        
                             <Button
                                 onClick={() => {
                                     handleInfoButton(id);
@@ -213,7 +293,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                             </Button>
                         </Stack> : <Stack direction="row" spacing={1} >
                             <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faPhone} />}</Button>
-                            <Button  onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
+                            <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
                             <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>
                         </Stack>
                     }
@@ -222,3 +302,13 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
         </Stack>
     );
 }
+
+
+                            /**    {!item!.isSender &&
+                                <Button
+                                    onClick={() => {
+                                        handleMessageButton(user.value.id, id, "Hello");
+                                    }}>{
+                                        <FontAwesomeIcon icon={faMessage} />
+                           
+                                    }</Button> } */

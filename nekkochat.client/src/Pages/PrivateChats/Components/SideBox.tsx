@@ -1,4 +1,4 @@
-import { Sidebar, Search, ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
+import { Sidebar,  ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import ProfileHeader from "../../Shared/ProfileHeader";
 import { iConversationClusterProps, iSideBoxProps } from "../../../Constants/Types/CommonTypes";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";

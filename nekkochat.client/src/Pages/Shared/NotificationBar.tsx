@@ -1,6 +1,9 @@
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import NekkoNotification from './NekkoNotification';
 import useGetNotifications from '../../Hooks/Notifications/useGetNotifications';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { setNotificationCount } from '../../Store/Slices/userSlice';
 
 interface iCustomProps {
     show: boolean,
@@ -10,8 +13,16 @@ interface iCustomProps {
 export default function NotificationBar({ show, setShow, userId }: iCustomProps) {
 
     const handleClose = () => setShow(false);
+    const dispatch = useDispatch();
 
     const { notifications } = useGetNotifications(userId);
+
+    useEffect(() => {
+        if (notifications.length > 0) {
+            var counts = notifications.filter((el) => el.seen == false).length;
+            dispatch(setNotificationCount(counts.toString()));
+        }
+    }, [notifications]);
 
     return (
         <Offcanvas show={show} onHide={handleClose}  name="end" placement="end">

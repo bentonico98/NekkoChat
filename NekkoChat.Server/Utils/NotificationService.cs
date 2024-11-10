@@ -11,18 +11,57 @@ namespace NekkoChat.Server.Utils
 {
     public class NotificationService(IServiceProvider srv) : iNotificationService
     {
-        public bool CreateNotification(NotificationRequest data)
+        public async Task<bool> CreateNotification(NotificationRequest data)
         {
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                AspNetUsers sender = ctx.AspNetUsers.Find(data.from_id);
+                AspNetUsers sender = await ctx.AspNetUsers.FindAsync(data.from_id);
+
+                if (sender is null) return false;
+
+                bool hasNotification = await ctx.notifications.AnyAsync((n) => n.User_Id == data.user_id);
+
+                if (hasNotification)
+                {
+                    Notifications notification = await ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefaultAsync();
+
+                    NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification);
+
+                    SingleNotificationSchema singleNotification = new SingleNotificationSchema
+                    {
+                        id = Guid.NewGuid().ToString(),
+                        seen = false,
+                        type = (ValidStatus.Valid_Notifications)data.type,
+                        from = $"{sender!.Fname} {sender!.Lname}",
+                        from_id = data.from_id,
+                        operation = data.operation,
+                        url = data.url,
+                    };
+
+                    if (notificationSchema is null || notificationSchema.notifications is null) return false;
+
+                    SingleNotificationSchema[] allNotifications = notificationSchema.notifications;
+
+                    if (allNotifications is null) return false;
+
+                    List<SingleNotificationSchema> tempArray = allNotifications.ToList();
+                    tempArray.Add(singleNotification);
+                    allNotifications = tempArray.ToArray();
+
+                    notification.Notification = JBProcessor.NotificationProcessed(allNotifications);
+
+                    ctx.notifications.Update(notification);
+                    await ctx.SaveChangesAsync();
+                    return true;
+
+                }
 
                 SingleNotificationSchema[] notifications = [new SingleNotificationSchema
                 {
                     id = Guid.NewGuid().ToString(),
                     seen = false,
                     type = (ValidStatus.Valid_Notifications)data.type,
-                    from = $"{sender!.Fname}{sender!.Lname}",
+                    from = $"{sender!.Fname} {sender!.Lname}",
                     from_id = data.from_id,
                     operation =  data.operation,
                     url = data.url
@@ -34,42 +73,12 @@ namespace NekkoChat.Server.Utils
                     Notification = JBProcessor.NotificationProcessed(notifications)
                 };
 
-                ctx.notifications.AddAsync(newNotification);
-                ctx.SaveChangesAsync();
+                ctx.notifications.Add(newNotification);
+                await ctx.SaveChangesAsync();
             }
             return true;
         }
-        public bool ReadNotification(NotificationRequest data)
-        {
-            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
-            {
-                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault();
-
-                if(notifications is null) return false;
-
-                List<SingleNotificationSchema> filteredNotification = new();
-
-                foreach (var notification in notifications.Notification)
-                {
-                    var output = JsonSerializer.Deserialize<SingleNotificationSchema>(notification);
-                    filteredNotification.Add(output);
-                }
-
-                foreach (var item in filteredNotification)
-                {
-                    if(item.id == data.notification_id)
-                    {
-                        item.seen = true;
-                    }
-                }
-                notifications.Notification = JBProcessor.NotificationProcessed(filteredNotification);
-                
-                ctx.notifications.Update(notifications);
-                ctx.SaveChangesAsync();
-            }
-            return true;
-        }
-        public bool DeleteNotification(NotificationRequest data)
+        public async Task<bool> ReadNotification(NotificationRequest data)
         {
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
@@ -79,9 +88,42 @@ namespace NekkoChat.Server.Utils
 
                 List<SingleNotificationSchema> filteredNotification = new();
 
-                foreach (var notification in notifications.Notification)
+                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification);
+                foreach (var notification in notificationSchema.notifications)
                 {
-                    var output = JsonSerializer.Deserialize<SingleNotificationSchema>(notification);
+                    SingleNotificationSchema output = (notification);
+                    filteredNotification.Add(output);
+                }
+
+                foreach (var item in filteredNotification)
+                {
+                    if (item.id == data.id)
+                    {
+                        item.seen = true;
+                    }
+                }
+                notifications.Notification = JBProcessor.NotificationProcessed(filteredNotification);
+
+                ctx.notifications.Update(notifications);
+                await ctx.SaveChangesAsync();
+            }
+            return true;
+        }
+        public async Task<bool> DeleteNotification(NotificationRequest data)
+        {
+            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault();
+
+                if (notifications is null) return false;
+
+                List<SingleNotificationSchema> filteredNotification = new();
+
+                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification);
+
+                foreach (var notification in notificationSchema.notifications)
+                {
+                    SingleNotificationSchema output = (notification);
                     filteredNotification.Add(output);
                 }
 
@@ -89,16 +131,16 @@ namespace NekkoChat.Server.Utils
 
                 foreach (var item in filteredNotification)
                 {
-                    if (item.id != data.notification_id)
+                    if (item.id != data.id)
                     {
                         newNotifications.Add(item);
                     }
                 }
 
                 notifications.Notification = JBProcessor.NotificationProcessed(newNotifications);
-                
+
                 ctx.notifications.Update(notifications);
-                ctx.SaveChangesAsync();
+                await ctx.SaveChangesAsync();
             }
             return true;
         }

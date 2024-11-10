@@ -122,7 +122,7 @@ namespace NekkoChat.Server.Controllers
                     await _signInManager.SignOutAsync();
 
                     _context.AspNetUsers.Update(user);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     UserDTO userView = _mapper.Map<UserDTO>(user);
                     return Ok(new ResponseDTO<UserDTO>());

@@ -87,7 +87,7 @@ export default function ChatMessages(
     return (
         <>
             {messages.length > 0 ?
-                <ChatContainer className="flexibleContainer">
+                <ChatContainer style={{minHeight: "100vh"}}>
 
                     {/*Chat Header*/}
 

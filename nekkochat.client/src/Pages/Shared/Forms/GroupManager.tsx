@@ -1,4 +1,4 @@
-import { Modal, Button, Container, Row, Col, Form } from 'react-bootstrap';
+import { Modal, Button, Container, Form } from 'react-bootstrap';
 import { Search, } from '@chatscope/chat-ui-kit-react';
 import GroupButton from '../GroupButton';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
@@ -19,6 +19,7 @@ import useDisplayMessage from '../../../Hooks/useDisplayMessage';
 import RegularSkeleton from '../Skeletons/RegularSkeleton';
 import NotificationServiceClient from '../../../Utils/NotificationServiceClient';
 import GetNotificationName from '../../../Utils/GetNotificationName ';
+import PrivateChatsServerServices from '../../../Utils/PrivateChatsServerServices';
 interface iGroupRequestTypesv2 {
     sender_id?: string,
     group_id?: number,
@@ -136,7 +137,7 @@ export default function GroupManager() {
             });
 
             info.participants!.forEach(async (el: iparticipants) => {
-                await NotificationServiceClient.CreateNotification({
+                let notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: el.id,
                     operation: "Added To A Groupchat.",
                     from: 'Unknown',
@@ -144,6 +145,23 @@ export default function GroupManager() {
                     type: GetNotificationName('group'),
                     url: '/groupchats'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: el.id,
+                        operation: "Added To A Groupchat.",
+                        from: 'Unknown',
+                        from_id: user.value.id,
+                        type: GetNotificationName('group'),
+                        url: '/groupchats'
+                    }, setDisplayInfo);
+                } else {
+                    setDisplayInfo({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
             });
             navigate("/groupchats/chat/" + res.singleUser);
         } else {

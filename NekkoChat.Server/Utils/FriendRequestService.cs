@@ -5,24 +5,28 @@ using NekkoChat.Server.Models;
 
 namespace NekkoChat.Server.Utils
 {
-    public class FriendRequestService() : iFriendRequestService
+    public class FriendRequestService(IServiceProvider srv) : iFriendRequestService
     {
-        public async Task<bool> IncreaseFriendCount(string user_id, IServiceProvider srv)
+
+        private readonly IServiceProvider _srv = srv;
+        public async Task<bool> IncreaseFriendCount(string user_id)
         {
-            bool success = await IncreaseInvoke(user_id, srv);
+            bool success = await IncreaseInvoke(user_id);
             return success;
         }
-        public async Task<bool> DecreaseFriendCount(string user_id, IServiceProvider srv)
+        public async Task<bool> DecreaseFriendCount(string user_id)
         {
-            bool success = await DecreaseInvoke(user_id, srv);
+            bool success = await DecreaseInvoke(user_id);
             return success;
         }
 
-        private static async Task<bool> IncreaseInvoke(string user_id, IServiceProvider srv)
+        private async Task<bool> IncreaseInvoke(string user_id)
         {
-            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers user = await ctx.AspNetUsers.FindAsync(user_id);
+
+                if(user is null) return false;
 
                 if (user.Friends_Count <= 200)
                 {
@@ -34,11 +38,13 @@ namespace NekkoChat.Server.Utils
             }
             return false;
         }
-        private static async Task<bool> DecreaseInvoke(string user_id, IServiceProvider srv)
+        private async Task<bool> DecreaseInvoke(string user_id)
         {
-            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers user = await ctx.AspNetUsers.FindAsync(user_id);
+
+                if (user is null) return false;
 
                 if (user.Friends_Count > 0)
                 {

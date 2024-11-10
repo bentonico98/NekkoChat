@@ -37,7 +37,7 @@ namespace NekkoChat.Server.Controllers
                     userNotifications.Add(output);
                 }
 
-                return Ok(new ResponseDTO<SingleNotificationSchema> { User = userNotifications[0]!.notifications.ToList() });
+                return Ok(new ResponseDTO<SingleNotificationSchema> { User = userNotifications[0]!.notifications.OrderByDescending((n) => n.date).ToList() });
             }
             catch (Exception ex)
             {
@@ -54,44 +54,66 @@ namespace NekkoChat.Server.Controllers
 
         // POST <NotificationsController>
         [HttpPost("create")]
-        public IActionResult Post([FromBody] NotificationRequest data)
+        public async Task<IActionResult> Post([FromBody] NotificationRequest data)
         {
-            bool isCreated = _nSrv.CreateNotification(data);
-
-            if (!isCreated)
+            try
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                bool isCreated = await _nSrv.CreateNotification(data);
+
+                if (!isCreated)
+                {
+                    return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                }
+                return Ok(new ResponseDTO<bool>());
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
 
-            return Ok(new ResponseDTO<bool>());
         }
 
         // PUT <NotificationsController>/5
-        [HttpPut("read/{id}")]
-        public IActionResult Put([FromRoute] int id, [FromBody] NotificationRequest data)
+        [HttpPut("read")]
+        public async Task<IActionResult> Put([FromBody] NotificationRequest data)
         {
-            bool isCreated = _nSrv.ReadNotification(data);
-
-            if (!isCreated)
+            try
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
-            }
+                bool isCreated = await _nSrv.ReadNotification(data);
 
-            return Ok(new ResponseDTO<bool>());
+                if (!isCreated)
+                {
+                    return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                }
+                return Ok(new ResponseDTO<bool>());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+
+            }
         }
 
         // DELETE api/<NotificationsController>/5
-        [HttpDelete("delete/{id}")]
-        public IActionResult Delete([FromRoute] int id, [FromBody] NotificationRequest data)
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] NotificationRequest data)
         {
-            bool isCreated = _nSrv.DeleteNotification(data);
-
-            if (!isCreated)
+            try
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
-            }
+                bool isCreated = await _nSrv.DeleteNotification(data);
 
-            return Ok(new ResponseDTO<bool>());
+                if (!isCreated)
+                {
+                    return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                }
+                return Ok(new ResponseDTO<bool>());
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            }
         }
     }
 }

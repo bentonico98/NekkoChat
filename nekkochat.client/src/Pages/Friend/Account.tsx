@@ -16,6 +16,8 @@ import useDisplayMessage from "../../Hooks/useDisplayMessage";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
 import GetNotificationName from "../../Utils/GetNotificationName ";
 import { Typography } from "@mui/material";
+import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
+import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 
 export default function Account() {
 
@@ -104,7 +106,7 @@ export default function Account() {
                     msj: res.message + " Accepted Request.",
                     isLoading: false
                 });
-                await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Accepted Your Friend Request.",
                     from: 'Unknown',
@@ -112,6 +114,32 @@ export default function Account() {
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Accepted Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Accepted Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+                } else {
+                    setDisplayInfo({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
             } else {
                 if (res.internalMessage) return setDisplayInfo({
                     hasError: true,
@@ -140,7 +168,7 @@ export default function Account() {
                     msj: res.message + " Decline Request.",
                     isLoading: false
                 });
-                await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Declined Your Friend Request.",
                     from: 'Unknown',
@@ -148,6 +176,32 @@ export default function Account() {
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Declined Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Declined Your Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+                } else {
+                    setDisplayInfo({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
             } else {
                 if (res.internalMessage) return setDisplayInfo({
                     hasError: true,
@@ -200,7 +254,7 @@ export default function Account() {
                     msj: res.message + " Friend Request.",
                     isLoading: false
                 });
-                await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: receiver_id,
                     operation: " Sent a Friend Request.",
                     from: 'Unknown',
@@ -208,6 +262,32 @@ export default function Account() {
                     type: GetNotificationName('request'),
                     url: '/friends'
                 });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Sent a Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+
+                    await GroupChatsServerServices.SendNotificationToUser({
+                        user_id: receiver_id,
+                        operation: " Sent a Friend Request.",
+                        from: 'Unknown',
+                        from_id: sender_id,
+                        type: GetNotificationName('request'),
+                        url: '/friends'
+                    }, setDisplayInfo);
+                } else {
+                    setDisplayInfo({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
             } else {
                 if (res.internalMessage) return setDisplayInfo({
                     hasError: true,
@@ -297,18 +377,10 @@ export default function Account() {
                             <Button
                                 variant="danger"
                                 onClick={() => {
-                                    handleManageFriendButton("decline", userInfo.id, user.value.id);
-                                }}
-                                className="mx-1">{
-                                    <FontAwesomeIcon icon={faTrashCan} />}
-                            </Button>
-                            <Button
-                                variant="danger"
-                                onClick={() => {
                                     handleManageFriendButton("remove", userInfo.id, user.value.id);
                                 }}
                                 className="mx-1">{
-                                    <FontAwesomeIcon icon={faStopCircle} />}
+                                    <FontAwesomeIcon icon={faTrashCan} />}
                             </Button>
                         </Col>
                         :
@@ -333,16 +405,16 @@ export default function Account() {
                 </Col>
             </Row>
             <Row>
-                <h5>About</h5>
-                <p>{userInfo.about || "Hi, Let's get to know eachother."}</p>
+                <Typography variant="h6">About</Typography>
+                <Typography variant="body2">{userInfo.about || "Hi, Let's get to know eachother."}</Typography>
             </Row>
             <Row>
-                <h5>Phone Number</h5>
-                <p>{userInfo.phoneNumber || "Unspecified"}</p>
+                <Typography variant="h6">Phone Number</Typography>
+                <Typography variant="body2">{userInfo.phoneNumber || "Unspecified"}</Typography>
             </Row>
             <Row>
-                <h5>Friends</h5>
-                <p>{userInfo.friends_Count || "0"}</p>
+                <Typography variant="h6">Friends</Typography>
+                <Typography variant="body2">{userInfo.friends_Count || "0"}</Typography>
             </Row>
         </Container>
     );

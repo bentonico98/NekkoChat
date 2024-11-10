@@ -12,7 +12,7 @@ export default class MessageServicesClient {
 
     public static async sendMessageToUser(data: iServerRequestTypes) {
 
-        let url = ServerLinks.getSendMessageUrl();
+        let url = ServerLinks.getSendMessageUrl(data.chat_id);
         const result = await axios.put(url, data).then((res) => {
             console.log(res.status);
             return res.data;

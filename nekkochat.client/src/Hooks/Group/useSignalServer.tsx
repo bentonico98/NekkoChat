@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import { iDisplayMessageTypes, iuserStore } from "../../Constants/Types/CommonTypes";
+import { iDisplayMessageTypes,  iuserStore } from "../../Constants/Types/CommonTypes";
 import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 import UserAuthServices from "../../Utils/UserAuthServices";
 export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<string | null | undefined>();
 
-    const startServer = () => {
-        GroupChatsServerServices.Start(addToChat).then(async (res) => {
-            setConnected(true);
-            setConn(res);
-        });
+    const startServer = async () => {
+        const res = await GroupChatsServerServices.Listen(addToChat, DisplayMessage);
+        setConnected(res.success);
+        setConn(res.conn);
     }
 
     const setConnectionId = async (user_id: string, connectionid: string | null | undefined) => {
@@ -37,14 +36,14 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
     useEffect(() => {
         if (!connected) {
             startServer();
-        } else {
-            return;
-        }
+        } 
     }, [connected, user]);
 
     useEffect(() => {
-        if (user.value.id) {
+        if (user.value.id && conn) {
             setConnectionId(user.value.id, conn);
+        } else {
+            DisplayMessage({ isLoading:true });
         }
     }, [conn]);
 

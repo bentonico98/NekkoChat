@@ -21,11 +21,12 @@ import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
 
 import * as React from "react";
-import useDisplayMessage from '../../Hooks/useDisplayMessage';
 import NotificationBar from './NotificationBar';
 function NekkoNavbar() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const notifications: string | null = useAppSelector((state) => state.user.notificationCount);
+
     const dispatch = useAppDispatch();
 
     const [show, setShow] = React.useState<boolean>(false);
@@ -38,7 +39,7 @@ function NekkoNavbar() {
 
     const handleLogout = async () => {
         dispatch(toggleLoading(true));
-        await UserAuthServices.Logout(user.value.id);
+        await UserAuthServices.Logout({ user_id: user.value.id });
         dispatch(logout());
         navigate();
     }
@@ -47,11 +48,11 @@ function NekkoNavbar() {
         if (!UserAuthServices.isAuthenticated()) {
             dispatch(toggleLoading(true));
             navigate();
-        } 
+        }
     }, []);
-    
+
     return (
-        <Navbar bg="light" sticky="top"  data-bs-theme="light">
+        <Navbar bg="light" sticky="top" data-bs-theme="light">
             <Container>
                 <Navbar.Brand href="/inbox">NekkoChat</Navbar.Brand>
                 <Nav>
@@ -65,8 +66,8 @@ function NekkoNavbar() {
                     <Nav.Link href="/chats?type=archived">{<FontAwesomeIcon icon={faArchive} />} Archived</Nav.Link>
                 </Nav>
                 <Nav>
+                    <Button variant="primary" onClick={handleShow} >{<FontAwesomeIcon icon={faMailBulk} />} <span>{notifications}</span></Button>
                     <Button className="mx-2" variant="danger" onClick={handleLogout} >{<FontAwesomeIcon icon={faSignOutAlt} />}</Button>
-                    <Button variant="primary" onClick={handleShow} >{<FontAwesomeIcon icon={faMailBulk} />}</Button>
                 </Nav>
             </Container>
             <NotificationBar show={show} setShow={setShow} userId={user.value.id} />

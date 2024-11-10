@@ -8,6 +8,9 @@ export interface UserState {
     errorModalOpened: boolean,
     msjModalOpened: boolean,
     notificationModal: boolean,
+    notificationCount: string | null,
+    profileModal: boolean,
+    settingModal: boolean,
     error: string | null | undefined
     message: string | null | undefined
     notification: string | null | undefined,
@@ -20,11 +23,13 @@ const initialState: UserState = {
     errorModalOpened: false,
     msjModalOpened: false,
     notificationModal: false,
+    notificationCount: "0",
+    profileModal: false,
+    settingModal: false,
     isLoading: false,
     error: null,
     message: null,
     notification: null,
-    
 }
 
 export const userSlice = createSlice({
@@ -53,6 +58,18 @@ export const userSlice = createSlice({
         },
         closeModal: (state) => {
             state.modalOpened = false;
+        },
+        openProfileModal: (state) => {
+            state.profileModal = true;
+        },
+        closeProfileModal: (state) => {
+            state.profileModal = false;
+        },
+        openSettingModal: (state) => {
+            state.settingModal = true;
+        },
+        closeSettingModal: (state) => {
+            state.settingModal = false;
         },
         toggleMsjModal: (state, action: PayloadAction<{ status: boolean, message: string | null | undefined }>) => {
             state.msjModalOpened = action.payload.status;
@@ -88,10 +105,12 @@ export const userSlice = createSlice({
         },
         toggleUILoading: (state, action: PayloadAction<boolean | undefined>) => {
             if (action.payload === undefined) return;
-
             state.isLoading = action.payload;
         },
-
+        setNotificationCount: (state, action: PayloadAction<string>) => {
+            if (!action.payload) return
+            state.notificationCount = action.payload;
+        },
     }
 });
 
@@ -101,10 +120,15 @@ export const {
     logout,
     openModal,
     closeModal,
+    openProfileModal,
+    closeProfileModal,
+    openSettingModal,
+    closeSettingModal,
     toggleMsjModal,
     toggleErrorModal,
     toggleNotification,
     toggleLoading,
+    setNotificationCount
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user;

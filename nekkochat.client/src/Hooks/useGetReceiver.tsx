@@ -44,7 +44,7 @@ export default function useGetReceiver(user: string, DisplayMessage: (obj: iDisp
         const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
-        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false);
+        const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false && i.user_id !== user);
         return message.length;
     }, [user])
 

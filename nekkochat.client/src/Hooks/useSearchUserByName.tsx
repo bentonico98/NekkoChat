@@ -10,7 +10,7 @@ export default function useSearchUserByName(user_id: string, DisplayMessage: (ob
     const handleSearch = async (stringSearch: string, friends: iUserViewModel[] = [new UserViewModel()]) => {
         DisplayMessage({ isLoading: true });
 
-        const res = await UserAuthServices.SearchUserByName(stringSearch);
+        const res = await UserAuthServices.SearchUserByName(stringSearch,user_id);
         if (res.success) {
             let searchRes: iUserViewModel[] = res.user.filter((r: iUserViewModel) => r.id !== user_id);
             if (friends.length > 0) {

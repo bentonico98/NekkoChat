@@ -1,4 +1,4 @@
-import { Modal, Button, Container, Col, Row } from 'react-bootstrap';
+import { Modal, Button, Container} from 'react-bootstrap';
 import { Search } from '@chatscope/chat-ui-kit-react';
 import FriendButton from '../FriendButton';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
@@ -44,7 +44,7 @@ export default function PrivateChatManager() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container style={{ width: 400, maxWidth: '100%' }}>
+        <Container style={{ width: 500, maxWidth: '100%' }}>
             <Modal.Dialog>
                 <Modal.Header >
                     <Modal.Title>New Chat</Modal.Title>

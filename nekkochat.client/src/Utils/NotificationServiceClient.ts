@@ -32,7 +32,7 @@ export default class NotificationServiceClient {
     }
 
     public static async ReadNotification(data: iNotificationTypes) {
-        const url = ServerLinks.getReadNotificationUrl(data.user_id);
+        const url = ServerLinks.getReadNotificationUrl();
 
         const res = await axios.put(url, data).then((res) => {
             return res.data;
@@ -44,7 +44,7 @@ export default class NotificationServiceClient {
         return res;
     }
     public static async DeleteNotification(data: iNotificationTypes) {
-        const url = ServerLinks.getDeleteNotificationUrl(data.user_id);
+        const url = ServerLinks.getDeleteNotificationUrl();
 
         const res = await axios.delete(url, data).then((res) => {
             return res.data;

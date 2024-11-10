@@ -87,14 +87,14 @@ namespace NekkoChat.Server.Controllers
 
                 if (ChatsContent == null)
                 {
-                    return NotFound(new ResponseDTO<MessagesDTO> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 }
 
                 return Ok(new ResponseDTO<MessagesDTO> { User = ChatsContent });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -117,7 +117,7 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
 
@@ -128,7 +128,7 @@ namespace NekkoChat.Server.Controllers
             int messageSent = await _messageServices.createChat(data);
             if (messageSent <= 0)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<int> { SingleUser = messageSent });
         }
@@ -140,7 +140,7 @@ namespace NekkoChat.Server.Controllers
             bool messageSent = await _messageServices.sendMessage(id, data);
             if (!messageSent)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
         }
@@ -151,7 +151,7 @@ namespace NekkoChat.Server.Controllers
             bool messageSent = _messageServices.readMessage(chat_id, data.sender_id);
             if (!messageSent)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
         }
@@ -173,7 +173,7 @@ namespace NekkoChat.Server.Controllers
 
             if (!managed)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
         }
@@ -182,7 +182,7 @@ namespace NekkoChat.Server.Controllers
         [HttpDelete("chat/delete/{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
-            return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
         }
 
         // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)
@@ -192,7 +192,7 @@ namespace NekkoChat.Server.Controllers
             bool messageDeleted = _messageServices.deleteMessage(id, data);
             if (!messageDeleted)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
         }

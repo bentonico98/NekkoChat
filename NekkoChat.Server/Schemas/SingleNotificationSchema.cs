@@ -12,5 +12,7 @@ namespace NekkoChat.Server.Schemas
         public string? from_id { get; set; }
 
         public string? operation { get; set; }
+        public DateTime date { get; set; } = DateTime.Now;
+
     }
 }

@@ -25,12 +25,13 @@ export interface iRegisterTypes {
 
 export interface iNotificationTypes {
     user_id?: string
-    notification_id?: string
+    id?: string
     operation?: string
     type?: number
     from?: string
     from_id?:string
     url?: string
+    seen?: boolean
 }
 export interface iDisplayMessageTypes {
     hasError?: boolean,
@@ -92,7 +93,9 @@ export interface iUserViewModel {
     about?: string,
     lastOnline?: string,
     isFriend?: boolean,
-    isSender?: boolean
+    isSender?: boolean,
+    canSendRequest?: boolean,
+    alreadyRequest?:boolean
 }
 
 export interface iResponseViewModel {

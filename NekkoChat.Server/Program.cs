@@ -108,6 +108,7 @@ app.UseExceptionHandler(appError =>
             await context.Response.WriteAsJsonAsync<ResponseDTO<object>>(new ResponseDTO<object>
             {
                 Success = false,
+                StatusCode = context.Response.StatusCode,
                 Error = ErrorMessages.ErrorMessage,
                 Message = ErrorMessages.ErrorMessage,
                 InternalMessage = ErrorMessages.ErrorMessage

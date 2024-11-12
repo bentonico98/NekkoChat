@@ -151,6 +151,10 @@ export default class UserAuthServices {
         let isNull = user === null;
         return !isNull;
     }
+    public static isRemembered() {
+        const rmr = JSON.parse(localStorage.getItem('rmrUser') || "false");
+        return rmr;
+    }
     public static RememberUser(pref: boolean) {
         const rmr = localStorage.setItem('rmrUser', JSON.stringify(pref));
         return rmr;

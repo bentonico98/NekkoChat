@@ -36,7 +36,7 @@ export default function NotificationSnackbar() {
     return (
         <Snackbar
             open={state.notificationModal}
-            autoHideDuration={4000}
+            autoHideDuration={5000}
             onClose={handleClose}
             action={action}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}

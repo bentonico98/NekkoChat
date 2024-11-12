@@ -8,7 +8,7 @@ export interface UserState {
     errorModalOpened: boolean,
     msjModalOpened: boolean,
     notificationModal: boolean,
-    notificationCount: string | null,
+    notificationCount: string,
     profileModal: boolean,
     settingModal: boolean,
     error: string | null | undefined

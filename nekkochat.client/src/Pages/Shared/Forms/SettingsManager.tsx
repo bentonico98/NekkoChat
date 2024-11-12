@@ -4,6 +4,10 @@ import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { Container } from '@mui/material';
 import { Modal } from 'react-bootstrap';
+import AboutForm from './SettingsForm/AboutForm';
+import GeneralForm from './SettingsForm/GeneralForm';
+import CustomizationForm from './SettingsForm/CustomizationForm';
+import VideoCallForm from './SettingsForm/VideoCallForm';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -23,9 +27,9 @@ function TabPanel(props: TabPanelProps) {
             {...other}
         >
             {value === index && (
-                <Box sx={{ p: 3 }}>
+                <Container>
                     {children}
-                </Box>
+                </Container>
             )}
         </div>
     );
@@ -63,32 +67,24 @@ export default function SettingsManager() {
                             value={value}
                             onChange={handleChange}
                             aria-label="Vertical tabs example"
-                            sx={{ borderRight: 1, borderColor: 'divider', minWidth:"150px" }}
+                            sx={{ borderRight: 1, borderColor: 'divider', minWidth: "150px" }}
                         >
                             <Tab label="General" {...a11yProps(0)} />
-                            <Tab label="Accounts" {...a11yProps(1)} />
-                            <Tab label="Friends" {...a11yProps(2)} />
-                            <Tab label="Video & Calls" {...a11yProps(3)} />
-                            <Tab label="Customization" {...a11yProps(4)} />
-                            <Tab label="About" {...a11yProps(5)} />
+                            <Tab label="Video & Calls" {...a11yProps(1)} />
+                            <Tab label="Customization" {...a11yProps(2)} />
+                            <Tab label="About" {...a11yProps(3)} />
                         </Tabs>
                         <TabPanel value={value} index={0}>
-                            General
+                            <GeneralForm />
                         </TabPanel>
                         <TabPanel value={value} index={1}>
-                            Accounts
+                            <VideoCallForm />
                         </TabPanel>
                         <TabPanel value={value} index={2}>
-                            Friends
+                            <CustomizationForm />
                         </TabPanel>
                         <TabPanel value={value} index={3}>
-                            Customization
-                        </TabPanel>
-                        <TabPanel value={value} index={4}>
-                            Video & Calls
-                        </TabPanel>
-                        <TabPanel value={value} index={5}>
-                            This application is collaboration between Eng. Benjunior Dorlouis & Eng. Lenny Garcia putting their skills together to build an app, we would be willing to use.
+                            <AboutForm />
                         </TabPanel>
                     </Box>
                 </Modal.Body>

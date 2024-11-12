@@ -10,7 +10,7 @@ export default function useServer() {
 
         if (isPrivateConnected.state === "Connected" && isGroupConnected.state === "Connected") {
             setEstablished(true);
-            console.log("SERVER UP")
+            console.log("SERVER UP");
         } else {
             ServerUp();
         }

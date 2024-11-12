@@ -1,4 +1,3 @@
-//import * as signalR from "@microsoft/signalr";
 import ServerInstance, { groupServer } from "../Constants/ServerInstance";
 import { iDisplayMessageTypes, iGroupRequestTypes, iNotificationTypes } from "../Constants/Types/CommonTypes";
 
@@ -17,14 +16,7 @@ export default class PrivateChatsServerServices {
                     addToChat(user_id, username, msj, false);
                 });
                 groupServer.on("ReceiveTypingSignal", (user: string, username: string) => {
-                    addToChat(null, null, null, { typing: true, user_id: user, userN: username });
-                });
-                groupServer.on("ReceiveNotification", (user_id: string) => {
-                    DisplayMessage({
-                        hasNotification: true,
-                        notification: "+1 New Notification"
-                    });
-                    return user_id;
+                    addToChat(null, username, null, { typing: true, user_id: user, username: username });
                 });
 
             } catch (er) {

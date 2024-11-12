@@ -302,13 +302,3 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
         </Stack>
     );
 }
-
-
-                            /**    {!item!.isSender &&
-                                <Button
-                                    onClick={() => {
-                                        handleMessageButton(user.value.id, id, "Hello");
-                                    }}>{
-                                        <FontAwesomeIcon icon={faMessage} />
-                           
-                                    }</Button> } */

@@ -30,7 +30,7 @@ namespace NekkoChat.Server.Hubs
                 }
             }
 
-            return Clients.Clients(connectionIds).SendAsync("ReceiveTypingSignal", sender?.Id, sender.UserName);
+            return Clients.Clients(connectionIds).SendAsync("ReceiveTypingSignal", sender?.Id, $"{sender?.Fname} {sender?.Lname}");
         }
         public async Task<Task> SendMessage(string sender_id, string group_id, string msj)
         {
@@ -53,7 +53,7 @@ namespace NekkoChat.Server.Hubs
                 };
             }
 
-            return Clients.Clients(connectionIds).SendAsync("ReceiveSpecificMessage", sender_id, msj, sender.UserName);
+            return Clients.Clients(connectionIds).SendAsync("ReceiveSpecificMessage", sender_id, msj, $"{sender?.Fname} {sender?.Lname}");
         }
         public async Task<Task> SendNotificationToUser(NotificationRequest data)
         {

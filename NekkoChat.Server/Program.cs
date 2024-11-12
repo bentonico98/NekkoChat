@@ -10,6 +10,8 @@ using NekkoChat.Server.Models;
 using Microsoft.OpenApi.Any;
 using NekkoChat.Server.Constants.Interfaces;
 using NekkoChat.Server.Utils;
+using Microsoft.AspNetCore.Diagnostics;
+using NekkoChat.Server.Constants;
 //using BlazorServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -90,6 +92,29 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+
+        if (contextFeature is not null)
+        {
+            Console.WriteLine($"Error: {contextFeature.Error}");
+            await context.Response.WriteAsJsonAsync<ResponseDTO<object>>(new ResponseDTO<object>
+            {
+                Success = false,
+                Error = ErrorMessages.ErrorMessage,
+                Message = ErrorMessages.ErrorMessage,
+                InternalMessage = ErrorMessages.ErrorMessage
+            });
+        }
+    });
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

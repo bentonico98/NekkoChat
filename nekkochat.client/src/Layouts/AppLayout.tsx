@@ -15,17 +15,24 @@ import ProfileManager from "../Pages/Shared/Forms/ProfileManager";
 import SettingsManager from "../Pages/Shared/Forms/SettingsManager";
 
 import customStyles from "../Constants/Styles/ModalStyles";
+import NotificationServerServices from "../Utils/NotificationServerServices";
 
 export default function AppLayout() {
     const { setDisplayInfo } = useDisplayMessage();
 
     const { established } = useServer();
 
+    const ListenningForNotifications = async () => {
+         NotificationServerServices.Listen(setDisplayInfo);
+    }
+
     useEffect(() => {
         if (!established) {
             setDisplayInfo({
                 isLoading: true
             });
+        } else {
+            ListenningForNotifications();
         }
     }, [established]);
 

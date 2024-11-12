@@ -1,14 +1,8 @@
-//import * as signalR from "@microsoft/signalr";
 import ServerInstance from "../Constants/ServerInstance";
 import { privateServer } from "../Constants/ServerInstance";
 import { iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
-
-    /*public static conn = new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
-        .withAutomaticReconnect()
-        .build();*/
 
     public static dispatchFunction: (obj: iDisplayMessageTypes) => void;
 
@@ -26,13 +20,6 @@ export default class PrivateChatsServerServices {
 
                 privateServer.on("ReceiveTypingSignal", (user: string) => {
                     addToChat(null, null, { typing: true, user_id: user });
-                });
-                privateServer.on("ReceiveNotification", (user_id: string) => {
-                    DisplayMessage({
-                        hasNotification: true,
-                        notification: "+1 New Notification"
-                    });
-                    return user_id;
                 });
             } catch (er) {
                 DisplayMessage({

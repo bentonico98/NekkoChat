@@ -13,8 +13,9 @@ using Microsoft.EntityFrameworkCore;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
-    public class GroupChatMessageServices([FromServices] IServiceProvider srv) : iGroupChatMessageService
+    public class GroupChatMessageServices([FromServices] IServiceProvider srv, [FromServices] ILogger<GroupChatMessageServices> logger) : iGroupChatMessageService
     {
+        private readonly ILogger<GroupChatMessageServices> _logger = logger;
 
         /// <summary>
         /// Funcion que se encargue del envio de los mensajes
@@ -26,6 +27,11 @@ namespace NekkoChat.Server.Utils
         /// <returns>bool -- Indica si fue exitoso o fallido</returns>
         public async Task<bool> sendMessage(GroupRequest data)
         {
+            if (data.group_id<=0)
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+            }
+
             bool chatExists = chatExist(data.group_id);
             string conversation = "";
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -35,6 +41,7 @@ namespace NekkoChat.Server.Utils
                     int chatId = await createChat(data);
                     if (chatId <= 0)
                     {
+                        _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
                         return false;
                     }
                     data.group_id = chatId;
@@ -65,6 +72,10 @@ namespace NekkoChat.Server.Utils
         /// <returns>int -- ID del Chat Creado</returns>
         public async Task<int> createChat(GroupRequest data)
         {
+            if (data.group_id <= 0 || string.IsNullOrEmpty(data.sender_id))
+            {
+                _logger.LogError("Group Id OR Sender Id Not Exist -- Group Chat Message Services");
+            }
             bool chatExisted = chatExist(data.group_id);
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
@@ -132,6 +143,11 @@ namespace NekkoChat.Server.Utils
         /// <returns>BOOLEAN</returns>
         public bool readMessage(GroupRequest data, int group_id)
         {
+            if (group_id <= 0)
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+            }
+
             if (string.IsNullOrEmpty(data.sender_id)) return false;
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -147,7 +163,8 @@ namespace NekkoChat.Server.Utils
                         item.read = true;
                     }
                 }
-                string payload = "{" + $"\"_id\":\"{group_id}\",\"messages\":{JsonSerializer.Serialize(messages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+                string payload = JBProcessor.GroupChatProcessed(group_id, data.groupname, messages.ToArray(), parseConvo.participants);
+                //string payload = "{" + $"\"_id\":\"{group_id}\",\"messages\":{JsonSerializer.Serialize(messages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
                 _context.groups_messages.UpdateRange(filteredConvo);
@@ -157,6 +174,11 @@ namespace NekkoChat.Server.Utils
         }
         public bool favoriteMessage(int group_id, ChatRequest data)
         {
+            if (group_id <= 0)
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+            }
+
             bool chatExisted = chatExist(group_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -179,6 +201,11 @@ namespace NekkoChat.Server.Utils
         }
         public bool archiveMessage(int group_id, ChatRequest data)
         {
+            if (group_id <= 0)
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+            }
+
             bool chatExisted = chatExist(group_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -200,6 +227,10 @@ namespace NekkoChat.Server.Utils
         }
         public bool deleteMessage(int chat_id, ChatRequest data)
         {
+            /*if (chat_id <= 0)
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+            }
             if (chat_id <= 0) return false;
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -222,14 +253,14 @@ namespace NekkoChat.Server.Utils
                         newConvoAfterDeletion.Add(message);
                     }
                 }
-
-                string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+                string payload = JBProcessor.GroupChatProcessed(chat_id, data.groupname, newConvoAfterDeletion.ToArray(), parseConvo.participants);
+                //string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
 
                 _context.groups_messages.Update(filteredConvo);
                 _context.SaveChanges();
-            }
+            }*/
 
             return true;
         }
@@ -240,6 +271,11 @@ namespace NekkoChat.Server.Utils
 
         public async Task<bool> addParticipantToGroup(GroupRequest data, int group_id)
         {
+            if (group_id <= 0 || string.IsNullOrEmpty(data.user_id))
+            {
+                _logger.LogError("Group Id Or User Id Not Exist -- Group Chat Message Services");
+            }
+
             if (string.IsNullOrEmpty(data.user_id)) return false;
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -266,7 +302,8 @@ namespace NekkoChat.Server.Utils
                     connectionid = participants.ConnectionId
                 });
 
-                string payload = "{" + $"\"_id\":\"{group_id}\",\"messages\":{JsonSerializer.Serialize(messages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}";
+                string payload = JBProcessor.GroupChatProcessed(group_id, data.groupname, messages.ToArray(), newParticipants.ToArray());
+                //string payload = "{" + $"\"_id\":\"{group_id}\",\"messages\":{JsonSerializer.Serialize(messages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}";
 
                 group.content = payload;
                 _context.groups_messages.UpdateRange(group);
@@ -328,7 +365,8 @@ namespace NekkoChat.Server.Utils
                     groupname = data.groupname
                 });
 
-                string payload = "{" + $"\"_id\":\"{data.group_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
+                string payload = JBProcessor.GroupChatProcessed(data.group_id, data.groupname, newMessages.ToArray(), parsedMessage.participants);
+                //string payload = "{" + $"\"_id\":\"{data.group_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
 
                 return payload;
             }
@@ -411,7 +449,8 @@ namespace NekkoChat.Server.Utils
                 Groups_Messages userMsj = new Groups_Messages
                 {
                     group_id = chat_id,
-                    content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
+                    content = JBProcessor.GroupChatProcessed(chat_id, data.groupname, newMessages, newParticipants)
+                    //content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
                 };
 
                 await _context.groups_messages.AddAsync(userMsj);

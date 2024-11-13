@@ -11,7 +11,7 @@ namespace NekkoChat.Server.Utils
             string content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(participants)}" + "}";
             return content;
         }
-        public static string GroupChatProcessed(int chat_id, string groupname, SingleChatSchemas[] messages, ParticipantsSchema[] participants)
+        public static string GroupChatProcessed(int chat_id, string groupname, GroupChatSchemas[] messages, ParticipantsSchema[] participants)
         {
             string content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"groupname\":\"{groupname}\", \"participants\":{JsonSerializer.Serialize(participants)}" + "}";
             return content;

@@ -21,7 +21,6 @@ export default function NotificationBar({ show, setShow, userId }: iCustomProps)
 
     const { setDisplayInfo } = useDisplayMessage();
 
-
     const { notifications } = useGetNotifications(userId);
 
     useEffect(() => {

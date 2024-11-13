@@ -4,6 +4,6 @@
     {
         public int id { get; set; }
         public GroupChatSchemas[]? messages { get; set; }
-        public object[]? participants { get; set; }
+        public ParticipantsSchema[]? participants { get; set; }
     }
 }

@@ -12,6 +12,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Constants.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Nest;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace NekkoChat.Server.Controllers
@@ -33,6 +34,11 @@ namespace NekkoChat.Server.Controllers
         [HttpGet("chats")]
         public IActionResult Get([FromQuery] string id, [FromQuery] string type = "all")
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                _logger.LogWarning("Id is null in Chat - Get All User Chat Route");
+            }
+
             try
             {
                 List<Chats> UserChats = new();
@@ -87,6 +93,7 @@ namespace NekkoChat.Server.Controllers
 
                 if (ChatsContent == null)
                 {
+                    _logger.LogWarning("Chat Content is null in Chat - Get All User Chat Route");
                     return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 }
 
@@ -94,7 +101,12 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In Chats - Get All Users Chat Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Chats - Get All Users Chat Route");
+                }
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
@@ -102,6 +114,11 @@ namespace NekkoChat.Server.Controllers
         [HttpGet("chat/{id}")]
         public IActionResult GetChatByUserId([FromRoute] string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                _logger.LogWarning("Id is null in Chat - Get All User Chat Route");
+            }
+
             try
             {
                 List<object> currentChats = new();
@@ -117,7 +134,12 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In Chats - Get Specific Chat Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Chats - Get Specific Chat Route");
+                }
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
@@ -128,6 +150,7 @@ namespace NekkoChat.Server.Controllers
             int messageSent = await _messageServices.createChat(data);
             if (messageSent <= 0)
             {
+                _logger.LogWarning("Operation Failed in Chat - Create Chat Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<int> { SingleUser = messageSent });
@@ -137,9 +160,16 @@ namespace NekkoChat.Server.Controllers
         [HttpPut("chat/send/{id}")]
         public async Task<IActionResult> Put([FromRoute] int id, [FromBody] ChatRequest data)
         {
+            if (id <= 0)
+            {
+                _logger.LogWarning("Id is null in Chat - Get Send Chat Route");
+            }
+
             bool messageSent = await _messageServices.sendMessage(id, data);
             if (!messageSent)
             {
+                _logger.LogWarning("Operation Failed in Chat - Send Chat Route");
+
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
@@ -148,9 +178,20 @@ namespace NekkoChat.Server.Controllers
         [HttpPut("chat/read/{chat_id}")]
         public IActionResult PutMessageRead([FromRoute] int chat_id, [FromBody] ChatRequest data)
         {
+            if (chat_id <= 0)
+            {
+                _logger.LogWarning("Id is null in Chat - Read Chat Route");
+            }
+
+            if (string.IsNullOrEmpty(data.sender_id))
+            {
+                _logger.LogWarning("Id is null in Chat - Read Chat Route");
+            }
+
             bool messageSent = _messageServices.readMessage(chat_id, data.sender_id);
             if (!messageSent)
             {
+                _logger.LogWarning("Operation Failed in Chat - Read Chat Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
@@ -173,6 +214,7 @@ namespace NekkoChat.Server.Controllers
 
             if (!managed)
             {
+                _logger.LogWarning("Operation Failed in Chat - Manage Chat Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());
@@ -192,6 +234,8 @@ namespace NekkoChat.Server.Controllers
             bool messageDeleted = _messageServices.deleteMessage(id, data);
             if (!messageDeleted)
             {
+                _logger.LogWarning("Operation Failed in Chat - Get Delete Message Chat Route");
+
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());

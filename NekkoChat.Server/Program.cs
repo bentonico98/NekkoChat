@@ -12,6 +12,7 @@ using NekkoChat.Server.Constants.Interfaces;
 using NekkoChat.Server.Utils;
 using Microsoft.AspNetCore.Diagnostics;
 using NekkoChat.Server.Constants;
+using Serilog;
 //using BlazorServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +71,14 @@ builder.Services.AddScoped<iGroupChatMessageService, GroupChatMessageServices>()
 builder.Services.AddScoped<iNotificationService, NotificationService>();
 builder.Services.AddTransient<iFriendRequestService, FriendRequestService>();
 
+//Serilog Configurations
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
+
 //Signal R Config
 builder.Services.AddSignalR();
 
@@ -83,6 +92,9 @@ var app = builder.Build();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+//Serilog Configurations
+//app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

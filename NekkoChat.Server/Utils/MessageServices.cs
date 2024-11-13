@@ -12,8 +12,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
-    public class MessageServices([FromServices] IServiceProvider srv) : iMessageService
+    public class MessageServices([FromServices] IServiceProvider srv, [FromServices] ILogger<MessageServices> logger) : iMessageService
     {
+        private readonly ILogger<MessageServices> _logger = logger;
 
         /// <summary>
         /// Funcion que se encargue del envio de los mensajes
@@ -32,6 +33,7 @@ namespace NekkoChat.Server.Utils
                 int chatId = await createChat(data);
                 if (chatId <= 0)
                 {
+                    _logger.LogError("Chat No Exist -- Message Services");
                     return false;
                 }
                 chat_id = chatId;
@@ -66,6 +68,11 @@ namespace NekkoChat.Server.Utils
         /// <returns>int -- ID del Chat Creado</returns>
         public async Task<int> createChat(ChatRequest data)
         {
+            if (string.IsNullOrEmpty(data.sender_id) || string.IsNullOrEmpty(data.receiver_id))
+            {
+                _logger.LogError("Sender Id Or Receiver Id Not Exist -- Message Services");
+            }
+
             bool chatExisted = chatExist(data.sender_id, data.receiver_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -74,13 +81,6 @@ namespace NekkoChat.Server.Utils
                 {
                     IQueryable<Chats> filteredChat = from chat in _context.chats select chat;
                     filteredChat = filteredChat.Where(chat => chat.sender_id == data.sender_id && chat.receiver_id == data.receiver_id || chat.sender_id == data.receiver_id && chat.receiver_id == data.sender_id);
-                    /*if (filteredChat == null || filteredChat.Count() <= 0)
-                    {
-                        IQueryable<Chats> filteredChatAlt = from chat in _context.chats select chat;
-                        filteredChatAlt = filteredChatAlt.Where(chat => chat.sender_id == data.receiver_id && chat.receiver_id == data.sender_id);
-                        return filteredChatAlt.FirstOrDefault().id;
-
-                    }*/
                     return filteredChat.FirstOrDefault().id;
                 }
 
@@ -118,6 +118,10 @@ namespace NekkoChat.Server.Utils
         /// <returns>BOOLEAN</returns>
         public bool readMessage(int chat_id, string sender_id)
         {
+            if (chat_id <= 0 || string.IsNullOrEmpty(sender_id))
+            {
+                _logger.LogError("Sender Id Or Chat Id Not Exist -- Message Services");
+            }
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 if (string.IsNullOrEmpty(sender_id)) return false;
@@ -135,8 +139,8 @@ namespace NekkoChat.Server.Utils
                         item.read = true;
                     }
                 }
-
-                string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+                string payload = JBProcessor.PrivateChatProcessed(chat_id, messages.ToArray(), parseConvo.participants);
+                //string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
                 _context.users_messages.UpdateRange(filteredConvo);
@@ -146,6 +150,11 @@ namespace NekkoChat.Server.Utils
         }
         public bool favoriteMessage(int chat_id, ChatRequest data)
         {
+            if (chat_id <= 0 || string.IsNullOrEmpty(data.user_id))
+            {
+                _logger.LogError("User Id Or Chat Id Not Exist -- Message Services");
+            }
+
             bool chatExisted = chatExist(chat_id, data.user_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -164,6 +173,11 @@ namespace NekkoChat.Server.Utils
         }
         public bool archiveMessage(int chat_id, ChatRequest data)
         {
+            if (string.IsNullOrEmpty(data.sender_id) || chat_id <= 0)
+            {
+                _logger.LogError("Sender Id Or Receiver Id Not Exist -- Message Services");
+            }
+
             bool chatExisted = chatExist(chat_id, data.user_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -182,6 +196,10 @@ namespace NekkoChat.Server.Utils
         }
         public bool deleteMessage(int chat_id, ChatRequest data)
         {
+            if (chat_id <= 0)
+            {
+                _logger.LogError("Sender Id Or Receiver Id Not Exist -- Message Services");
+            }
 
             if (chat_id <= 0) return false;
 
@@ -208,7 +226,8 @@ namespace NekkoChat.Server.Utils
                         newConvoAfterDeletion.Add(message);
                     }
                 }
-                string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
+                string payload = JBProcessor.PrivateChatProcessed(chat_id, newConvoAfterDeletion.ToArray(), parseConvo.participants);
+                //string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
 
@@ -269,7 +288,9 @@ namespace NekkoChat.Server.Utils
                     read = false
                 });
 
-                string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
+                string payload = JBProcessor.PrivateChatProcessed(chat_id, newMessages.ToArray(), parsedMessage.participants);
+
+                // string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
 
                 return payload;
             }
@@ -370,7 +391,12 @@ namespace NekkoChat.Server.Utils
         /// <returns> bool (true/false) -- en base a si la operacion fue exitosa o no</returns>
         private async Task<bool> createUserMessage(int chat_id, ChatRequest data)
         {
-            if (string.IsNullOrEmpty(data.sender_id) || string.IsNullOrEmpty(data.receiver_id)) return false;
+            if (string.IsNullOrEmpty(data.sender_id) || string.IsNullOrEmpty(data.receiver_id) || chat_id <= 0)
+            {
+                _logger.LogError("Sender Id Or Receiver Id Or Chat Id Not Exist -- Message Services");
+                return false;
+            }
+
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
@@ -378,7 +404,7 @@ namespace NekkoChat.Server.Utils
 
                 if (sender == null || receiver == null || chat_id <= 0) return false;
 
-                object[] newMessages = [new SingleChatSchemas
+                SingleChatSchemas[] newMessages = [new SingleChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
                     content = data.value,
@@ -403,7 +429,8 @@ namespace NekkoChat.Server.Utils
                 Users_Messages userMsj = new Users_Messages
                 {
                     chat_id = chat_id,
-                    content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
+                    content = JBProcessor.PrivateChatProcessed(chat_id, newMessages, newParticipants),
+                    //content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
                 };
 
                 await _context.users_messages.AddRangeAsync(userMsj);
@@ -413,6 +440,7 @@ namespace NekkoChat.Server.Utils
 
                 if (umId <= 0)
                 {
+                    _logger.LogError("Operation Failed -- Message Services");
                     return false;
                 }
                 return true;

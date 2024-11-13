@@ -15,15 +15,22 @@ namespace NekkoChat.Server.Controllers
     [ApiController]
     public class NotificationsController(
         ApplicationDbContext context,
-        iNotificationService notificationService) : ControllerBase
+        iNotificationService notificationService,
+        ILogger<NotificationsController> logger) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly iNotificationService _nSrv = notificationService;
+        private readonly ILogger<NotificationsController> _logger = logger;
 
         // GET: <NotificationsController>
         [HttpGet]
         public IActionResult Get([FromQuery] string user_id)
         {
+            if (string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("User Id is Null In Notification - Get Route");
+            }
+
             try
             {
                 List<NotificationSchema> userNotifications = new();
@@ -41,7 +48,12 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<SingleNotificationSchema> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.WrongCredentials });
+                _logger.LogError(ex.Message + " In Notification - Get Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Get Route");
+                }
+                return StatusCode(500, new ResponseDTO<SingleNotificationSchema> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
             }
         }
 
@@ -62,6 +74,8 @@ namespace NekkoChat.Server.Controllers
 
                 if (!isCreated)
                 {
+                    _logger.LogDebug("Operation Failed In Notification - Create Route");
+
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
                 return Ok(new ResponseDTO<bool>());
@@ -69,6 +83,11 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + " In Notification - Create Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Create Route");
+                }
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
 
@@ -84,12 +103,19 @@ namespace NekkoChat.Server.Controllers
 
                 if (!isCreated)
                 {
+                    _logger.LogDebug("Operation Failed In Notification - Read Route");
+
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
                 return Ok(new ResponseDTO<bool>());
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + " In Notification - Read Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Read Route");
+                }
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
 
             }
@@ -105,6 +131,7 @@ namespace NekkoChat.Server.Controllers
 
                 if (!isCreated)
                 {
+                    _logger.LogDebug("Operation Failed In Notification - Delete Route");
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
                 return Ok(new ResponseDTO<bool>());
@@ -112,6 +139,11 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + " In Notification - Delete Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Delete Route");
+                }
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
         }

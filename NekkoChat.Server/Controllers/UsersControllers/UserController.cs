@@ -12,6 +12,7 @@ using NekkoChat.Server.Constants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Utils;
 using NekkoChat.Server.Constants.Interfaces;
+using System.Xml.Linq;
 
 namespace NekkoChat.Server.Controllers
 {
@@ -31,10 +32,13 @@ namespace NekkoChat.Server.Controllers
 
 
         // /User/users?user_id="user_id"
-
         [HttpGet("users")]
         public async Task<IActionResult> Get([FromQuery] string user_id, [FromQuery] string sender_id)
         {
+            if (string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("Sender id Or User Id is null in User - Get Users Friends Route");
+            }
             try
             {
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id);
@@ -49,6 +53,9 @@ namespace NekkoChat.Server.Controllers
                     if (friendsList is not null)
                     {
                         userView.isFriend = (bool)friendsList!.isAccepted;
+                    }else
+                    {
+                        _logger.LogWarning("Friend List is null in User - Get Users Friends Route");
                     }
                 }
                 using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -60,13 +67,22 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In User - Get Users Friends Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Get Users Friends Route");
+                }
+                return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
         [HttpGet("user")]
         public async Task<IActionResult> GetUserByName([FromQuery] string name, [FromQuery] string user_id)
         {
+            if(string.IsNullOrEmpty(name) || string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("Name Or User Id is null in User - Get User By Name Route");
+            }
 
             try
             {
@@ -119,7 +135,12 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In User - Get User Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Get User Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
 
         }
@@ -233,6 +254,11 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + " In Notification - Read Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Read Route");
+                }
                 return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
             }
         }
@@ -242,6 +268,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (string.IsNullOrEmpty(data.receiver_id) || string.IsNullOrEmpty(data.sender_id))
             {
+                _logger.LogWarning("Receiver id OR Sender id is Null In User - Manage Send Friend Request Route");
                 return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
 
@@ -273,6 +300,11 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex.Message + " In User - Send Friend Request Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Read Route");
+                }
                 return StatusCode(500, new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ex.Message });
             }
 
@@ -283,6 +315,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (string.IsNullOrEmpty(data.receiver_id) || string.IsNullOrEmpty(data.sender_id))
             {
+                _logger.LogWarning("Receiver id OR Sender id is Null In User - Manage Friend Request Route");
                 return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
 
@@ -292,6 +325,11 @@ namespace NekkoChat.Server.Controllers
                 fr.sender_id == data.sender_id && fr.receiver_id == data.receiver_id
                 ||
                 fr.sender_id == data.receiver_id && fr.receiver_id == data.sender_id);
+
+                if (friendReq is null)
+                {
+                    _logger.LogWarning("Friend Request Not Found In User - Manage Friend Request Route");
+                }
 
                 if (data.operation == "accept" && friendReq!.id > 0)
                 {
@@ -316,6 +354,7 @@ namespace NekkoChat.Server.Controllers
                 }
                 else
                 {
+                    _logger.LogWarning("Invalid Operation In User - Manage Friend Request Route");
                     return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.ErrorRegular, StatusCode = 400 });
                 }
 
@@ -325,13 +364,23 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In User - Manage Friend Request Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Manage Friend Request Route");
+                }
+                return StatusCode(500, new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
         [HttpPost("manage/connectionid")]
         public async Task<IActionResult> Post([FromBody] UserRequest data)
         {
+            if (string.IsNullOrEmpty(data.user_id) || string.IsNullOrEmpty(data.connectionid))
+            {
+                _logger.LogWarning("User id OR Connection id is Null In User - Manage Connection Id Route");
+            }
+
             try
             {
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id);
@@ -343,13 +392,28 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In User - Manage Connection Id Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Manage Connection Id Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
         [HttpPut("manage/status")]
         public async Task<IActionResult> Put([FromBody] UserRequest data, [FromQuery] int status)
         {
+            if(status < 0)
+            {
+                _logger.LogWarning("Staus is Invalid In User - Manage Status Route");
+            }
+
+            if (string.IsNullOrEmpty(data.user_id))
+            {
+                _logger.LogWarning("User Id is Null In User - Manage Status Route");
+            }
+
             try
             {
                 AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id);
@@ -360,7 +424,12 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                _logger.LogError(ex.Message + " In User - Manage Status Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Manage Status Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
     }

@@ -21,13 +21,15 @@ import useGetUser from "../../Hooks/Group/useGetUser";
 import useSignalServer from "../../Hooks/Group/useSignalServer";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
+import NekkoSpinner from "../Shared/Skeletons/NekkoSpinner";
 
 Modal.setAppElement("#root");
 export default function Inbox() {
     const [isTyping, setIsTyping] = useState<iTypingComponentProps>({
         typing: false,
         user_id: "0",
-        username: "Member"
+        username: "Member",
+        group_id: "0"
     });
 
     const user = useAppSelector((state) => state.user);
@@ -58,11 +60,11 @@ export default function Inbox() {
         dispatch(closeModal());
     }
 
-    const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username }: iTypingComponentProps) => {
+    const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username, group_id }: iTypingComponentProps, groupID: string) => {
         if (!msj && !user) {
-            setIsTyping({ typing: typing, user_id: user_id, username});
+            setIsTyping({ typing: typing, user_id: user_id, username, group_id: group_id ? group_id : groupID });
             setTimeout(() => {
-                setIsTyping({ typing: false, user_id: user_id, username });
+                setIsTyping({ typing: false, user_id: user_id, username, group_id: group_id ? group_id : groupID });
             }, 3000);
             return;
         }
@@ -90,13 +92,14 @@ export default function Inbox() {
     return (
         <>
             <MainContainer  >
-                <SideBox
+                {conversations.length > 0 &&  <SideBox
                     messages={conversations}
                     user={user_id}
                     setCurrentConversation={fetchMessage}
                     DisplayMessage={setDisplayInfo}
-                />
-                {messages.length > 0 &&
+                /> }
+
+                {messages.length > 0 ?
                     <ChatMessages
                         messages={messages}
                         connected={connected}
@@ -104,7 +107,7 @@ export default function Inbox() {
                         receiver={chatID}
                         isTyping={isTyping}
                         DisplayMessage={setDisplayInfo}
-                    />}
+                    /> : <NekkoSpinner />}
 
             </MainContainer>
             <Modal

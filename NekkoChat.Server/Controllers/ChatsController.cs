@@ -37,6 +37,7 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogWarning("Id is null in Chat - Get All User Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
             try
@@ -68,6 +69,7 @@ namespace NekkoChat.Server.Controllers
                 {
                     IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
                     chat = chat.Where((u) => u.chat_id == userChat.id);
+
                     foreach (var c in chat)
                     {
                         using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -75,20 +77,27 @@ namespace NekkoChat.Server.Controllers
                             AspNetUsers participants = new();
                             if (userChat.sender_id != id)
                             {
-                                participants = ctx.AspNetUsers.Find(userChat.sender_id);
+                                if (!string.IsNullOrEmpty(userChat.sender_id))
+                                {
+                                    participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
+                                }
                             }
                             else
                             {
-                                participants = ctx.AspNetUsers.Find(userChat.receiver_id);
+                                if (!string.IsNullOrEmpty(userChat.receiver_id))
+                                {
+                                    participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
+                                }
                             }
 
-                            MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content);
-                            contents.status = participants!.Status;
-
-                            ChatsContent.Add(contents);
+                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                            {
+                                MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
+                                contents.status = participants!.Status;
+                                ChatsContent.Add(contents);
+                            }
                         }
                     }
-
                 }
 
                 if (ChatsContent == null)
@@ -117,6 +126,7 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogWarning("Id is null in Chat - Get All User Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
             try
@@ -128,7 +138,10 @@ namespace NekkoChat.Server.Controllers
 
                 foreach (var c in chat)
                 {
-                    currentChats.Add(JsonDocument.Parse(c.content));
+                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                    {
+                        currentChats.Add(JsonDocument.Parse(c.content));
+                    }
                 }
                 return Ok(new ResponseDTO<object> { User = currentChats });
             }
@@ -147,7 +160,14 @@ namespace NekkoChat.Server.Controllers
         [HttpPost("chat/create")]
         public async Task<IActionResult> Post([FromBody] ChatRequest data)
         {
-            int messageSent = await _messageServices.createChat(data);
+
+            int messageSent = 0;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = await _messageServices.createChat(data);
+            }
+
             if (messageSent <= 0)
             {
                 _logger.LogWarning("Operation Failed in Chat - Create Chat Route");
@@ -163,53 +183,71 @@ namespace NekkoChat.Server.Controllers
             if (id <= 0)
             {
                 _logger.LogWarning("Id is null in Chat - Get Send Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
-            bool messageSent = await _messageServices.sendMessage(id, data);
+            bool messageSent = false;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = await _messageServices.sendMessage(id, data);
+            }
+
             if (!messageSent)
             {
                 _logger.LogWarning("Operation Failed in Chat - Send Chat Route");
-
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
+
             return Ok(new ResponseDTO<bool>());
         }
         // PUT chats/chat/read/{id} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/read/{chat_id}")]
         public IActionResult PutMessageRead([FromRoute] int chat_id, [FromBody] ChatRequest data)
         {
-            if (chat_id <= 0)
+            if (chat_id <= 0 || string.IsNullOrEmpty(data.sender_id))
             {
                 _logger.LogWarning("Id is null in Chat - Read Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
-            if (string.IsNullOrEmpty(data.sender_id))
+            bool messageSent = false;
+
+            if (ModelState.IsValid)
             {
-                _logger.LogWarning("Id is null in Chat - Read Chat Route");
+                messageSent = _messageServices.readMessage(chat_id, data.sender_id);
             }
 
-            bool messageSent = _messageServices.readMessage(chat_id, data.sender_id);
             if (!messageSent)
             {
                 _logger.LogWarning("Operation Failed in Chat - Read Chat Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
+
             return Ok(new ResponseDTO<bool>());
         }
         // PUT chats/chat/manage/{id} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/manage/{chat_id}")]
         public IActionResult PutManageChat([FromRoute] int chat_id, [FromBody] ChatRequest data)
         {
+            if (chat_id <= 0)
+            {
+                _logger.LogWarning("Id is null in Chat - Read Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+            }
             bool managed = false;
 
-            if (data.operation == "archive")
+            if (ModelState.IsValid)
             {
-                managed = _messageServices.archiveMessage(chat_id, data);
+                if (data.operation == "archive")
+                {
+                    managed = _messageServices.archiveMessage(chat_id, data);
 
-            }
-            else if (data.operation == "favorite")
-            {
-                managed = _messageServices.favoriteMessage(chat_id, data);
+                }
+                else if (data.operation == "favorite")
+                {
+                    managed = _messageServices.favoriteMessage(chat_id, data);
+                }
             }
 
             if (!managed)
@@ -217,6 +255,7 @@ namespace NekkoChat.Server.Controllers
                 _logger.LogWarning("Operation Failed in Chat - Manage Chat Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
+
             return Ok(new ResponseDTO<bool>());
         }
 
@@ -231,11 +270,22 @@ namespace NekkoChat.Server.Controllers
         [HttpDelete("chat/message/delete/{id}")]
         public IActionResult DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
         {
-            bool messageDeleted = _messageServices.deleteMessage(id, data);
+            if (id <= 0)
+            {
+                _logger.LogWarning("Id is null in Chat - Read Chat Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+            }
+
+            bool messageDeleted = false;
+
+            if (ModelState.IsValid)
+            {
+                messageDeleted = _messageServices.deleteMessage(id, data);
+            }
+
             if (!messageDeleted)
             {
                 _logger.LogWarning("Operation Failed in Chat - Get Delete Message Chat Route");
-
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
             return Ok(new ResponseDTO<bool>());

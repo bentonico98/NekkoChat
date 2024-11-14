@@ -4,6 +4,6 @@ namespace NekkoChat.Server.Schemas
 {
     public class NotificationSchema
     {
-        public SingleNotificationSchema[]? notifications { get; set; }
+        public SingleNotificationSchema[] notifications { get; set; } = new SingleNotificationSchema[0];
     }
 }

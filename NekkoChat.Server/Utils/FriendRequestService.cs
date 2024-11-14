@@ -11,11 +11,15 @@ namespace NekkoChat.Server.Utils
         private readonly IServiceProvider _srv = srv;
         public async Task<bool> IncreaseFriendCount(string user_id)
         {
+            if (string.IsNullOrEmpty(user_id)) return false;
+
             bool success = await IncreaseInvoke(user_id);
             return success;
         }
         public async Task<bool> DecreaseFriendCount(string user_id)
         {
+            if (string.IsNullOrEmpty(user_id)) return false;
+
             bool success = await DecreaseInvoke(user_id);
             return success;
         }

@@ -10,12 +10,13 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Constants;
 using NekkoChat.Server.Constants.Interfaces;
 using Nest;
+using NekkoChat.Server.Schemas;
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class GroupController(
-        ILogger<GroupController> logger, 
+        ILogger<GroupController> logger,
         ApplicationDbContext context,
         iGroupChatMessageService messageServices) : ControllerBase
     {
@@ -30,11 +31,13 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(user_id))
             {
                 _logger.LogWarning("User Id is null in Group - Get All User Chats Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
+
             try
             {
                 List<Groups_Members> GroupChats = new();
-                List<object> ChatsContent = new();
+                List<GroupMessageSchemas> ChatsContent = new();
 
                 IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
 
@@ -48,9 +51,16 @@ namespace NekkoChat.Server.Controllers
                 {
                     IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
                     chat = chat.Where((u) => u.group_id == userChat.group_id);
+
+                    if (!chat.Any()) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
                     foreach (var c in chat)
                     {
-                        ChatsContent.Add(JsonDocument.Parse(c.content));
+                        if (c.content is not null)
+                        {
+                            GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                            ChatsContent.Add(payload);
+                        }
                     }
                 }
 
@@ -59,7 +69,7 @@ namespace NekkoChat.Server.Controllers
                     return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 }
 
-                return Ok(new ResponseDTO<object> { User = ChatsContent });
+                return Ok(new ResponseDTO<GroupMessageSchemas> { User = ChatsContent });
 
             }
             catch (Exception ex)
@@ -80,20 +90,30 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(id))
             {
                 _logger.LogWarning("Id is Null in Group - Get Specific Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
+
             try
             {
-                List<object> currentChats = new();
+                List<GroupMessageSchemas> currentChats = new();
                 int chat_id = int.Parse(id);
                 IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
                 chat = chat.Where((u) => u.group_id == chat_id);
 
+                if (!chat.Any()) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
                 foreach (var c in chat)
                 {
-                    currentChats.Add(JsonDocument.Parse(c.content));
+                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                    {
+                        GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                        currentChats.Add(payload);
+                    }
                 }
 
-                return Ok(new ResponseDTO<object> { User = currentChats });
+                if (currentChats.Count() <= 0) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
+                return Ok(new ResponseDTO<GroupMessageSchemas> { User = currentChats });
 
             }
             catch (Exception ex)
@@ -103,7 +123,7 @@ namespace NekkoChat.Server.Controllers
                 {
                     _logger.LogError(ex?.InnerException?.Message + " In Groups - Get Specific Chat Route");
                 }
-                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ex.Message, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 
@@ -111,13 +131,17 @@ namespace NekkoChat.Server.Controllers
         [HttpGet("groups/{group_id}")]
         public async Task<IActionResult> GetGroupById([FromRoute] int group_id)
         {
-            if(group_id <= 0)
+            if (group_id <= 0)
             {
                 _logger.LogWarning("Group Id is null in Group - Get Specific Group Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
             try
             {
                 Groups group = await _context.groups.FindAsync(group_id);
+
+                if (group is null) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
                 return Ok(new ResponseDTO<Groups> { SingleUser = group });
             }
             catch (Exception ex)
@@ -135,20 +159,30 @@ namespace NekkoChat.Server.Controllers
         [HttpPost("chat/create")]
         public async Task<IActionResult> Post([FromBody] GroupRequest data)
         {
-            int messageSent = await _messageServices.createChat(data);
+            int messageSent = 0;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = await _messageServices.createChat(data);
+            }
             if (messageSent <= 0)
             {
                 _logger.LogWarning("Operation Failed in Group - Create Group Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
-            return Ok(new ResponseDTO<int> { SingleUser = messageSent});
+            return Ok(new ResponseDTO<int> { SingleUser = messageSent });
         }
 
         // PUT groupschat/chat/send/{id} --- Ruta para envio de mensaje a un chat existente
         [HttpPut("chat/send/{id}")]
         public async Task<IActionResult> Put([FromBody] GroupRequest data)
         {
-            bool messageSent = await _messageServices.sendMessage(data);
+            bool messageSent = false;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = await _messageServices.sendMessage(data);
+            }
             if (!messageSent)
             {
                 _logger.LogWarning("Operation Failed in Group - Send Group Route");
@@ -165,9 +199,16 @@ namespace NekkoChat.Server.Controllers
             if (group_id <= 0)
             {
                 _logger.LogWarning("Id is Null in Group - Read Group Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
-            bool messageSent = _messageServices.readMessage(data, group_id);
+            bool messageSent = false;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = _messageServices.readMessage(data, group_id);
+            }
+
             if (!messageSent)
             {
                 _logger.LogWarning("Operation Failed in Group - Read Group Route");
@@ -184,14 +225,22 @@ namespace NekkoChat.Server.Controllers
             if (group_id <= 0)
             {
                 _logger.LogWarning("Id is Null in Group - Add To Group Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
-            bool messageSent = await _messageServices.addParticipantToGroup(data, group_id);
+            bool messageSent = false;
+
+            if (ModelState.IsValid)
+            {
+                messageSent = await _messageServices.addParticipantToGroup(data, group_id);
+            }
+
             if (!messageSent)
             {
                 _logger.LogWarning("Operation Failed in Group - Add To Group Route");
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
+
             return Ok(new ResponseDTO<Groups>());
         }
 
@@ -202,18 +251,22 @@ namespace NekkoChat.Server.Controllers
             if (group_id <= 0)
             {
                 _logger.LogWarning("Id is Null in Group - Manage Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
             bool managed = false;
 
-            if (data.operation == "archive")
+            if (ModelState.IsValid)
             {
-                managed = _messageServices.archiveMessage(group_id, data);
+                if (data.operation == "archive")
+                {
+                    managed = _messageServices.archiveMessage(group_id, data);
 
-            }
-            else if (data.operation == "favorite")
-            {
-                managed = _messageServices.favoriteMessage(group_id, data);
+                }
+                else if (data.operation == "favorite")
+                {
+                    managed = _messageServices.favoriteMessage(group_id, data);
+                }
             }
 
             if (!managed)
@@ -229,12 +282,19 @@ namespace NekkoChat.Server.Controllers
         [HttpDelete("chat/message/delete/{id}")]
         public IActionResult DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
         {
-            if(id <= 0)
+            if (id <= 0)
             {
                 _logger.LogWarning("Id is Null in Group - Delete Message Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
-            bool messageDeleted = _messageServices.deleteMessage(id, data);
+            bool messageDeleted = false;
+
+            if (ModelState.IsValid)
+            {
+                messageDeleted = _messageServices.deleteMessage(id, data);
+            }
+
             if (!messageDeleted)
             {
                 _logger.LogWarning("Operation Failed in Group - Delete Message Route");

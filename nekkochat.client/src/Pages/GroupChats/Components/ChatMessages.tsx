@@ -58,7 +58,7 @@ export default function ChatMessages({
 
                     {/*Chat Component*/}
 
-                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && <TypingIndicator content={`${isTyping.username} is typing`} />}>
+                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && isTyping.group_id === receiver.toString() && <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
                         {messages.map((el: iChatSchema, idx: number) => {
                             return (

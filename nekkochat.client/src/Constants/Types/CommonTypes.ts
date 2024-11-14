@@ -131,7 +131,8 @@ export interface iSideBoxProps {
 export interface iTypingComponentProps {
     typing: boolean,
     user_id: string,
-    username?: string
+    username?: string,
+    group_id?:string
 }
 export interface iChatMessagesProps {
     messages: iChatSchema[],

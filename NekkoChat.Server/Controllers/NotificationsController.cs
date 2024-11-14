@@ -29,6 +29,7 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(user_id))
             {
                 _logger.LogWarning("User Id is Null In Notification - Get Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
             try
@@ -38,10 +39,14 @@ namespace NekkoChat.Server.Controllers
 
                 IQueryable<Notifications> notifications = _context.notifications.Where((n) => n.User_Id == user_id);
 
+                if(notifications is null || !notifications.Any()) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
                 foreach (var notification in notifications)
                 {
-                    NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification);
-                    userNotifications.Add(output);
+                    if (notification is not null && !string.IsNullOrEmpty(notification.Notification))
+                    {
+                        NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
+                        userNotifications.Add(output);
+                    }
                 }
 
                 return Ok(new ResponseDTO<SingleNotificationSchema> { User = userNotifications[0]!.notifications.OrderByDescending((n) => n.date).ToList() });
@@ -68,14 +73,18 @@ namespace NekkoChat.Server.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Post([FromBody] NotificationRequest data)
         {
+            bool isCreated = false;
+
             try
             {
-                bool isCreated = await _nSrv.CreateNotification(data);
+                if (ModelState.IsValid)
+                {
+                    isCreated = await _nSrv.CreateNotification(data);
+                }
 
                 if (!isCreated)
                 {
                     _logger.LogDebug("Operation Failed In Notification - Create Route");
-
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
                 return Ok(new ResponseDTO<bool>());
@@ -91,15 +100,21 @@ namespace NekkoChat.Server.Controllers
                 return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
             }
 
+
         }
 
         // PUT <NotificationsController>/5
         [HttpPut("read")]
         public async Task<IActionResult> Put([FromBody] NotificationRequest data)
         {
+            bool isCreated = await _nSrv.ReadNotification(data);
             try
             {
-                bool isCreated = await _nSrv.ReadNotification(data);
+                
+                if (ModelState.IsValid)
+                {
+                    isCreated = await _nSrv.ReadNotification(data);
+                }
 
                 if (!isCreated)
                 {
@@ -107,6 +122,7 @@ namespace NekkoChat.Server.Controllers
 
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
+
                 return Ok(new ResponseDTO<bool>());
             }
             catch (Exception ex)
@@ -125,15 +141,21 @@ namespace NekkoChat.Server.Controllers
         [HttpDelete("delete")]
         public async Task<IActionResult> Delete([FromBody] NotificationRequest data)
         {
+            bool isCreated = await _nSrv.DeleteNotification(data);
+
             try
             {
-                bool isCreated = await _nSrv.DeleteNotification(data);
+                if (ModelState.IsValid)
+                {
+                    isCreated = await _nSrv.DeleteNotification(data);
+                }
 
                 if (!isCreated)
                 {
                     _logger.LogDebug("Operation Failed In Notification - Delete Route");
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
+
                 return Ok(new ResponseDTO<bool>());
 
             }

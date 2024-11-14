@@ -12,11 +12,11 @@ export default class PrivateChatsServerServices {
         if (groupServer.state == "Connected") {
             try {
 
-                groupServer.on("ReceiveSpecificMessage", (user_id: string, msj: string, username: string) => {
-                    addToChat(user_id, username, msj, false);
+                groupServer.on("ReceiveSpecificMessage", (user_id: string, msj: string, username: string, group_id:string) => {
+                    addToChat(user_id, username, msj, false, group_id);
                 });
-                groupServer.on("ReceiveTypingSignal", (user: string, username: string) => {
-                    addToChat(null, username, null, { typing: true, user_id: user, username: username });
+                groupServer.on("ReceiveTypingSignal", (user: string, username: string, group_id: string) => {
+                    addToChat(null, username, null, { typing: true, user_id: user, username: username, group_id }, group_id);
                 });
 
             } catch (er) {

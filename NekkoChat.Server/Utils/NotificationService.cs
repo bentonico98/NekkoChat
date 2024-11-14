@@ -13,6 +13,8 @@ namespace NekkoChat.Server.Utils
     {
         public async Task<bool> CreateNotification(NotificationRequest data)
         {
+            if (data is null || string.IsNullOrEmpty(data.from_id) || string.IsNullOrEmpty(data.user_id)) return false;
+
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers sender = await ctx.AspNetUsers.FindAsync(data.from_id);
@@ -23,9 +25,13 @@ namespace NekkoChat.Server.Utils
 
                 if (hasNotification)
                 {
-                    Notifications notification = await ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefaultAsync();
+                    IQueryable<Notifications> UserNotifications = ctx.notifications.Where((n) => n.User_Id == data.user_id);
 
-                    NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification);
+                    if (!UserNotifications.Any() || UserNotifications is null) return false;
+                    Notifications notification = UserNotifications.FirstOrDefault()!;
+
+                    if (notification is null || notification.Notification is null) return false;
+                    NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
 
                     SingleNotificationSchema singleNotification = new SingleNotificationSchema
                     {
@@ -82,13 +88,14 @@ namespace NekkoChat.Server.Utils
         {
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault();
+                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault()!;
 
-                if (notifications is null) return false;
+                if (notifications is null || notifications.Notification is null) return false;
 
                 List<SingleNotificationSchema> filteredNotification = new();
+                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification)!;
 
-                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification);
+                if (notificationSchema is null || notificationSchema.notifications is null) return false;
                 foreach (var notification in notificationSchema.notifications)
                 {
                     SingleNotificationSchema output = (notification);
@@ -113,14 +120,15 @@ namespace NekkoChat.Server.Utils
         {
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault();
+                Notifications notifications = ctx.notifications.Where((n) => n.User_Id == data.user_id).FirstOrDefault()!;
 
-                if (notifications is null) return false;
+                if (notifications is null || notifications.Notification is null) return false;
 
                 List<SingleNotificationSchema> filteredNotification = new();
 
-                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification);
+                NotificationSchema notificationSchema = JsonSerializer.Deserialize<NotificationSchema>(notifications.Notification)!;
 
+                if (notificationSchema is null || notificationSchema.notifications is null) return false;
                 foreach (var notification in notificationSchema.notifications)
                 {
                     SingleNotificationSchema output = (notification);

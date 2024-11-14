@@ -129,7 +129,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -147,7 +147,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -183,7 +183,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -200,7 +200,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');

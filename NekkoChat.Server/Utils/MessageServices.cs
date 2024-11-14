@@ -37,8 +37,15 @@ namespace NekkoChat.Server.Utils
                     return false;
                 }
                 chat_id = chatId;
-                conversation = parseMessage(chat_id, data);
-                Users_Messages newUm = fetchUsersMessages(chat_id);
+                ResponseDTO<string> parseMessageResponse = parseMessage(chat_id, data);
+
+                if (!parseMessageResponse.Success || parseMessageResponse.SingleUser is null) return false;
+                conversation = parseMessageResponse.SingleUser;
+
+                ResponseDTO<Users_Messages> fetchUsersMessagesResponse = fetchUsersMessages(chat_id);
+
+                if (!fetchUsersMessagesResponse.Success || fetchUsersMessagesResponse.SingleUser is null) return false;
+                Users_Messages newUm = fetchUsersMessagesResponse.SingleUser;
                 newUm.content = conversation;
                 using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                 {
@@ -47,8 +54,15 @@ namespace NekkoChat.Server.Utils
                 }
                 return true;
             }
-            conversation = parseMessage(chat_id, data);
-            Users_Messages um = fetchUsersMessages(chat_id);
+            ResponseDTO<string> parseMessageResponseAlt = parseMessage(chat_id, data);
+            if (!parseMessageResponseAlt.Success || parseMessageResponseAlt.SingleUser is null) return false;
+
+            conversation = parseMessageResponseAlt.SingleUser;
+
+            ResponseDTO<Users_Messages> fetchUsersMessagesResponseAlt = fetchUsersMessages(chat_id);
+
+            if (!fetchUsersMessagesResponseAlt.Success || fetchUsersMessagesResponseAlt.SingleUser is null) return false;
+            Users_Messages um = fetchUsersMessagesResponseAlt.SingleUser;
             um.content = conversation;
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -73,6 +87,8 @@ namespace NekkoChat.Server.Utils
                 _logger.LogError("Sender Id Or Receiver Id Not Exist -- Message Services");
             }
 
+            if (string.IsNullOrEmpty(data.sender_id) || string.IsNullOrWhiteSpace(data.receiver_id)) return 0;
+
             bool chatExisted = chatExist(data.sender_id, data.receiver_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -81,7 +97,10 @@ namespace NekkoChat.Server.Utils
                 {
                     IQueryable<Chats> filteredChat = from chat in _context.chats select chat;
                     filteredChat = filteredChat.Where(chat => chat.sender_id == data.sender_id && chat.receiver_id == data.receiver_id || chat.sender_id == data.receiver_id && chat.receiver_id == data.sender_id);
-                    return filteredChat.FirstOrDefault().id;
+
+                    if (!filteredChat.Any()) return 0;
+
+                    return filteredChat.FirstOrDefault()!.id;
                 }
 
                 Chats newChat = new Chats
@@ -103,7 +122,10 @@ namespace NekkoChat.Server.Utils
 
                 if (!umCreated)
                 {
-                    Users_Messages um = fetchUsersMessages(chat_id);
+                    ResponseDTO<Users_Messages> fetchUsersMessagesResponse = fetchUsersMessages(chat_id);
+
+                    if (!fetchUsersMessagesResponse.Success || fetchUsersMessagesResponse.SingleUser is null) return 0;
+                    Users_Messages um = fetchUsersMessagesResponse.SingleUser;
                     return um.chat_id;
                 }
                 return chat_id;
@@ -126,21 +148,30 @@ namespace NekkoChat.Server.Utils
             {
                 if (string.IsNullOrEmpty(sender_id)) return false;
 
-                Users_Messages filteredConvo = fetchUsersMessages(chat_id);
+                ResponseDTO<Users_Messages> filteredConvoResponse = fetchUsersMessages(chat_id);
+
+                if (!filteredConvoResponse.Success || filteredConvoResponse.SingleUser is null) return false;
+                Users_Messages filteredConvo = filteredConvoResponse.SingleUser;
                 var chats = filteredConvo.content;
 
-                MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats);
+                if (string.IsNullOrEmpty(chats)) return false;
+
+                MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats)!;
+
+                if (parseConvo is null || parseConvo.messages is null || parseConvo.participants is null) return false;
                 IEnumerable<SingleChatSchemas> messages = parseConvo!.messages;
 
                 foreach (var item in messages)
                 {
-                    if (!item.user_id.Equals(sender_id))
+                    if (item is not null && !string.IsNullOrEmpty(item.user_id))
                     {
-                        item.read = true;
+                        if (!item.user_id.Equals(sender_id))
+                        {
+                            item.read = true;
+                        }
                     }
                 }
                 string payload = JBProcessor.PrivateChatProcessed(chat_id, messages.ToArray(), parseConvo.participants);
-                //string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(messages)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
                 _context.users_messages.UpdateRange(filteredConvo);
@@ -155,13 +186,14 @@ namespace NekkoChat.Server.Utils
                 _logger.LogError("User Id Or Chat Id Not Exist -- Message Services");
             }
 
+            if (string.IsNullOrEmpty(data.user_id) || chat_id <= 0) return false;
             bool chatExisted = chatExist(chat_id, data.user_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 if (!chatExisted) return false;
 
-                Chats chat = _context.chats.Find(chat_id);
+                Chats chat = _context.chats.Find(chat_id)!;
 
                 chat!.isFavorite = data.favorite;
 
@@ -178,13 +210,14 @@ namespace NekkoChat.Server.Utils
                 _logger.LogError("Sender Id Or Receiver Id Not Exist -- Message Services");
             }
 
+            if (string.IsNullOrEmpty(data.user_id) || chat_id <= 0) return false;
             bool chatExisted = chatExist(chat_id, data.user_id);
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 if (!chatExisted) return false;
 
-                Chats chat = _context.chats.Find(chat_id);
+                Chats chat = _context.chats.Find(chat_id)!;
 
                 chat!.isArchived = data.archive;
 
@@ -205,9 +238,18 @@ namespace NekkoChat.Server.Utils
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                Users_Messages filteredConvo = fetchUsersMessages(chat_id);
-                var chats = filteredConvo.content;
-                MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats);
+                ResponseDTO<Users_Messages> filteredConvoResponse = fetchUsersMessages(chat_id);
+
+                if (!filteredConvoResponse.Success || filteredConvoResponse.SingleUser is null) return false;
+                Users_Messages filteredConvo = filteredConvoResponse.SingleUser;
+
+                if (filteredConvo is null || filteredConvo.content is null) return false;
+                string chats = filteredConvo.content;
+
+                if (string.IsNullOrEmpty(chats)) return false;
+                MessageSchemas parseConvo = JsonSerializer.Deserialize<MessageSchemas>(chats)!;
+
+                if (parseConvo is null || parseConvo.messages is null || parseConvo.participants is null) return false;
                 IEnumerable<SingleChatSchemas> messages = parseConvo!.messages;
 
                 bool isUserMessage = this.belongToUser(messages, data);
@@ -227,7 +269,6 @@ namespace NekkoChat.Server.Utils
                     }
                 }
                 string payload = JBProcessor.PrivateChatProcessed(chat_id, newConvoAfterDeletion.ToArray(), parseConvo.participants);
-                //string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newConvoAfterDeletion)}, \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
 
@@ -265,34 +306,38 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- ID del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje enviado por el usuario
         /// <returns>string -- El objeto JSON convertido en STRING</returns>
-        private string parseMessage(int chat_id, ChatRequest data)
+        private ResponseDTO<string> parseMessage(int chat_id, ChatRequest data)
         {
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
+                if(chat_id <= 0 || string.IsNullOrEmpty(data.sender_id)) return new ResponseDTO<string> { Success = false };
+                
                 IQueryable<Users_Messages> currentChat = from c in _context.users_messages select c;
                 currentChat = currentChat.Where(c => c.chat_id == chat_id);
                 var chat = currentChat!.FirstOrDefault()!.content;
 
-                MessageSchemas parsedMessage = JsonSerializer.Deserialize<MessageSchemas>(chat);
+                if (string.IsNullOrEmpty(chat)) return new ResponseDTO<string> { Success = false};
+                MessageSchemas parsedMessage = JsonSerializer.Deserialize<MessageSchemas>(chat)!;
+
+                if (parsedMessage is null || parsedMessage.messages is null || parsedMessage.participants is null) return new ResponseDTO<string> { Success = false };
+
                 var messages = parsedMessage.messages.ToImmutableArray();
 
-                AspNetUsers user = _context.AspNetUsers.Find(data.sender_id);
+                AspNetUsers user = _context.AspNetUsers.Find(data.sender_id)!;
 
                 var newMessages = messages.AddRange(new SingleChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
                     content = data.value,
                     user_id = data.sender_id.ToString(),
-                    username = user!.UserName,
+                    username = user != null ? user!.UserName : "Unknown",
                     created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     read = false
                 });
 
                 string payload = JBProcessor.PrivateChatProcessed(chat_id, newMessages.ToArray(), parsedMessage.participants);
 
-                // string payload = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(parsedMessage.participants)}" + "}";
-
-                return payload;
+                return new ResponseDTO<string> { Success = true, SingleUser = payload };
             }
         }
 
@@ -301,13 +346,17 @@ namespace NekkoChat.Server.Utils
         /// </summary>
         /// <param name="chat_id"></param> -- ID del Chat
         /// <returns>Models.Users_Messages -- El user messages que coincide con el chat en cuestion</returns>
-        private Models.Users_Messages fetchUsersMessages(int chat_id)
+        private ResponseDTO<Users_Messages> fetchUsersMessages(int chat_id)
         {
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 IQueryable<Users_Messages> filteredUserMessages = from um in _context.users_messages select um;
                 filteredUserMessages = filteredUserMessages.Where(um => um.chat_id == chat_id);
-                return filteredUserMessages.FirstOrDefault();
+
+                if(!filteredUserMessages.Any() || filteredUserMessages is null) return new ResponseDTO<Users_Messages> { Success = false };
+
+                Users_Messages payload = filteredUserMessages.FirstOrDefault()!;
+                return new ResponseDTO<Users_Messages> { Success = true, SingleUser = payload };
             }
         }
 
@@ -396,7 +445,7 @@ namespace NekkoChat.Server.Utils
                 _logger.LogError("Sender Id Or Receiver Id Or Chat Id Not Exist -- Message Services");
                 return false;
             }
-
+            
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);

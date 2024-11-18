@@ -14,13 +14,15 @@ export default class MessageServicesClient {
 
         let url = ServerLinks.getSendMessageUrl(data.chat_id);
         const result = await axios.put(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
             return new ResponseViewModel(false, 500, null, null, err.response.data.error);
-        });;
-        await PrivateChatsServerServices.SendMessageToUserInvoke(data);
+        });
+
+        if (result.success) {
+            await PrivateChatsServerServices.SendMessageToUserInvoke(data);
+        }
         return result;
     }
 
@@ -30,7 +32,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getReadMessageUrl(data.chat_id);
 
         const result = await axios.put(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -46,7 +47,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getDeleteMessageUrl(data.chat_id);
 
         const result = await axios.delete(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -62,7 +62,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getDeleteMessageUrl(data);
 
         const result = await axios.delete(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -142,7 +141,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-            console.log(res);
             return res.data;
         }).catch(function (error) {
             // handle error
@@ -221,7 +219,9 @@ export default class MessageServicesClient {
             return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
-        await GroupChatsServerServices.SendMessageToGroupInvoke(data);
+        if (result.success) {
+            await GroupChatsServerServices.SendMessageToGroupInvoke(data);
+        }
         return result;
     }
 
@@ -264,7 +264,6 @@ export default class MessageServicesClient {
         let url = ServerLinks.getCreateGroupChatUrl();
 
         const result = await axios.post(url, data).then((res) => {
-            console.log(res);
             return res.data;
         }).catch(err => {
             console.error(err);

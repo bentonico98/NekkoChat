@@ -11,6 +11,7 @@ using NekkoChat.Server.Constants;
 using NekkoChat.Server.Constants.Interfaces;
 using Nest;
 using NekkoChat.Server.Schemas;
+using AutoMapper;
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
@@ -18,11 +19,15 @@ namespace NekkoChat.Server.Controllers
     public class GroupController(
         ILogger<GroupController> logger,
         ApplicationDbContext context,
-        iGroupChatMessageService messageServices) : ControllerBase
+        iGroupChatMessageService messageServices,
+        IMapper mapper,
+        IServiceProvider srv) : ControllerBase
     {
         private readonly ILogger<GroupController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
         private readonly iGroupChatMessageService _messageServices = messageServices;
+        private readonly IMapper _mapper = mapper;
+
 
         // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
@@ -47,19 +52,20 @@ namespace NekkoChat.Server.Controllers
                     GroupChats.Add(conversation);
                 }
 
-                foreach (var userChat in GroupChats)
+                if (GroupChats.Count() > 0)
                 {
-                    IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
-                    chat = chat.Where((u) => u.group_id == userChat.group_id);
-
-                    if (!chat.Any()) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
-
-                    foreach (var c in chat)
+                    foreach (var userChat in GroupChats)
                     {
-                        if (c.content is not null)
+                        IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
+                        chat = chat.Where((u) => u.group_id == userChat.group_id);
+
+                        foreach (var c in chat)
                         {
-                            GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                            ChatsContent.Add(payload);
+                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                            {
+                                GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                                ChatsContent.Add(payload);
+                            }
                         }
                     }
                 }
@@ -96,11 +102,11 @@ namespace NekkoChat.Server.Controllers
             try
             {
                 List<GroupMessageSchemas> currentChats = new();
+
                 int chat_id = int.Parse(id);
+
                 IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
                 chat = chat.Where((u) => u.group_id == chat_id);
-
-                if (!chat.Any()) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
                 foreach (var c in chat)
                 {
@@ -139,10 +145,55 @@ namespace NekkoChat.Server.Controllers
             try
             {
                 Groups group = await _context.groups.FindAsync(group_id);
+                List<string> participantsIds = new();
+                List<ParticipantsSchema> participants = new();
 
                 if (group is null) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
-                return Ok(new ResponseDTO<Groups> { SingleUser = group });
+                IQueryable<Groups_Members> participantsList = _context.groups_members.Where((gm) => gm.group_id == group_id);
+                if (participantsList.Any())
+                {
+                    foreach (var p in participantsList)
+                    {
+                        if (p is not null && !string.IsNullOrEmpty(p.user_id))
+                        {
+                            participantsIds.Add(p.user_id);
+                        }
+                    }
+                }
+
+                if (participantsIds.Count() > 0)
+                {
+                    foreach (var p in participantsIds)
+                    {
+                        using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                        {
+                            AspNetUsers user = await ctx.AspNetUsers.FindAsync(p)!;
+                            if (user is not null)
+                            {
+                                ParticipantsSchema userView = new ParticipantsSchema
+                                {
+                                    id = user.Id,
+                                    name = $"{user.Fname} {user.Lname}",
+                                    connectionid = !string.IsNullOrEmpty(user.ConnectionId) ? user.ConnectionId : "",
+                                    profilePic = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? user.ProfilePhotoUrl : "/src/assets/avatar.png"
+                                };
+                                participants.Add(userView);
+                            }
+                        }
+                    }
+                }
+
+                GroupDTO groupView = new GroupDTO
+                {
+                    id = group.id,
+                    name = !string.IsNullOrEmpty(group.name) ? group.name : "",
+                    description = group.description,
+                    type = !string.IsNullOrEmpty(group.type) ? group.type : "",
+                    profilePhotoUrl = group.profilePhotoUrl
+                };
+                groupView.participants = participants.ToArray();
+                return Ok(new ResponseDTO<GroupDTO> { SingleUser = groupView });
             }
             catch (Exception ex)
             {
@@ -151,7 +202,7 @@ namespace NekkoChat.Server.Controllers
                 {
                     _logger.LogError(ex?.InnerException?.Message + " In Groups - Get Specific Group Route");
                 }
-                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
+                return StatusCode(500, new ResponseDTO<GroupDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
         }
 

@@ -5,27 +5,38 @@ import { Typography } from '@mui/material';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import { Image } from "react-bootstrap";
 import { useDispatch } from 'react-redux';
-import { logout } from '../../../Store/Slices/userSlice';
+import { logout, refreshUserData, toggleErrorModal, toggleMsjModal } from '../../../Store/Slices/userSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { faPen } from '@fortawesome/free-solid-svg-icons';
-import { useRef } from 'react';
+import UserAuthServices from '../../../Utils/UserAuthServices';
 
 export default function ProfileManager() {
 
     const user: iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useDispatch();
 
-    const filePickerRef = useRef<any>();
-
-    const handlPickerButton = () => {
-        filePickerRef.current.click();
-    }
-
     const handleClickButton = () => {
         dispatch(logout());
     }
-    
+
+    const changeProfilePicture = async () => {
+       
+        const form: HTMLFormElement = document.querySelector("#nekkoform")!;
+
+        const formData = new FormData(form);
+     
+        console.log(formData)
+
+        const res = await UserAuthServices.SetProfilePicture(formData,user.value.id, user.value.userName);
+        if (res.success) {
+            dispatch(refreshUserData(user.value.id));
+            dispatch(toggleMsjModal({ status: true, message: "Profile Picture Updated." }));
+        } else {
+            dispatch(toggleErrorModal({ status: true, message: res.error }));
+        }
+    }
+
     return (
         <Container style={{ width: 400, maxWidth: '100%' }}>
             <Modal.Dialog>
@@ -38,18 +49,17 @@ export default function ProfileManager() {
                         <Row>
                             <Col xs={12}>
                                 <Image src={user.value.profilePhotoUrl} roundedCircle fluid width={100} className="p-2" />
-                                <input ref={filePickerRef} type="file" style={{ display: "none" }} id="nekkoFilePicker" />
-
-                                <FontAwesomeIcon id="nekkoFileButton" style={{ cursor: "pointer" }} onClick={handlPickerButton} icon={faPen} />
+                                <form onSubmit={(e) => { e.preventDefault(); changeProfilePicture() }} id="nekkoform" encType="multipart/form-data">
+                                    <input name="file" type="file" />
+                                    <Button type="submit">{<FontAwesomeIcon id="nekkoFileButton" style={{ cursor: "pointer" }}  icon={faPen} />}</Button>
+                                </form>
                             </Col>
                             <Col>
                                 <Typography variant="h6">First Name: {FirstLetterUpperCase(user.value.fname || "Unknown")}</Typography>
                                 <Typography variant="h6">Last Name: {FirstLetterUpperCase(user.value.lname || "Unknown")}</Typography>
                             </Col>
                         </Row>
-                        <Row>
-
-                        </Row>
+                       
                         <Row>
                             <Typography variant="h6">About</Typography>
                             <Typography variant="body2">{user.value.about || "Hi, Let's get to know eachother."}</Typography>

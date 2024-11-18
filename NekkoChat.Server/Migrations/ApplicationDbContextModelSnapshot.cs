@@ -188,6 +188,9 @@ namespace NekkoChat.Server.Migrations
                     b.Property<string>("FullName")
                         .HasColumnType("text");
 
+                    b.Property<int?>("Groupsid")
+                        .HasColumnType("integer");
+
                     b.Property<string>("LastOnline")
                         .HasColumnType("text");
 
@@ -234,6 +237,8 @@ namespace NekkoChat.Server.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Groupsid");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -338,7 +343,6 @@ namespace NekkoChat.Server.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("user_id")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
@@ -515,6 +519,18 @@ namespace NekkoChat.Server.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("NekkoChat.Server.Models.AspNetUsers", b =>
+                {
+                    b.HasOne("NekkoChat.Server.Models.Groups", null)
+                        .WithMany("participants")
+                        .HasForeignKey("Groupsid");
+                });
+
+            modelBuilder.Entity("NekkoChat.Server.Models.Groups", b =>
+                {
+                    b.Navigation("participants");
                 });
 #pragma warning restore 612, 618
         }

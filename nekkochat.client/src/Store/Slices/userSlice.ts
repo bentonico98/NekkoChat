@@ -1,6 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../userStore";
+import UserAuthServices from "../../Utils/UserAuthServices";
 
 export interface UserState {
     value: object,
@@ -39,6 +40,16 @@ export const userSlice = createSlice({
         getUserData: (state) => {
             const user = JSON.parse(localStorage.getItem("user") || '{}');
             state.value = user;
+        },
+        refreshUserData:  (state, action: PayloadAction<string>) => {
+            if (action.payload) {
+                UserAuthServices.RefreshUserById(action.payload).then((res) => {
+                    if (res.success) {
+                        localStorage.setItem("user", JSON.stringify(res.singleUser));
+                        state.value = res.singleUser;
+                    }
+                })
+            }
         },
         login: (state, action: PayloadAction<{ success: boolean, user: object }>) => {
             if (action.payload.success) {
@@ -116,6 +127,7 @@ export const userSlice = createSlice({
 
 export const {
     getUserData,
+    refreshUserData,
     login,
     logout,
     openModal,

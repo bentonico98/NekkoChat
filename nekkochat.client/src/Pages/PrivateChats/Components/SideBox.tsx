@@ -2,7 +2,6 @@ import { Sidebar,  ConversationList, Conversation, Avatar } from '@chatscope/cha
 import ProfileHeader from "../../Shared/ProfileHeader";
 import { iConversationClusterProps, iSideBoxProps } from "../../../Constants/Types/CommonTypes";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
-import avatar from "../../../assets/avatar.png";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import { ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
 import { Archive, Delete, Favorite } from '@mui/icons-material';
@@ -17,7 +16,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
 
-    const { getParticipantName } = useGetParticipants(user);
+    const { getParticipantName, getPic } = useGetParticipants(user);
 
     const [chat_id, setChat_id] = useState<number>();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -63,7 +62,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                             });
                         }}>
                         <Avatar
-                            src={avatar}
+                            src={getPic(el.participants)}
                             name={el.participants[el.participants.length - 1].name}
                             status={GetUserStatusService(parseInt(el!.status || "0"))} />
                     </Conversation>);

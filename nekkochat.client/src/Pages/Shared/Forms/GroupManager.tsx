@@ -22,6 +22,7 @@ import GetNotificationName from '../../../Utils/GetNotificationName ';
 import PrivateChatsServerServices from '../../../Utils/PrivateChatsServerServices';
 interface iGroupRequestTypesv2 {
     sender_id?: string,
+    user_id?: string,
     group_id?: number,
     groupname?: string,
     grouptype?: string,
@@ -63,6 +64,7 @@ export default function GroupManager() {
 
     const [groupInfo, setGroupInfo] = useState<iGroupRequestTypesv2>({
         sender_id: user.value.id,
+        user_id: user.value.id,
         participants: [],
         groupname: "",
         groupdesc: "",
@@ -192,7 +194,8 @@ export default function GroupManager() {
                 {
                     id,
                     name,
-                    connectionid: "0000000000000"
+                    connectionid: "0000000000000",
+                    profilePic: '/src/assets/avatar.png'
                 }]
             });
             setDisplayInfo({ isLoading: false });

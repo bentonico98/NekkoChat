@@ -1,4 +1,4 @@
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, Button, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 
 import avatar from "../../../assets/avatar.png";
 
@@ -7,12 +7,13 @@ import GroupChatsServerServices from "../../../Utils/GroupChatsServerServices";
 
 import { useNavigate } from 'react-router-dom';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMaximize } from "@fortawesome/free-solid-svg-icons";
-import { iChatSchema, iGroupChatMessagesProps } from '../../../Constants/Types/CommonTypes';
+import { iChatSchema, iGroupChatMessagesProps, iuserStore } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import { Container } from '@mui/material';
 import useGetGroup from '../../../Hooks/Group/useGetGroup';
+import { UserState } from '../../../Store/Slices/userSlice';
+import { useAppSelector } from '../../../Hooks/storeHooks';
+import useGetParticipants from '../../../Hooks/useGetParticipants';
 
 
 export default function ChatMessages({
@@ -20,9 +21,12 @@ export default function ChatMessages({
     connected,
     sender,
     receiver,
+    participants,
     isTyping,
     DisplayMessage
 }: iGroupChatMessagesProps) {
+
+    const user: UserState | iuserStore | any = useAppSelector((state)=> state.user)
 
     const {
         groupName,
@@ -30,6 +34,8 @@ export default function ChatMessages({
         groupDesc,
         groupPhoto,
         startDate } = useGetGroup(sender, messages, receiver, DisplayMessage);
+
+    const { getGroupPic } = useGetParticipants(user.value.id);
 
     const navigate = useNavigate();
 
@@ -39,26 +45,22 @@ export default function ChatMessages({
                 <ChatContainer style={{ minHeight: "100vh" }}>
 
                     {/*Chat Header*/}
-
                     <ConversationHeader>
-                        <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
                             src={groupPhoto || avatar}
-                            name={FirstLetterUpperCase(groupName)} />
+                            name={FirstLetterUpperCase(groupName)}
+                            onClick={() => { navigate("/group/" + receiver); }} />
                         <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
                             <VoiceCallButton />
                             <VideoCallButton />
-                            <Button
-                                icon={<FontAwesomeIcon icon={faMaximize} />}
-                                onClick={() => { navigate("/groupchats/chat/" + receiver); }} />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>
 
                     {/*Chat Component*/}
 
-                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && isTyping.group_id === receiver.toString() && <TypingIndicator content={`${isTyping.username} is typing`} />}>
+                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && isTyping.group_id == receiver.toString() && <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
                         {messages.map((el: iChatSchema, idx: number) => {
                             return (
@@ -69,7 +71,7 @@ export default function ChatMessages({
                                     direction: `${el.user_id === sender ? "outgoing" : "incoming"}`,
                                     position: "single"
                                 }}>
-                                    <Avatar src={avatar} name={el.username} />
+                                    <Avatar src={getGroupPic(participants, el.user_id)} name={el.username} />
                                     <Message.Header sender={el.username} />
                                     <Message.Footer sentTime={el.created_at} />
                                 </Message>
@@ -80,7 +82,7 @@ export default function ChatMessages({
                     {/*Box to Send Message*/}
 
                     <MessageInput
-                        className="textBoxInput"
+                        className="textBoxInput text-right"
                         placeholder="Type message here"
                         disabled={!connected}
                         sendOnReturnDisabled={!connected}
@@ -93,15 +95,23 @@ export default function ChatMessages({
                             }
                         }}
                         onSend={async (e) => {
-                            await MessageServicesClient.sendMessageToGroup({
+                            const res = await MessageServicesClient.sendMessageToGroup({
                                 group_id: receiver,
                                 sender_id: sender,
+                                user_id: sender,
                                 groupname: groupName,
                                 grouptype: groupType,
                                 groupdesc: groupDesc,
                                 groupphoto: groupPhoto,
-                                value: e
-                            })
+                                value: e,
+                                participants: [{ id: "0", name: "None", connectionid: "00000000", profilePic:"/src/assets/avatar.png" }]
+                            });
+                            if (!res.success) {
+                                DisplayMessage({
+                                    hasError: true,
+                                    error: "Unable To Send Message."
+                                });
+                            }
                         }} />
                 </ChatContainer>
                 : <Container style={{ minHeight: "100vh" }}>

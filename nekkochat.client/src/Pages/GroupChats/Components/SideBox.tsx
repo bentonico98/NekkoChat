@@ -26,7 +26,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                 {messages.map((el: iConversationClusterProps, idx: number) => {
                     return (<Conversation
                         key={idx}
-                        name={FirstLetterUpperCase(el.messages[0].groupname || el.groupname || "Unknown")}
+                        name={FirstLetterUpperCase(el.groupname || "Unknown")}
                         lastSenderName={el.messages[el.messages.length - 1].username}
                         info={el.messages[el.messages.length - 1].content}
                         unreadCnt={getUnreadMessages(el.messages)}
@@ -35,7 +35,13 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                             await MessageServicesClient.sendReadMessageGroup({
                                 group_id: parseInt(el._id),
                                 sender_id: user,
-                                groupname: el.groupname
+                                user_id:user,
+                                groupname: el.groupname,
+                                groupdesc: "No Desc",
+                                groupphoto: "No Photo",
+                                grouptype: "No Type",
+                                participants: el.participants,
+                                value: "No Message"
                             });
                         }}>
                         <Avatar

@@ -5,7 +5,8 @@ import GetUserStatusService from "../Utils/GetUserStatusService";
 import { iChatSchema, iDisplayMessageTypes, iparticipants } from "../Constants/Types/CommonTypes";
 
 export default function useGetReceiver(user: string, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
-    
+
+
     const fetchUser = async (id: string) => {
         DisplayMessage({ isLoading: true });
 
@@ -82,5 +83,5 @@ export default function useGetReceiver(user: string, DisplayMessage: (obj: iDisp
         return messages.filter((i: iChatSchema) => i.user_id !== user);
     }
 
-    return { getLastOnline, getUserStatus: fetchUser, getParticipantStatus: fetchUserByParticipantId, getReceiverName, getUnreadMessages, getChatStartDate };
+    return { getLastOnline, getUserStatus: fetchUser, getParticipantStatus: fetchUserByParticipantId, getReceiverName,  getUnreadMessages, getChatStartDate };
 }

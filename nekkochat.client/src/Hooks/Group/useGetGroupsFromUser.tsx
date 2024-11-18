@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { iChatSchema, iDisplayMessageTypes } from "../../Constants/Types/CommonTypes";
+import { iChatSchema, iConversationClusterProps, iDisplayMessageTypes } from "../../Constants/Types/CommonTypes";
 
 export default function useGetChatFromUser(DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [messages, setMessages] = useState<iChatSchema[]>([]);
     const [chatID, setChatID] = useState<number>(0);
-    const [currentConvo, setcurrentConvo] = useState<iChatSchema[]>([]);
+    const [currentConvo, setcurrentConvo] = useState<iConversationClusterProps[]>([]);
 
     const setCurrentConversation = useCallback((group_id: number) => {
         DisplayMessage({ isLoading: true });

@@ -10,6 +10,9 @@ import { Col, Row } from 'react-bootstrap';
 import { iRegisterTypes } from '../../Constants/Types/CommonTypes';
 import ErrorBanner from '../Shared/ErrorBanner';
 import { useFormik } from 'formik';
+
+import nekkoAlt from "../../assets/nekkoAlt.png";
+
 export default function Register() {
 
     const dispatch = useAppDispatch();
@@ -158,8 +161,19 @@ export default function Register() {
     return (
         <Container fixed>
             <Stack spacing={5} direction="column" >
-                <Typography variant="h3" component="h3" className="mt-5">Create An Account</Typography>
+                <Box className="mt-5">
+                    <img
+                        alt=""
+                        src={nekkoAlt}
+                        width="100"
+                        height="100"
+                        className="d-inline-block align-top"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => { navigate('/'); }}
+                    />{' '}
+                </Box>
                 <Divider />
+                <Typography variant="body1" component="h3" className="mt-5">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
                 <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
                     <Row>
                         <Col>
@@ -169,7 +183,7 @@ export default function Register() {
                                     <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
                                         <OutlinedInput
                                             name="fname"
-                                            id="outlined-adornment-weight"
+                                            id="outlined-adornment-weight1"
                                             aria-describedby="outlined-weight-helper-text"
                                             inputProps={{
                                                 'aria-label': 'weight',
@@ -188,7 +202,7 @@ export default function Register() {
                                     <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
                                         <OutlinedInput
                                             name="lname"
-                                            id="outlined-adornment-weight"
+                                            id="outlined-adornment-weight2"
                                             aria-describedby="outlined-weight-helper-text"
                                             inputProps={{
                                                 'aria-label': 'weight',
@@ -209,7 +223,7 @@ export default function Register() {
                                     <OutlinedInput
                                         name="email"
                                         type="email"
-                                        id="outlined-adornment-weight"
+                                        id="outlined-adornment-weight3"
                                         aria-describedby="outlined-weight-helper-text"
                                         inputProps={{
                                             'aria-label': 'weight',
@@ -232,7 +246,7 @@ export default function Register() {
                                         <OutlinedInput
                                             name="password"
                                             type="password"
-                                            id="outlined-adornment-weight"
+                                            id="outlined-adornment-weight4"
                                             aria-describedby="outlined-weight-helper-text"
                                             inputProps={{
                                                 'aria-label': 'weight',
@@ -252,7 +266,7 @@ export default function Register() {
                                         <OutlinedInput
                                             name="confirmPassword"
                                             type="password"
-                                            id="outlined-adornment-weight"
+                                            id="outlined-adornment-weight5"
                                             aria-describedby="outlined-weight-helper-text"
                                             inputProps={{
                                                 'aria-label': 'weight',
@@ -276,7 +290,7 @@ export default function Register() {
                                     <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                         <OutlinedInput
                                             name="phoneNumber"
-                                            id="outlined-adornment-weight"
+                                            id="outlined-adornment-weight6"
                                             aria-describedby="outlined-weight-helper-text"
                                             inputProps={{
                                                 'aria-label': 'weight',
@@ -297,7 +311,7 @@ export default function Register() {
                                     <OutlinedInput
                                         name="profilePhotoUrl"
                                         type="file"
-                                        id="outlined-adornment-weight"
+                                        id="outlined-adornment-weight7"
                                         aria-describedby="outlined-weight-helper-text"
                                         inputProps={{
                                             'aria-label': 'weight',
@@ -317,7 +331,7 @@ export default function Register() {
                                     <OutlinedInput
                                         name="about"
                                         type="textarea"
-                                        id="outlined-adornment-weight"
+                                        id="outlined-adornment-weight8"
                                         aria-describedby="outlined-weight-helper-text"
                                         inputProps={{
                                             'aria-label': 'weight',

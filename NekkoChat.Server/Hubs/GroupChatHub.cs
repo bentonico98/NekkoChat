@@ -28,6 +28,7 @@ namespace NekkoChat.Server.Hubs
 
             List<string> connectionIds = new();
 
+            if (group is null || string.IsNullOrEmpty(group.name)) return Task.FromResult(TypedResults.Unauthorized);
 
             foreach (var member in filteredMembers)
             {
@@ -37,11 +38,12 @@ namespace NekkoChat.Server.Hubs
                     if (payload is not null && !string.IsNullOrEmpty(payload.ConnectionId))
                     {
                         connectionIds.Add(payload.ConnectionId);
+                        await Groups.AddToGroupAsync(payload.ConnectionId, group.name);
                     }
                 }
             }
 
-            return Clients.Clients(connectionIds).SendAsync("ReceiveTypingSignal", sender?.Id, $"{sender?.Fname} {sender?.Lname}", groupID);
+            return Clients.Group(group.name).SendAsync("ReceiveTypingSignal", sender?.Id, $"{sender?.Fname} {sender?.Lname}", groupID, group.name);
         }
         public async Task<Task> SendMessage(string sender_id, string group_id, string msj)
         {
@@ -62,6 +64,8 @@ namespace NekkoChat.Server.Hubs
 
             List<string> connectionIds = new();
 
+            if (group is null || string.IsNullOrEmpty(group.name)) return Task.FromResult(TypedResults.Unauthorized);
+
             foreach (var member in filteredMembers)
             {
                 using (var context = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
@@ -70,13 +74,12 @@ namespace NekkoChat.Server.Hubs
                     if(payload is not null && !string.IsNullOrEmpty(payload.ConnectionId))
                     {
                         connectionIds.Add(payload.ConnectionId);
+                        await Groups.AddToGroupAsync(payload.ConnectionId, group.name);
                     }
                 };
             }
 
-            if (connectionIds.Count() <= 0) return Task.FromResult(TypedResults.Unauthorized);
-
-            return Clients.Clients(connectionIds).SendAsync("ReceiveSpecificMessage", sender_id, msj, $"{sender?.Fname} {sender?.Lname}", groupID);
+            return Clients.Group(group.name).SendAsync("ReceiveSpecificMessage", sender_id, msj, $"{sender?.Fname} {sender?.Lname}", groupID, group.name);
         }
         public async Task<Task> SendNotificationToUser(NotificationRequest data)
         {
@@ -84,7 +87,7 @@ namespace NekkoChat.Server.Hubs
 
             if (!string.IsNullOrEmpty(data.user_id)) return Task.FromResult(TypedResults.Unauthorized);
 
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.user_id);
+            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.user_id)!;
 
             if (receiver is not null && !string.IsNullOrEmpty(receiver.ConnectionId))
             {

@@ -63,6 +63,7 @@ export interface iServerRequestTypes {
 }
 export interface iGroupRequestTypes {
     sender_id?: string,
+    user_id?: string,
     group_id?: number,
     groupname?: string,
     grouptype?: string,
@@ -74,12 +75,23 @@ export interface iGroupRequestTypes {
 export interface iparticipants {
     id: string,
     name: string,
-    connectionid: string
+    connectionid: string,
+    profilePic:string
 }
 
 export interface iuserStore {
     value: iUserViewModel,
-    modalOpened: boolean
+    modalOpened: boolean,
+    errorModalOpened: boolean,
+    msjModalOpened: boolean,
+    notificationModal: boolean,
+    notificationCount: string,
+    profileModal: boolean,
+    settingModal: boolean,
+    error: string | null | undefined
+    message: string | null | undefined
+    notification: string | null | undefined,
+    isLoading: boolean | undefined,
 }
 
 export interface iUserViewModel {
@@ -97,6 +109,12 @@ export interface iUserViewModel {
     canSendRequest?: boolean,
     alreadyRequest?:boolean
 }
+export interface IUserEditTypes {
+    user_id: string,
+    fname: string,
+    lname: string,
+    about?: string,
+}
 
 export interface iResponseViewModel {
     success?: boolean | null;
@@ -112,7 +130,8 @@ export interface iChatSchema {
     user_id?: string,
     created_at?: string,
     read?: boolean,
-    groupname?: string,
+    groupname?: string | undefined,
+    group_id?:number | undefined
 }
 export interface iConversationClusterProps {
     _id: string,
@@ -132,7 +151,8 @@ export interface iTypingComponentProps {
     typing: boolean,
     user_id: string,
     username?: string,
-    group_id?:string
+    group_id?: string,
+    groupname?:string
 }
 export interface iChatMessagesProps {
     messages: iChatSchema[],

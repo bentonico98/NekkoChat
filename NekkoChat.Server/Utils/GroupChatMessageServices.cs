@@ -10,6 +10,7 @@ using System;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNet.Identity;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
@@ -49,7 +50,7 @@ namespace NekkoChat.Server.Utils
                     }
                     data.group_id = chatId;
 
-                    ResponseDTO<string> payload = parseMessage(data);
+                    ResponseDTO<string> payload = await parseMessage(data);
 
                     if (!payload.Success || payload.SingleUser is null) return false;
 
@@ -67,12 +68,11 @@ namespace NekkoChat.Server.Utils
                     return true;
                 }
 
-                ResponseDTO<string> payload2 = parseMessage(data);
+                ResponseDTO<string> payload2 = await parseMessage(data);
 
                 if (!payload2.Success || payload2.SingleUser is null) return false;
 
                 conversation = payload2.SingleUser;
-
 
                 ResponseDTO<Groups_Messages> fetchUserResponseAlt = fetchUsersMessages(data.group_id);
 
@@ -226,7 +226,6 @@ namespace NekkoChat.Server.Utils
                 if (parseConvo.participants is null || data is null || string.IsNullOrEmpty(data.groupname)) return false;
 
                 string payload = JBProcessor.GroupChatProcessed(group_id, data.groupname, messages.ToArray(), parseConvo.participants);
-                //string payload = "{" + $"\"_id\":\"{group_id}\",\"messages\":{JsonSerializer.Serialize(messages)},\"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(parseConvo.participants)}" + "}";
 
                 filteredConvo.content = payload;
                 _context.groups_messages.UpdateRange(filteredConvo);
@@ -336,6 +335,7 @@ namespace NekkoChat.Server.Utils
             if (group_id <= 0 || string.IsNullOrEmpty(data.user_id))
             {
                 _logger.LogError("Group Id Or User Id Not Exist -- Group Chat Message Services");
+                return false;
             }
 
             if (string.IsNullOrEmpty(data.user_id)) return false;
@@ -374,14 +374,22 @@ namespace NekkoChat.Server.Utils
                 var messages = parsedMessage.messages.ToImmutableArray();
                 var allParticipants = parsedMessage.participants.ToImmutableArray();
 
+                if (participants is null ||
+                    string.IsNullOrEmpty(participants.Id) ||
+                    string.IsNullOrEmpty(participants.UserName) ||
+                    string.IsNullOrEmpty(participants.ConnectionId)) return false;
+
                 var newParticipants = allParticipants.Add(new ParticipantsSchema
                 {
                     id = participants.Id,
                     name = participants.UserName,
-                    connectionid = participants.ConnectionId
+                    connectionid = participants.ConnectionId,
+                    profilePic = !string.IsNullOrEmpty(participants.ProfilePhotoUrl) ? participants.ProfilePhotoUrl : "/src/assets/avatar.png"
                 });
 
-                string payload = JBProcessor.GroupChatProcessed(group_id, data.groupname, messages.ToArray(), newParticipants.ToArray());
+                ParticipantsSchema[] participantPayload = await refreshParticipants(newParticipants.ToArray());
+
+                string payload = JBProcessor.GroupChatProcessed(group_id, data.groupname, messages.ToArray(), participantPayload);
 
                 group.content = payload;
                 _context.groups_messages.UpdateRange(group);
@@ -392,6 +400,31 @@ namespace NekkoChat.Server.Utils
                     user_id = data.user_id
                 };
 
+                /*if (newParticipants.Count() > 0)
+                {
+                    Groups groupPayload = await _context.groups.FindAsync(group_id)!;
+                    using (var db = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                    {
+                        List<AspNetUsers> AllUserPayload = new();
+
+                        foreach (var p in newParticipants)
+                        {
+                            if (groupPayload is not null)
+                            {
+                                if (p is not null && !string.IsNullOrEmpty(p.id))
+                                {
+                                    AspNetUsers userPayload = await db.AspNetUsers.FindAsync(p.id)!;
+                                    if (userPayload is not null)
+                                    {
+                                        AllUserPayload.Add(userPayload);
+                                    }
+                                }
+                            }
+                        }
+                        groupPayload!.AllUsers = AllUserPayload.ToArray();
+                        await db.SaveChangesAsync();
+                    }
+                }*/
                 await _context.groups_members.AddAsync(newMember);
                 await _context.SaveChangesAsync();
             }
@@ -400,7 +433,6 @@ namespace NekkoChat.Server.Utils
 
 
         /// /////////////// FUNCIONES PRIVADAS -- DEBAJO DE ESTA LINEA
-
 
         private bool belongToUser(IEnumerable<GroupChatSchemas> messages, ChatRequest data)
         {
@@ -419,12 +451,14 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- ID del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje enviado por el usuario
         /// <returns>string -- El objeto JSON convertido en STRING</returns>
-        private ResponseDTO<string> parseMessage(GroupRequest data)
+        private async Task<ResponseDTO<string>> parseMessage(GroupRequest data)
         {
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 IQueryable<Groups_Messages> currentChat = from c in _context.groups_messages select c;
-                currentChat = currentChat.Where(c => c.id == data.group_id);
+                currentChat = currentChat.Where(c => c.group_id == data.group_id);
+
+                if (!currentChat.Any()) return new ResponseDTO<string> { Success = false };
                 var chat = currentChat!.FirstOrDefault()!.content;
 
                 if (string.IsNullOrEmpty(chat)) return new ResponseDTO<string> { Success = false };
@@ -445,21 +479,27 @@ namespace NekkoChat.Server.Utils
                     payloadId = data.user_id;
                 }
 
-                AspNetUsers user = _context?.AspNetUsers?.Find(payloadId);
+                if (payloadId.Equals("0")) return new ResponseDTO<string> { Success = false };
+
+                AspNetUsers user = _context?.AspNetUsers?.Find(payloadId)!;
 
                 var newMessages = messages.Add(new GroupChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
-                    content = data?.value,
-                    user_id = data?.sender_id?.ToString(),
-                    username = user != null ? user!.UserName : "Unknown",
+                    content = data!.value,
+                    user_id = data!.sender_id.ToString(),
+                    username = !string.IsNullOrEmpty(user!.UserName) ? user.UserName : "Unknown",
                     created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     read = false,
-                    groupname = data?.groupname
+                    groupname = data!.groupname,
+                    group_id = data!.group_id.ToString()
                 });
 
                 if (parsedMessage.participants is null) return new ResponseDTO<string> { Success = false };
-                string payload = JBProcessor.GroupChatProcessed(data!.group_id, data.groupname, newMessages.ToArray(), parsedMessage.participants);
+
+                ParticipantsSchema[] participantPayload = await refreshParticipants(parsedMessage.participants);
+
+                string payload = JBProcessor.GroupChatProcessed(data!.group_id, data.groupname, newMessages.ToArray(), participantPayload);
 
                 return new ResponseDTO<string> { Success = true, SingleUser = payload };
             }
@@ -477,7 +517,7 @@ namespace NekkoChat.Server.Utils
                 IQueryable<Groups_Messages> filteredUserMessages = from um in _context.groups_messages select um;
                 filteredUserMessages = filteredUserMessages.Where(um => um.group_id == chat_id);
 
-                if (filteredUserMessages.Any()) return new ResponseDTO<Groups_Messages> { Success = false };
+                if (!filteredUserMessages.Any()) return new ResponseDTO<Groups_Messages> { Success = false };
 
                 return new ResponseDTO<Groups_Messages> { Success = true, SingleUser = filteredUserMessages.FirstOrDefault() };
             }
@@ -522,31 +562,34 @@ namespace NekkoChat.Server.Utils
             {
                 AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
 
-                if (sender == null || chat_id <= 0) return false;
+                if (sender is null || chat_id <= 0) return false;
 
                 GroupChatSchemas[] newMessages = [new GroupChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
                     content = data.value,
                     user_id = data.sender_id.ToString(),
-                    username = sender!.UserName,
+                    username = !string.IsNullOrEmpty(sender.UserName) ? sender.UserName : "Unknown",
                     created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     read = false,
-                    groupname = data.groupname
+                    groupname = data.groupname,
+                    group_id = data!.group_id.ToString()
+
                 }];
 
                 ParticipantsSchema[] newParticipants = [new ParticipantsSchema
                 {
                     id = sender.Id,
-                    name= sender.UserName,
-                    connectionid= sender.ConnectionId
+                    name= !string.IsNullOrEmpty(sender.UserName)? sender.UserName : "Unknown",
+                    connectionid= !string.IsNullOrEmpty(sender.ConnectionId)? sender.ConnectionId : "Unknown",
+                    profilePic = !string.IsNullOrEmpty(sender.ProfilePhotoUrl) ? sender.ProfilePhotoUrl : "/src/assets/avatar.png"
+
                 }];
 
                 Groups_Messages userMsj = new Groups_Messages
                 {
                     group_id = chat_id,
                     content = JBProcessor.GroupChatProcessed(chat_id, data.groupname, newMessages, newParticipants)
-                    //content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"groupname\":\"{data.groupname}\", \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
                 };
 
                 await _context.groups_messages.AddAsync(userMsj);
@@ -561,6 +604,33 @@ namespace NekkoChat.Server.Utils
 
                 return true;
             }
+        }
+
+        private async Task<ParticipantsSchema[]> refreshParticipants(ParticipantsSchema[] participants)
+        {
+            List<ParticipantsSchema> payload = new();
+
+            foreach (var participant in participants)
+            {
+                if (participant is not null)
+                {
+                    using (var db = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                    {
+                        AspNetUsers user = await db.AspNetUsers.FindAsync(participant.id)!;
+                        if (user is not null)
+                        {
+                            payload.Add(new ParticipantsSchema
+                            {
+                                id = user.Id,
+                                name = user.UserName!,
+                                connectionid = user.ConnectionId!,
+                                profilePic = user.ProfilePhotoUrl!
+                            });
+                        }
+                    }
+                }
+            }
+            return payload.ToArray();
         }
         private async Task<bool> createMembership(int group_id, string user_id = "0")
         {

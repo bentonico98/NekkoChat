@@ -10,7 +10,7 @@ type incomingProps = {
 export default function GroupButton({ item, idx, func }: incomingProps) {
    
     return (
-        <Container key={idx}>
+        <Container key={idx} className="my-2">
             <Row >
                 <input
                     type="checkbox"

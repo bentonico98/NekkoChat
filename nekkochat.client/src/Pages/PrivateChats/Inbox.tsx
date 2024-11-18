@@ -1,4 +1,3 @@
-import "./Inbox.css";
 import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
 import { useState, useEffect } from "react";

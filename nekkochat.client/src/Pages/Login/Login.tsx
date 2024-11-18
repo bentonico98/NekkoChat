@@ -12,6 +12,8 @@ import { FormGroup, Row } from 'react-bootstrap';
 import { iLoginTypes } from '../../Constants/Types/CommonTypes';
 import ErrorBanner from '../Shared/ErrorBanner';
 
+import nekkoAlt from "../../assets/nekkoAlt.png";
+
 export default function Login() {
 
     const dispatch = useAppDispatch();
@@ -123,8 +125,20 @@ export default function Login() {
     return (
         <Container maxWidth="sm">
             <Stack spacing={5} direction="column" >
-                <Typography variant="h3" component="h3" className="mt-5">Login</Typography>
+                <Box className="mt-5">
+                    <img
+                        alt=""
+                        src={nekkoAlt}
+                        width="100"
+                        height="100"
+                        className="d-inline-block align-top"
+                        style={{cursor:'pointer'} }
+                        onClick={() => { navigate('/'); } }
+                    />{' '}
+                </Box>
                 <Divider />
+                <Typography variant="body1" component="h3" className="mt-5">Login to your account. Miaw!</Typography>
+
                 <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
                     <Stack>
                         <Box sx={{ width: 500, maxWidth: '100%' }}>
@@ -133,7 +147,7 @@ export default function Login() {
                                 <OutlinedInput
                                     name="email"
                                     type="email"
-                                    id="outlined-adornment-weight"
+                                    id="outlined-adornment-weight1"
                                     aria-describedby="outlined-weight-helper-text"
                                     inputProps={{
                                         'aria-label': 'weight',
@@ -153,7 +167,7 @@ export default function Login() {
                                 <OutlinedInput
                                     name="password"
                                     type="password"
-                                    id="outlined-adornment-weight"
+                                    id="outlined-adornment-weight2"
                                     aria-describedby="outlined-weight-helper-text"
                                     inputProps={{
                                         'aria-label': 'weight',

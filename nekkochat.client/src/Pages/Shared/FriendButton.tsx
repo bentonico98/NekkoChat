@@ -251,16 +251,16 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
     }
 
     return (
-        <Stack key={idx} direction="row" className={`mx-2 border border-2 rounded pt-3 ${!item!.isFriend && "bg-secondary"}`}>
-            <Box sx={{ width: 200, maxWidth: '100%' }} className="mx-2">
+        <Stack key={idx} direction="row" spacing={ 3} sx={{ display: "flex", justifyContent: "space-around", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
+            <Box>
                 <Image src={avatar} roundedCircle fluid width={50} />
             </Box>
 
-            <Box sx={{ width: 500, maxWidth: '100%' }}>
+            <Box>
                 <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
             </Box>
 
-            <Box sx={{ width: 500, maxWidth: '100%' }}>
+            <Box>
                 <Box>
                     {!item!.isFriend ?
                         <Stack direction="row" spacing={1}>

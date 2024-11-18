@@ -9,6 +9,7 @@ using System;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNet.Identity;
 namespace NekkoChat.Server.Utils
 {
     //Servicios que se encargaran del envio de los mensajes
@@ -37,7 +38,7 @@ namespace NekkoChat.Server.Utils
                     return false;
                 }
                 chat_id = chatId;
-                ResponseDTO<string> parseMessageResponse = parseMessage(chat_id, data);
+                ResponseDTO<string> parseMessageResponse = await parseMessage(chat_id, data);
 
                 if (!parseMessageResponse.Success || parseMessageResponse.SingleUser is null) return false;
                 conversation = parseMessageResponse.SingleUser;
@@ -54,7 +55,7 @@ namespace NekkoChat.Server.Utils
                 }
                 return true;
             }
-            ResponseDTO<string> parseMessageResponseAlt = parseMessage(chat_id, data);
+            ResponseDTO<string> parseMessageResponseAlt = await parseMessage(chat_id, data);
             if (!parseMessageResponseAlt.Success || parseMessageResponseAlt.SingleUser is null) return false;
 
             conversation = parseMessageResponseAlt.SingleUser;
@@ -171,6 +172,7 @@ namespace NekkoChat.Server.Utils
                         }
                     }
                 }
+
                 string payload = JBProcessor.PrivateChatProcessed(chat_id, messages.ToArray(), parseConvo.participants);
 
                 filteredConvo.content = payload;
@@ -227,7 +229,7 @@ namespace NekkoChat.Server.Utils
 
             return true;
         }
-        public bool deleteMessage(int chat_id, ChatRequest data)
+        public async Task<bool> deleteMessage(int chat_id, ChatRequest data)
         {
             if (chat_id <= 0)
             {
@@ -268,7 +270,10 @@ namespace NekkoChat.Server.Utils
                         newConvoAfterDeletion.Add(message);
                     }
                 }
-                string payload = JBProcessor.PrivateChatProcessed(chat_id, newConvoAfterDeletion.ToArray(), parseConvo.participants);
+
+                ParticipantsSchema[] participantPayload = await refreshParticipants(parseConvo.participants);
+
+                string payload = JBProcessor.PrivateChatProcessed(chat_id, newConvoAfterDeletion.ToArray(), participantPayload);
 
                 filteredConvo.content = payload;
 
@@ -306,17 +311,19 @@ namespace NekkoChat.Server.Utils
         /// <param name="sender_id"></param> -- ID del que envia el mensaje
         /// <param name="msj"></param> -- Mensaje enviado por el usuario
         /// <returns>string -- El objeto JSON convertido en STRING</returns>
-        private ResponseDTO<string> parseMessage(int chat_id, ChatRequest data)
+        private async Task<ResponseDTO<string>> parseMessage(int chat_id, ChatRequest data)
         {
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                if(chat_id <= 0 || string.IsNullOrEmpty(data.sender_id)) return new ResponseDTO<string> { Success = false };
-                
+                if (chat_id <= 0 || string.IsNullOrEmpty(data.sender_id)) return new ResponseDTO<string> { Success = false };
+
                 IQueryable<Users_Messages> currentChat = from c in _context.users_messages select c;
                 currentChat = currentChat.Where(c => c.chat_id == chat_id);
+
+                if (!currentChat.Any()) return new ResponseDTO<string> { Success = false };
                 var chat = currentChat!.FirstOrDefault()!.content;
 
-                if (string.IsNullOrEmpty(chat)) return new ResponseDTO<string> { Success = false};
+                if (string.IsNullOrEmpty(chat)) return new ResponseDTO<string> { Success = false };
                 MessageSchemas parsedMessage = JsonSerializer.Deserialize<MessageSchemas>(chat)!;
 
                 if (parsedMessage is null || parsedMessage.messages is null || parsedMessage.participants is null) return new ResponseDTO<string> { Success = false };
@@ -335,7 +342,9 @@ namespace NekkoChat.Server.Utils
                     read = false
                 });
 
-                string payload = JBProcessor.PrivateChatProcessed(chat_id, newMessages.ToArray(), parsedMessage.participants);
+                ParticipantsSchema[] participantPayload = await refreshParticipants(parsedMessage.participants);
+
+                string payload = JBProcessor.PrivateChatProcessed(chat_id, newMessages.ToArray(), participantPayload);
 
                 return new ResponseDTO<string> { Success = true, SingleUser = payload };
             }
@@ -353,7 +362,7 @@ namespace NekkoChat.Server.Utils
                 IQueryable<Users_Messages> filteredUserMessages = from um in _context.users_messages select um;
                 filteredUserMessages = filteredUserMessages.Where(um => um.chat_id == chat_id);
 
-                if(!filteredUserMessages.Any() || filteredUserMessages is null) return new ResponseDTO<Users_Messages> { Success = false };
+                if (!filteredUserMessages.Any() || filteredUserMessages is null) return new ResponseDTO<Users_Messages> { Success = false };
 
                 Users_Messages payload = filteredUserMessages.FirstOrDefault()!;
                 return new ResponseDTO<Users_Messages> { Success = true, SingleUser = payload };
@@ -430,6 +439,33 @@ namespace NekkoChat.Server.Utils
             }
             return false;
         }
+        private async Task<ParticipantsSchema[]> refreshParticipants(ParticipantsSchema[] participants)
+        {
+            List<ParticipantsSchema> payload = new();
+
+            foreach (var participant in participants)
+            {
+                if (participant is not null)
+                {
+                    using (var db = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                    {
+                        AspNetUsers user = await db.AspNetUsers.FindAsync(participant.id)!;
+                        if (user is not null)
+                        {
+                            payload.Add(new ParticipantsSchema
+                            {
+                                id = user.Id,
+                                name = user.UserName!,
+                                connectionid = user.ConnectionId!,
+                                profilePic = user.ProfilePhotoUrl!
+                            });
+                        }
+                    }
+                }
+            }
+            return payload.ToArray();
+        }
+
 
         /// <summary>
         /// Funccion que crea el user message relacionado con el chat si no existe
@@ -445,20 +481,20 @@ namespace NekkoChat.Server.Utils
                 _logger.LogError("Sender Id Or Receiver Id Or Chat Id Not Exist -- Message Services");
                 return false;
             }
-            
+
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
                 AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
                 AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.receiver_id);
 
-                if (sender == null || receiver == null || chat_id <= 0) return false;
+                if (sender is null || receiver is null || chat_id <= 0) return false;
 
                 SingleChatSchemas[] newMessages = [new SingleChatSchemas
                 {
                     id = Guid.NewGuid().ToString(),
                     content = data.value,
                     user_id = data.sender_id.ToString(),
-                    username = sender!.UserName,
+                    username = sender.UserName!,
                     created_at = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     read = false
                 }];
@@ -466,20 +502,23 @@ namespace NekkoChat.Server.Utils
                 ParticipantsSchema[] newParticipants = [new ParticipantsSchema
                 {
                     id = data.sender_id,
-                    name= sender.UserName,
-                    connectionid= sender.ConnectionId
+                    name= sender.UserName!,
+                    connectionid= sender.ConnectionId!,
+                    profilePic = !string.IsNullOrEmpty(sender.ProfilePhotoUrl) ? sender.ProfilePhotoUrl : "/src/assets/avatar.png"
+
                 }, new ParticipantsSchema
                 {
                     id = data.receiver_id,
-                    name= receiver.UserName,
-                    connectionid= receiver.ConnectionId
+                    name= receiver.UserName!,
+                    connectionid= receiver.ConnectionId!,
+                    profilePic = !string.IsNullOrEmpty(receiver.ProfilePhotoUrl) ? receiver.ProfilePhotoUrl : "/src/assets/avatar.png"
+
                 }];
 
                 Users_Messages userMsj = new Users_Messages
                 {
                     chat_id = chat_id,
                     content = JBProcessor.PrivateChatProcessed(chat_id, newMessages, newParticipants),
-                    //content = "{" + $"\"_id\":\"{chat_id}\",\"messages\":{JsonSerializer.Serialize(newMessages)}, \"participants\":{JsonSerializer.Serialize(newParticipants)}" + "}"
                 };
 
                 await _context.users_messages.AddRangeAsync(userMsj);

@@ -43,7 +43,6 @@ export default function AppLayout() {
         }
 
         const isRemember = UserAuthServices.isRemembered();
-        console.log(isRemember)
 
         if (!isRemember) {
             setTimeout(() => {

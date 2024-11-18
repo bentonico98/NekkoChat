@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Globalization;
-using Elasticsearch.Net;
-using Nest;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using NekkoChat.Server.Constants.Types;
@@ -13,6 +11,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Utils;
 using NekkoChat.Server.Constants.Interfaces;
 using System.Xml.Linq;
+using HttpMultipartParser;
+using Microsoft.AspNet.Identity;
 
 namespace NekkoChat.Server.Controllers
 {
@@ -23,12 +23,14 @@ namespace NekkoChat.Server.Controllers
         ApplicationDbContext context,
         IMapper mapper,
         IServiceProvider serviceProvider,
-        iFriendRequestService friendProvider) : ControllerBase
+        iFriendRequestService friendProvider,
+        IWebHostEnvironment env) : ControllerBase
     {
         private readonly ILogger<UserController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
         private readonly IMapper _mapper = mapper;
         private readonly iFriendRequestService _friendProvider = friendProvider;
+        private readonly IWebHostEnvironment _env = env;
 
 
         // /User/users?user_id="user_id"
@@ -38,6 +40,8 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(sender_id) || string.IsNullOrEmpty(user_id))
             {
                 _logger.LogWarning("Sender id Or User Id is null in User - Get Users Friends Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
             }
             try
             {
@@ -48,12 +52,13 @@ namespace NekkoChat.Server.Controllers
                     Friend_List friendsList = ctx.friend_list.Where((c) =>
                     c.sender_id == userView.Id && c.receiver_id == sender_id && c.isAccepted == true
                     ||
-                    c.sender_id == sender_id && c.receiver_id == userView.Id && c.isAccepted == true).FirstOrDefault();
+                    c.sender_id == sender_id && c.receiver_id == userView.Id && c.isAccepted == true).FirstOrDefault()!;
 
-                    if (friendsList is not null)
+                    if (friendsList is not null && friendsList.isAccepted is not null)
                     {
-                        userView.isFriend = (bool)friendsList!.isAccepted;
-                    }else
+                        userView.isFriend = (bool)friendsList.isAccepted;
+                    }
+                    else
                     {
                         _logger.LogWarning("Friend List is null in User - Get Users Friends Route");
                     }
@@ -79,9 +84,10 @@ namespace NekkoChat.Server.Controllers
         [HttpGet("user")]
         public async Task<IActionResult> GetUserByName([FromQuery] string name, [FromQuery] string user_id)
         {
-            if(string.IsNullOrEmpty(name) || string.IsNullOrEmpty(user_id))
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(user_id))
             {
                 _logger.LogWarning("Name Or User Id is null in User - Get User By Name Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
             }
 
             try
@@ -91,14 +97,13 @@ namespace NekkoChat.Server.Controllers
                 IQueryable<AspNetUsers> results = from c in _context.AspNetUsers select c;
                 results = results.Where((c) => c.UserName!.ToLower().Contains(name.ToLower()));
 
-                
+
                 foreach (var search in results)
                 {
                     UserDTO userView = _mapper.Map<UserDTO>(search);
 
                     bool canSend = true;
                     bool alreadySent = false;
-
 
                     using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                     {
@@ -144,9 +149,46 @@ namespace NekkoChat.Server.Controllers
             }
 
         }
+        [HttpGet("auth/user")]
+        public async Task<IActionResult> GetUserById([FromQuery] string user_id)
+        {
+            if (string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("Name Or User Id is null in User - Get User By Name Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+            }
+
+            try
+            {
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id)!;
+
+                if(user is null)
+                {
+                    return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                }
+                UserDTO userView = _mapper.Map<UserDTO>(user);
+                return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message + " In User - Get User Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Get User Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
+            }
+
+        }
         [HttpGet("friends")]
         public IActionResult GetUserFriends([FromQuery] string user_id, [FromQuery] string operation)
         {
+            if (string.IsNullOrEmpty(operation) || string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("Operation Or User Id is null in User - Get User By Name Route");
+                return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+            }
             try
             {
                 List<UserDTO> friendsList = new();
@@ -161,18 +203,20 @@ namespace NekkoChat.Server.Controllers
                         {
                             using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                             {
-                                AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id);
+                                if (friend is not null && !string.IsNullOrEmpty(friend.sender_id))
+                                {
+                                    AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id)!;
 
-                                if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                UserDTO userView = _mapper.Map<UserDTO>(user);
-                                userView.isFriend = false;
-                                userView.isSender = true;
-                                userView.canSendRequest = false;
-                                userView.alreadyRequest = true;
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    userView.isFriend = false;
+                                    userView.isSender = true;
+                                    userView.canSendRequest = false;
+                                    userView.alreadyRequest = true;
 
-                                friendsList.Add(userView);
-
+                                    friendsList.Add(userView);
+                                }
                             }
                         }
                     }
@@ -183,19 +227,21 @@ namespace NekkoChat.Server.Controllers
                         {
                             using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                             {
-                                AspNetUsers user = ctx.AspNetUsers.Find(altFriend.receiver_id);
+                                if (altFriend is not null && !string.IsNullOrEmpty(altFriend.receiver_id))
+                                {
+                                    AspNetUsers user = ctx.AspNetUsers.Find(altFriend.receiver_id)!;
 
-                                if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                UserDTO userView = _mapper.Map<UserDTO>(user);
-                          
-                                userView.isFriend = false;
-                                userView.isSender = false;
-                                userView.canSendRequest = false;
-                                userView.alreadyRequest = true;
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
 
-                                friendsList.Add(userView);
+                                    userView.isFriend = false;
+                                    userView.isSender = false;
+                                    userView.canSendRequest = false;
+                                    userView.alreadyRequest = true;
 
+                                    friendsList.Add(userView);
+                                }
                             }
                         }
                     }
@@ -210,18 +256,20 @@ namespace NekkoChat.Server.Controllers
                         {
                             using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                             {
-                                AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id);
+                                if (friend is not null && !string.IsNullOrEmpty(friend.sender_id))
+                                {
+                                    AspNetUsers user = ctx.AspNetUsers.Find(friend.sender_id)!;
 
-                                if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                UserDTO userView = _mapper.Map<UserDTO>(user);
-                            
-                                userView.isFriend = true;
-                                userView.isSender = true;
-                                userView.canSendRequest = false;
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
 
-                                friendsList.Add(userView);
+                                    userView.isFriend = true;
+                                    userView.isSender = true;
+                                    userView.canSendRequest = false;
 
+                                    friendsList.Add(userView);
+                                }
                             }
                         }
                     }
@@ -233,22 +281,26 @@ namespace NekkoChat.Server.Controllers
                         {
                             using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                             {
-                                AspNetUsers user = ctx.AspNetUsers.Find(altFriend.receiver_id);
+                                if (altFriend is not null && !string.IsNullOrEmpty(altFriend.receiver_id))
+                                {
+                                    AspNetUsers user = ctx.AspNetUsers.Find(altFriend.receiver_id)!;
 
-                                if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                UserDTO userView = _mapper.Map<UserDTO>(user);
-                      
-                                userView.isFriend = true;
-                                userView.isSender = false;
-                                userView.canSendRequest = false;
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
+
+                                    userView.isFriend = true;
+                                    userView.isSender = false;
+                                    userView.canSendRequest = false;
 
 
-                                friendsList.Add(userView);
+                                    friendsList.Add(userView);
+                                }
                             }
                         }
                     }
                 }
+
                 return Ok(new ResponseDTO<UserDTO> { Success = true, User = friendsList, StatusCode = 200 });
 
             }
@@ -322,13 +374,14 @@ namespace NekkoChat.Server.Controllers
             try
             {
                 Friend_List friendReq = await _context.friend_list.FirstOrDefaultAsync((fr) =>
-                fr.sender_id == data.sender_id && fr.receiver_id == data.receiver_id
+                fr!.sender_id == data.sender_id && fr!.receiver_id == data.receiver_id
                 ||
-                fr.sender_id == data.receiver_id && fr.receiver_id == data.sender_id);
+                fr!.sender_id == data.receiver_id && fr!.receiver_id == data.sender_id)!;
 
-                if (friendReq is null)
+                if (friendReq is not null && friendReq.isAccepted is not null)
                 {
                     _logger.LogWarning("Friend Request Not Found In User - Manage Friend Request Route");
+                    return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
                 }
 
                 if (data.operation == "accept" && friendReq!.id > 0)
@@ -379,6 +432,7 @@ namespace NekkoChat.Server.Controllers
             if (string.IsNullOrEmpty(data.user_id) || string.IsNullOrEmpty(data.connectionid))
             {
                 _logger.LogWarning("User id OR Connection id is Null In User - Manage Connection Id Route");
+                return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
 
             try
@@ -404,14 +458,10 @@ namespace NekkoChat.Server.Controllers
         [HttpPut("manage/status")]
         public async Task<IActionResult> Put([FromBody] UserRequest data, [FromQuery] int status)
         {
-            if(status < 0)
+            if (status < 0 || string.IsNullOrEmpty(data.user_id))
             {
-                _logger.LogWarning("Staus is Invalid In User - Manage Status Route");
-            }
-
-            if (string.IsNullOrEmpty(data.user_id))
-            {
-                _logger.LogWarning("User Id is Null In User - Manage Status Route");
+                _logger.LogWarning("Staus OR User Id is Invalid In User - Manage Status Route");
+                return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
             }
 
             try
@@ -428,6 +478,89 @@ namespace NekkoChat.Server.Controllers
                 if (ex.InnerException is not null)
                 {
                     _logger.LogError(ex?.InnerException?.Message + " In User - Manage Status Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
+            }
+        }
+
+        [HttpPatch("manage/profile/information")]
+        public async Task<IActionResult> PutProfileInformation([FromBody] UserEditableRequest data)
+        {
+
+            if (string.IsNullOrEmpty(data.user_id) || string.IsNullOrEmpty(data.lname) || string.IsNullOrEmpty(data.fname))
+            {
+                _logger.LogWarning("User Id OR Username is Invalid In User - Manage Profile Picture Route");
+                return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
+            }
+            if (string.IsNullOrEmpty(data.about))
+            {
+                data.about = $"Hi, My Name is {data.fname} {data.lname}, Nice To meet you.";
+            }
+
+            try
+            {
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(data.user_id)!;
+
+                if(user is not null)
+                {
+                    user.Fname = data.fname;
+                    user.Lname = data.lname;
+                    user.About = data.about;
+                    _context.AspNetUsers.UpdateRange(user);
+                    await _context.SaveChangesAsync();
+                }
+               
+                return Ok(new ResponseDTO<UserDTO>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message + " In User - Manage Profile Picture Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Manage Profile Picture Route");
+                }
+                return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
+            }
+        }
+
+        [HttpPut("manage/profile/picture")]
+        public async Task<IActionResult> PutProfilePicture([FromForm] IFormFile file, [FromQuery] string username, [FromQuery] string user_id)
+        {
+
+            if (string.IsNullOrEmpty(user_id) || string.IsNullOrEmpty(username))
+            {
+                _logger.LogWarning("User Id OR Username is Invalid In User - Manage Profile Picture Route");
+                return BadRequest(new ResponseDTO<Friend_List> { Success = false, Message = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues, StatusCode = 400 });
+            }
+
+            try
+            {
+                var uriBuilder = new UriBuilder(Request.Scheme, Request.Host.Host, Request.Host.Port ?? 7138);
+                if (uriBuilder.Uri.IsDefaultPort)
+                {
+                    uriBuilder.Port = -1;
+                }
+                var baseUri = uriBuilder.Uri.AbsoluteUri;
+
+                ResponseDTO<string> operation = await FileSaver.SaveProfilePictureAsync(file, username, _env.WebRootPath, baseUri);
+
+                if (!operation.Success)
+                {
+                    _logger.LogError(operation.Error + " In User - Manage Profile Picture Route");
+                    return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = "Unable To Update Profile Picture.", StatusCode = 500 });
+                }
+                AspNetUsers user = await _context.AspNetUsers.FindAsync(user_id)!;
+                user!.ProfilePhotoUrl = operation.SingleUser;
+                _context.AspNetUsers.UpdateRange(user);
+                await _context.SaveChangesAsync();
+                return Ok(new ResponseDTO<UserDTO>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message + " In User - Manage Profile Picture Route");
+                if (ex.InnerException is not null)
+                {
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Manage Profile Picture Route");
                 }
                 return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }

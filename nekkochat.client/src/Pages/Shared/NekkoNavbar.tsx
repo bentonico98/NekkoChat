@@ -22,6 +22,10 @@ import { iuserStore } from '../../Constants/Types/CommonTypes';
 
 import * as React from "react";
 import NotificationBar from './NotificationBar';
+
+import nekkoAlt from "../../assets/nekkoAlt.png";
+import { Typography } from '@mui/material';
+
 function NekkoNavbar() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
@@ -54,7 +58,16 @@ function NekkoNavbar() {
     return (
         <Navbar bg="light" sticky="top" data-bs-theme="light">
             <Container>
-                <Navbar.Brand href="/inbox">NekkoChat</Navbar.Brand>
+                <Navbar.Brand href="/inbox" style={{display:"flex", justifyContent:"center", alignItems:"center", textAlign:"center"} } >
+                    <img
+                        alt=""
+                        src={nekkoAlt }
+                        width="50"
+                        height="50"
+                        className="d-inline-block align-top"
+                    />{' '}
+                    <Typography variant="h4">NekkoChat</Typography>
+                </Navbar.Brand>
                 <Nav>
                     <Nav.Link href="/inbox">{<FontAwesomeIcon icon={faInbox} />} Inbox</Nav.Link>
                     <Nav.Link href="/groupchats">{<FontAwesomeIcon icon={faPeopleGroup} />} Groupchats</Nav.Link>

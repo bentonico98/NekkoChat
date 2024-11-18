@@ -268,7 +268,7 @@ namespace NekkoChat.Server.Controllers
 
         // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/message/delete/{id}")]
-        public IActionResult DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
+        public async Task<IActionResult> DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
         {
             if (id <= 0)
             {
@@ -280,7 +280,7 @@ namespace NekkoChat.Server.Controllers
 
             if (ModelState.IsValid)
             {
-                messageDeleted = _messageServices.deleteMessage(id, data);
+                messageDeleted = await _messageServices.deleteMessage(id, data);
             }
 
             if (!messageDeleted)

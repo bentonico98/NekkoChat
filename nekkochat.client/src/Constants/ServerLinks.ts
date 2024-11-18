@@ -97,12 +97,24 @@
          const url = `user/manage/connectionid`;
          return `${this.ServerUrl}${url}`;
      }
+     public static getSetProfilePicUrl(user_id:string,username:string) {
+         const url = `user/manage/profile/picture?user_id=${user_id}&username=${username}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getManagaUserProfile() {
+         const url = `user/manage/profile/information`;
+         return `${this.ServerUrl}${url}`;
+     }
      public static getSetUserStatusUrl(status: number) {
          const url = `user/manage/status?status=${status}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserById(user_id: string, sender_id:string) {
          const url = `user/users?user_id=${user_id}&sender_id=${sender_id}`;
+         return `${this.ServerUrl}${url}`;
+     }
+     public static getRefreshById(user_id: string) {
+         const url = `user/auth/user?user_id=${user_id}`;
          return `${this.ServerUrl}${url}`;
      }
      public static getUserByName(name: string, user_id:string) {

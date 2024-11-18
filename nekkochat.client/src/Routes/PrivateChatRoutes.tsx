@@ -11,12 +11,12 @@ import InboxGroup from "../Pages/GroupChats/Inbox";
 
 import FriendList from "../Pages/Friend/Index";
 import FriendProfile from "../Pages/Friend/Account";
+import GroupProfile from "../Pages/Friend/GroupProfile";
 import VideoChats from "../Pages/VideoChats/Index";
 import Settings from "../Pages/Settings/Index";
 
 import AppLayout from "../Layouts/AppLayout";
 import AltLayout from "../Layouts/AltLayout";
-
 
 export default function PrivateChatRoutes() {
 
@@ -43,6 +43,8 @@ export default function PrivateChatRoutes() {
                     </Route>
 
                     <Route path="/account/:user_id" element={<FriendProfile />} />
+
+                    <Route path="/group/:user_id" element={<GroupProfile />} />
 
                     <Route path="profile" element={<FriendList />} />
 

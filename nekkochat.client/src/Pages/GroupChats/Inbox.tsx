@@ -1,4 +1,3 @@
-import "./Inbox.css";
 import { MainContainer } from '@chatscope/chat-ui-kit-react';
 
 import { useState, useEffect } from "react";
@@ -6,10 +5,9 @@ import { useState, useEffect } from "react";
 import SideBox from "./Components/SideBox";
 import ChatMessages from "./Components/ChatMessages";
 
-import ChatSchema from "../../Schemas/ChatSchema";
+//import ChatSchema from "../../Schemas/ChatSchema";
 
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
-
 
 import { getUserData, closeModal, toggleErrorModal, toggleMsjModal, toggleNotification, toggleLoading } from "../../Store/Slices/userSlice";
 
@@ -60,16 +58,30 @@ export default function Inbox() {
         dispatch(closeModal());
     }
 
-    const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username, group_id }: iTypingComponentProps, groupID: string) => {
+    const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username }: iTypingComponentProps, groupID: string, groupName: string) => {
         if (!msj && !user) {
-            setIsTyping({ typing: typing, user_id: user_id, username, group_id: group_id ? group_id : groupID });
+            setIsTyping({ typing: typing, user_id: user_id, username, group_id: groupID, groupname: groupName });
             setTimeout(() => {
-                setIsTyping({ typing: false, user_id: user_id, username, group_id: group_id ? group_id : groupID });
+                setIsTyping({ typing: false, user_id: user_id, username, group_id: groupID, groupname: groupName });
             }, 3000);
             return;
         }
-        setMessages((c: iChatSchema[]) =>
-            [...c, new ChatSchema(Math.floor(Math.random()).toString(), user, userN, msj, new Date().toJSON(), false)]);
+        setMessages((c: iChatSchema[]) => {
+            let payload: iChatSchema[] = [...c];
+            if (c[0].group_id == parseInt(groupID)) {
+                payload = [...c, {
+                    id: Math.floor(Math.random()).toString(),
+                    user_id:user,
+                    username: userN,
+                    content: msj,
+                    groupname: groupName,
+                    group_id: parseInt(groupID),
+                    read: false,
+                    created_at: new Date().toJSON()
+                }];
+            }
+            return payload;
+        });
     };
 
     const {
@@ -82,6 +94,7 @@ export default function Inbox() {
     const {
         messages,
         setMessages,
+        currentConvo,
         chatID,
         fetchMessage } = useGetGroupsFromUser(setDisplayInfo);
 
@@ -92,17 +105,18 @@ export default function Inbox() {
     return (
         <>
             <MainContainer  >
-                {conversations.length > 0 &&  <SideBox
+                <SideBox
                     messages={conversations}
                     user={user_id}
                     setCurrentConversation={fetchMessage}
                     DisplayMessage={setDisplayInfo}
-                /> }
+                />
 
                 {messages.length > 0 ?
                     <ChatMessages
                         messages={messages}
                         connected={connected}
+                        participants={currentConvo[0].participants}
                         sender={user_id}
                         receiver={chatID}
                         isTyping={isTyping}

@@ -1,101 +1,381 @@
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import RegisterSchemas from '../../Schemas/RegisterSchemas';
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { useState, useEffect } from "react";
-import { ErrorInterface } from '../../Constants/Types/CommonTypes';
 import { useAppDispatch } from '../../Hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../Store/Slices/userSlice';
+import { login, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../Store/Slices/userSlice';
+import useDisplayMessage from '../../Hooks/useDisplayMessage';
+import { Button, Typography, Box, FormHelperText, FormControl, OutlinedInput, Container, Stack, Divider, FormGroup, Checkbox, FormControlLabel, Link } from '@mui/material';
+import * as yup from 'yup';
+import { Col, Row } from 'react-bootstrap';
+import { iRegisterTypes } from '../../Constants/Types/CommonTypes';
+import ErrorBanner from '../Shared/ErrorBanner';
+import { useFormik } from 'formik';
+
+import nekkoAlt from "../../assets/nekkoAlt.png";
 
 export default function Register() {
 
     const dispatch = useAppDispatch();
+
+    const [isSubmitting, setSubmitting] = useState<boolean>(false);
+    const [isGlobalError, setIsGlobalError] = useState<boolean>(false);
+    const [globalError, setGlobalError] = useState<string>("");
 
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
 
     const navigate = useNavigate();
 
-    const handleSubmit = async (values: RegisterSchemas) => {
-        const res = await UserAuthServices.Register(values);
-        setLoggedIn(res.success);
-        setCurrentUser(res);
-        if (res.success) {
-            await UserAuthServices.SetUserStatusTo(res.user.id, 0);
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
+
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
         }
-        return res;
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
+
+    }, [displayInfo]);
+
+    const handleSubmit = async (values: iRegisterTypes) => {
+        setDisplayInfo({ isLoading: true });
+
+        const res = await UserAuthServices.Register(values);
+
+        setLoggedIn(res.success);
+
+        if (res.success) {
+            setCurrentUser(res.singleUser);
+
+            await UserAuthServices.SetUserStatusTo(res.singleUser.id, 0);
+            setDisplayInfo({
+                hasMsj: true,
+                msj: res.message + " Registration.",
+                isLoading: false
+            });
+            UserAuthServices.RememberUser(values.remember);
+            setSubmitting(false);
+        } else {
+
+            if (res.internalMessage) return setDisplayInfo({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            setDisplayInfo({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
+            setIsGlobalError((e: boolean) => {
+                e = true;
+                return e;
+            });
+            setGlobalError((er: string) => {
+                er = res.error;
+                return er;
+            });
+            setSubmitting(false);
+        }
+        return res.success;
     }
+
     useEffect(() => {
         if (loggedIn) {
-            dispatch(login(currentUser));
+            dispatch(login({ success: loggedIn, user: currentUser }));
             navigate("/inbox");
         }
     }, [loggedIn]);
 
+    const validationSchema = yup.object({
+        email: yup
+            .string()
+            .email('Enter a valid email')
+            .required('Email is required'),
+        password: yup
+            .string()
+            .min(8, 'Password should be of minimum 8 characters length')
+            .max(12, 'Password must be less than 12 characters long')
+            .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/,
+                'Password must contain uppercare letter, a number & special character.')
+            .required('Password is required'),
+        confirmPassword: yup
+            .string()
+            .oneOf([yup.ref('password')], 'Passwords Must Match.')
+            .min(8, 'Password must be of minimum 8 characters long')
+            .max(12, 'Password must be less than 12 characters long')
+            .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/,
+                'Password must contain uppercare letter, a number & special character.')
+            .required('Password is required'),
+        lname: yup
+            .string()
+            .max(15, 'First Name is too long.')
+            .required('First Name is Required.'),
+        fname: yup
+            .string()
+            .max(15, 'Last Name is too long')
+            .required('Last Name is Required.'),
+        about: yup
+            .string()
+            .max(240, 'About is too long, Must be less the 240 characters')
+            .nullable(),
+        profilePhotoUrl: yup
+            .string()
+            .default('/src/assets/avatar.png')
+            .nullable(),
+        phoneNumber: yup
+            .string()
+            .matches(/^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
+                'Phone Number must match valid.')
+            .required('Phone Number is Required.'),
+        remember: yup
+            .boolean()
+            .default(false)
+            .nullable(),
+    });
+
+    const formik = useFormik({
+        initialValues: {
+            email : '',
+            fname: '',
+            lname: '',
+            password: '',
+            confirmPassword: '',
+            phoneNumber: '',
+            remember: false,
+            profilePhotoUrl: '',
+            about: '',
+        },
+        validationSchema: validationSchema,
+        onSubmit: (values) => {
+            setSubmitting(true);
+            handleSubmit(values);
+        },
+    });
+
     return (
-        <main>
-            <h1>Register</h1>
-            <hr />
-            <Formik
-                initialValues={new RegisterSchemas("", "", "", "", "")}
-                validate={values => {
-                    const errors: ErrorInterface = {};
-                    if (!values.email) {
-                        errors.email = 'Email Required';
-                    } else if (
-                        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-                    ) {
-                        errors.email = 'Invalid email address';
-                    }
-                    if (!values.username) {
-                        errors.username = 'Username Required';
-                    }
-                    if (!values.password) {
-                        errors.password = 'Password Required';
-                    }
-                    if (!values.confirmpassword) {
-                        errors.confirmpassword = 'Please, Confirm your password';
-                    }
-                    return errors;
-                }}
-                onSubmit={(values, { setSubmitting }) => {
-                    setTimeout(() => {
-                        alert(JSON.stringify(values, null, 2));
-                        setSubmitting(false);
-                    }, 400);
-                    console.log(values);
-                    handleSubmit(values);
-                }}
-            >
-                {({ isSubmitting }) => (
-                    <Form>
-                        <label>Username</label>
-                        <Field type="text" name="username" />
-                        <ErrorMessage name="username" component="div" />
+        <Container fixed>
+            <Stack spacing={5} direction="column" >
+                <Box className="mt-5">
+                    <img
+                        alt=""
+                        src={nekkoAlt}
+                        width="100"
+                        height="100"
+                        className="d-inline-block align-top"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => { navigate('/'); }}
+                    />{' '}
+                </Box>
+                <Divider />
+                <Typography variant="body1" component="h3" className="mt-5">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
+                <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
+                    <Row>
+                        <Col>
+                            <Stack direction="row">
+                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                    {formik.errors.fname && <ErrorBanner error={formik.errors.fname} />}
+                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                        <OutlinedInput
+                                            name="fname"
+                                            id="outlined-adornment-weight1"
+                                            aria-describedby="outlined-weight-helper-text"
+                                            inputProps={{
+                                                'aria-label': 'weight',
+                                            }}
+                                            value={formik.values.fname}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.fname && Boolean(formik.errors.fname)}
+                                        />
+                                        <FormHelperText id="outlined-weight-helper-text">First Name</FormHelperText>
+                                    </FormControl>
+                                </Box>
 
-                        <label>Email</label>
-                        <Field type="email" name="email" />
-                        <ErrorMessage name="email" component="div" />
+                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                    {formik.errors.lname && <ErrorBanner error={formik.errors.lname} />}
+                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                        <OutlinedInput
+                                            name="lname"
+                                            id="outlined-adornment-weight2"
+                                            aria-describedby="outlined-weight-helper-text"
+                                            inputProps={{
+                                                'aria-label': 'weight',
+                                            }}
+                                            value={formik.values.lname}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.lname && Boolean(formik.errors.lname)}
+                                        />
+                                        <FormHelperText id="outlined-weight-helper-text">Last Name</FormHelperText>
+                                    </FormControl>
+                                </Box>
+                            </Stack>
 
-                        <label>Password</label>
-                        <Field type="password" name="password" />
-                        <ErrorMessage name="password" component="div" />
+                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                                {formik.errors.email && <ErrorBanner error={formik.errors.email} />}
+                                <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                                    <OutlinedInput
+                                        name="email"
+                                        type="email"
+                                        id="outlined-adornment-weight3"
+                                        aria-describedby="outlined-weight-helper-text"
+                                        inputProps={{
+                                            'aria-label': 'weight',
+                                        }}
+                                        value={formik.values.email}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={formik.touched.email && Boolean(formik.errors.email)}
+                                    />
+                                    <FormHelperText id="outlined-weight-helper-text">Email</FormHelperText>
+                                </FormControl>
+                            </Box>
 
-                        <label>Confirm Password</label>
-                        <Field type="password" name="confirmpassword" />
-                        <ErrorMessage name="confirmpassword" component="div" />
 
-                        <label>Phone Number</label>
-                        <Field type="text" name="phoneNumber" />
-                        <ErrorMessage name="phoneNumber" component="div" />
+                            <Stack direction="row">
+                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                    {formik.errors.password && <ErrorBanner error={formik.errors.password} />}
 
-                        <button type="submit" disabled={isSubmitting}>
-                            Submit
-                        </button>
-                    </Form>
-                )}
-            </Formik>
+                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                        <OutlinedInput
+                                            name="password"
+                                            type="password"
+                                            id="outlined-adornment-weight4"
+                                            aria-describedby="outlined-weight-helper-text"
+                                            inputProps={{
+                                                'aria-label': 'weight',
+                                            }}
+                                            value={formik.values.password}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.password && Boolean(formik.errors.password)}
+                                        />
+                                        <FormHelperText id="outlined-weight-helper-text">Password</FormHelperText>
+                                    </FormControl>
+                                </Box>
+                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                    {formik.errors.confirmPassword && <ErrorBanner error={formik.errors.confirmPassword} />}
 
-        </main>
+                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                        <OutlinedInput
+                                            name="confirmPassword"
+                                            type="password"
+                                            id="outlined-adornment-weight5"
+                                            aria-describedby="outlined-weight-helper-text"
+                                            inputProps={{
+                                                'aria-label': 'weight',
+                                            }}
+                                            value={formik.values.confirmPassword}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.confirmPassword && Boolean(formik.errors.confirmPassword)}
+                                        />
+                                        <FormHelperText id="outlined-weight-helper-text">Confirm Password</FormHelperText>
+                                    </FormControl>
+                                </Box>
+                            </Stack>
+
+                        </Col>
+
+                        <Col>
+                            <Stack>
+                                <Box sx={{ width: 500, maxWidth: '100%' }}>
+                                    {formik.errors.phoneNumber && <ErrorBanner error={formik.errors.phoneNumber} />}
+                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                                        <OutlinedInput
+                                            name="phoneNumber"
+                                            id="outlined-adornment-weight6"
+                                            aria-describedby="outlined-weight-helper-text"
+                                            inputProps={{
+                                                'aria-label': 'weight',
+                                            }}
+                                            value={formik.values.phoneNumber}
+                                            onChange={formik.handleChange}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                                        />
+                                        <FormHelperText id="outlined-weight-helper-text">Phone Number</FormHelperText>
+                                    </FormControl>
+                                </Box>
+                            </Stack>
+
+                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                                {formik.errors.profilePhotoUrl && <ErrorBanner error={formik.errors.profilePhotoUrl} />}
+                                <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                                    <OutlinedInput
+                                        name="profilePhotoUrl"
+                                        type="file"
+                                        id="outlined-adornment-weight7"
+                                        aria-describedby="outlined-weight-helper-text"
+                                        inputProps={{
+                                            'aria-label': 'weight',
+                                        }}
+                                        value={formik.values.profilePhotoUrl}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={formik.touched.profilePhotoUrl && Boolean(formik.errors.profilePhotoUrl)}
+                                    />
+                                    <FormHelperText id="outlined-weight-helper-text">Profile Picture</FormHelperText>
+                                </FormControl>
+                            </Box>
+
+                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                                {formik.errors.about && <ErrorBanner error={formik.errors.about} />}
+                                <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                                    <OutlinedInput
+                                        name="about"
+                                        type="textarea"
+                                        id="outlined-adornment-weight8"
+                                        aria-describedby="outlined-weight-helper-text"
+                                        inputProps={{
+                                            'aria-label': 'weight',
+                                        }}
+                                        value={formik.values.about}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={formik.touched.about && Boolean(formik.errors.about)}
+                                    />
+                                    <FormHelperText id="outlined-weight-helper-text">Tell more about yourself</FormHelperText>
+                                </FormControl>
+                            </Box>
+                        </Col>
+                    </Row>
+
+                    {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
+
+                    <Row>
+                        <FormGroup>
+                            <FormGroup>
+                                <FormControlLabel
+                                    onChange={formik.handleChange}
+                                    value={formik.values.remember}
+                                    name="remember"
+                                    control={<Checkbox />}
+                                    label="Remember" />
+                            </FormGroup>
+                        </FormGroup>
+                    </Row>
+                    
+                    <Button
+                        color="primary"
+                        variant="contained"
+                        fullWidth
+                        type="submit"
+                        disabled={isSubmitting}>
+                        Register
+                    </Button>
+                </form>
+                <Divider />
+                <Box>
+                    <Typography>Already Registered? <Link color="inherit" href="login">Login</Link></Typography>
+                </Box>
+            </Stack>
+        </Container>
     );
 }

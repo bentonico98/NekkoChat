@@ -1,20 +1,27 @@
 import { iConversationClusterProps, iSideBoxProps } from "../../../Constants/Types/CommonTypes";
 import ProfileHeader from "../../Shared/ProfileHeader";
-//import SideBoxCard from "./SideBoxCard";
 import avatar from "../../../assets/avatar.png";
 
-import { Sidebar, Search, ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
+import { Sidebar,  ConversationList, Conversation, Avatar } from '@chatscope/chat-ui-kit-react';
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import FirstLetterUpperCase from "../../../Utils/FirstLetterUpperCase";
 import useGetReceiver from "../../../Hooks/useGetReceiver";
-export default function SideBox({ messages, user, setCurrentConversation }: iSideBoxProps) {
+import ProfileHeaderSkeleton from "../../Shared/Skeletons/ProfileHeaderSkeleton";
+import ConversationSkeleton from "../../Shared/Skeletons/ConversationSkeleton";
+import { Divider } from "@mui/material";
+export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
 
-    const { getUnreadMessages } = useGetReceiver(user);
+    const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
 
     return (
-        <Sidebar position="left" scrollable={false} style={{ minHeight: "100vh" }}>
-            <ProfileHeader />
-            <Search placeholder="Search..." />
+        <Sidebar
+            position="left"
+            scrollable={false}
+            style={{ minHeight: "100vh" }}>
+            {user ? <ProfileHeader /> : <ProfileHeaderSkeleton />}
+
+            <Divider />
+            {messages && messages.length > 0 ? 
             <ConversationList>
                 {messages.map((el: iConversationClusterProps, idx: number) => {
                     return (<Conversation
@@ -28,7 +35,13 @@ export default function SideBox({ messages, user, setCurrentConversation }: iSid
                             await MessageServicesClient.sendReadMessageGroup({
                                 group_id: parseInt(el._id),
                                 sender_id: user,
-                                groupname: el.groupname
+                                user_id:user,
+                                groupname: el.groupname,
+                                groupdesc: "No Desc",
+                                groupphoto: "No Photo",
+                                grouptype: "No Type",
+                                participants: el.participants,
+                                value: "No Message"
                             });
                         }}>
                         <Avatar
@@ -37,7 +50,9 @@ export default function SideBox({ messages, user, setCurrentConversation }: iSid
                         />
                     </Conversation>
                 )})}
-            </ConversationList>
+                </ConversationList>
+                :
+                <ConversationSkeleton />}  
         </Sidebar>
     );
 }

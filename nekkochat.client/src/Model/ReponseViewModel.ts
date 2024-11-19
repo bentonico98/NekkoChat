@@ -2,11 +2,11 @@ import { iResponseViewModel, iUserViewModel } from "../Constants/Types/CommonTyp
 import UserViewModel from "./UserViewModel";
 
 export default class ResponseViewModel implements iResponseViewModel {
-    public Success?: boolean | null;
-    public User?: iUserViewModel | null;
-    public Message?: string | null;
-    public Error?: string | null;
-    public Status?: number | null;
+    public success?: boolean | null;
+    public user?: iUserViewModel | null;
+    public message?: string | null;
+    public error?: string | null;
+    public status?: number | null;
 
     constructor(
         success: boolean = false,
@@ -15,11 +15,11 @@ export default class ResponseViewModel implements iResponseViewModel {
         msj: string | null = "Failed",
         err: string | null = null) {
 
-        this.Success = success;
-        this.User = user;
-        this.Message = msj;
-        this.Error = err;
-        this.Status = status;
+        this.success = success;
+        this.user = user;
+        this.message = msj;
+        this.error = err;
+        this.status = status;
     }
 
 }

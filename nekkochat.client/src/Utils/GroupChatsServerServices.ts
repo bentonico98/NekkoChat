@@ -1,52 +1,82 @@
-import * as signalR from "@microsoft/signalr";
-import { iGroupRequestTypes } from "../Constants/Types/CommonTypes";
+import ServerInstance, { groupServer } from "../Constants/ServerInstance";
+import { iDisplayMessageTypes, iGroupRequestTypes, iNotificationTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
-    public static conn = new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7198/groupchathub", { withCredentials: false })
-        .withAutomaticReconnect()
-        .build();
+    public static dispatchFunction: (obj: iDisplayMessageTypes) => void;
 
-    public static async Start(addToChat: any) {
+    public static async Listen(addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
 
-        if (this.conn.state == "Disconnected") {
+        this.dispatchFunction = DisplayMessage;
+
+        if (groupServer.state == "Connected") {
             try {
-                await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
 
-                this.conn.onclose(async () => {
-                    await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
+                groupServer.on("ReceiveSpecificMessage", (user_id: string, msj: string, username: string, group_id:string, groupname:string) => {
+                    addToChat(user_id, username, msj, false, group_id, groupname);
                 });
-                this.conn.on("ReceiveSpecificMessage", (user_id: string, msj: string, username:string) => {
-                    addToChat(user_id, username, msj, false);
-                });
-                this.conn.on("ReceiveTypingSignal", (user: string, username: string) => {
-                    addToChat(null, null, null, { typing: true, user_id: user, userN: username });
+                groupServer.on("ReceiveTypingSignal", (user: string, username: string, group_id: string, groupname: string) => {
+                    addToChat(null, username, null, { typing: true, user_id: user, username: username }, group_id, groupname);
                 });
 
             } catch (er) {
-                console.log(er);
+
+                DisplayMessage({
+                    hasError: true,
+                    error: "Server Is Down, Try Again."
+                });
                 setTimeout(async () => {
-                    if (this.conn.state == "Disconnected") {
-                        await this.conn.start().then(() => console.log("Conectado al HUB " + this.conn.connectionId)).catch(err => console.log(err));
+                    if (groupServer.state == "Disconnected") {
+                        await ServerInstance.StartGroupServer();
+                        return { success: true, conn: groupServer.connectionId };
                     }
-                }, 3000);
+                }, 1500);
+            }
+            return { success: true, conn: groupServer.connectionId };
+        } else if (groupServer.state == "Disconnected") {
+
+            const connection = await ServerInstance.StartGroupServer();
+            return { success: true, conn: connection.connectionId };
+        } else {
+
+            try {
+                const connection = await ServerInstance.StartGroupServer();
+                return { success: true, conn: connection.connectionId };
+            } catch (ex) {
+                return { success: false, conn: null };
             }
         }
-        return this.conn.connectionId;
     }
     public static SendMessageToGroupInvoke(data: iGroupRequestTypes) {
         try {
-            this.conn.invoke("SendMessage", data.sender_id, data.group_id, data.value);
+            groupServer.invoke("SendMessage", data.sender_id, data.group_id, data.value);
         } catch (er) {
-            console.log(er);
+            this.dispatchFunction({
+                hasError: true,
+                error: "Error Sending Message."
+            });
         }
     }
     public static SendTypingSignal(sender_id: string, group_id: number) {
         try {
-            this.conn.invoke("SendTypingSignal", sender_id, group_id);
+            groupServer.invoke("SendTypingSignal", sender_id, group_id);
         } catch (er) {
-            console.log(er);
+            this.dispatchFunction({
+                hasError: true,
+                error: "Server Is Down, Try Again."
+            });
+        }
+    }
+    public static SendNotificationToUser(
+        data: iNotificationTypes,
+        DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+        try {
+            groupServer.invoke("SendNotificationToUser", data);
+        } catch (er) {
+            DisplayMessage({
+                hasError: true,
+                error: "Failed To Send Notification."
+            });
         }
     }
 };

@@ -9,9 +9,9 @@ namespace NekkoChat.Server.Constants.Interfaces
         public bool readMessage(GroupRequest data, int group_id);
         public Task<bool> addParticipantToGroup(GroupRequest data, int group_id);
         public Task<int> createChat(GroupRequest data);
-        public bool favoriteMessage();
-        public bool archiveMessage();
-        public bool deleteMessage();
+        public bool favoriteMessage(int group_id, ChatRequest data);
+        public bool archiveMessage(int group_id, ChatRequest data);
+        public bool deleteMessage(int group_id, ChatRequest data);
         public bool deleteChat();
     }
 }

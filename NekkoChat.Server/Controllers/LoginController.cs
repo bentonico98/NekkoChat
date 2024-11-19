@@ -15,15 +15,17 @@ namespace NekkoChat.Server.Controllers
     [Route("[controller]")]
     [ApiController]
     public class LoginController(
-        SignInManager<AspNetUsers> signInManager, 
-        UserManager<AspNetUsers> userManager, 
-        ApplicationDbContext context, 
-        IMapper mapper) : ControllerBase
+        SignInManager<AspNetUsers> signInManager,
+        UserManager<AspNetUsers> userManager,
+        ApplicationDbContext context,
+        IMapper mapper,
+        ILogger<LoginController> logger) : ControllerBase
     {
         private readonly SignInManager<AspNetUsers> _signInManager = signInManager;
         private readonly UserManager<AspNetUsers> _userManager = userManager;
         private readonly ApplicationDbContext _context = context;
         private readonly IMapper _mapper = mapper;
+        private readonly ILogger<LoginController> _logger = logger;
 
         // POST /login
         [HttpPost("/login")]
@@ -31,7 +33,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByEmailAsync(data.username);
+                var user = await _userManager.FindByEmailAsync(data.email);
                 try
                 {
                     var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -54,10 +56,16 @@ namespace NekkoChat.Server.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.MissingValues });
+                    _logger.LogError(ex.Message + " In Login Route");
+                    if (ex.InnerException is not null)
+                    {
+                        _logger.LogError(ex?.InnerException?.Message + " In Login Route");
+                    }
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
                 }
             }
-            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
+            _logger.LogWarning(ErrorMessages.MissingValues + " In Login Route");
+            return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.WrongCredentials });
         }
 
         // POST /login
@@ -66,32 +74,58 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                AspNetUsers user = new AspNetUsers
+                try
                 {
-                    Email = data.email,
-                    UserName = data.username,
-                    EmailConfirmed = true,
-                    PhoneNumber = data.phoneNumber,
-                    PhoneNumberConfirmed = true,
-                    LastOnline = date,
-                    Status = ValidStatus.Valid_Status.available
-                };
+                    if (data.password.Equals(data.confirmPassword))
+                    {
+                        var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-                var userCreated = await _userManager.CreateAsync(user, data.password);
+                        AspNetUsers user = new AspNetUsers
+                        {
+                            Email = data.email,
+                            UserName = data.fname,
+                            Fname = data.fname,
+                            Lname = data.lname,
+                            FullName = $"{data.fname} {data.lname}",
+                            EmailConfirmed = true,
+                            PhoneNumber = data.phoneNumber,
+                            PhoneNumberConfirmed = true,
+                            LastOnline = date,
+                            Status = ValidStatus.Valid_Status.available,
+                            TwoFactorEnabled = false,
+                            LockoutEnabled = false,
+                            Friends_Count = 0,
+                            About = !string.IsNullOrEmpty(data.about) ? data.about : "Available",
+                            ProfilePhotoUrl = !string.IsNullOrEmpty(data.profilePhotoUrl) ? data.profilePhotoUrl : "/src/assets/avatar.png"
 
-                if (userCreated.Succeeded)
-                {
-                    await _signInManager.SignInAsync(
-                        user,
-                        isPersistent: false);
+                        };
 
-                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                        var userCreated = await _userManager.CreateAsync(user, data.password);
 
-                    return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
+                        if (userCreated.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(
+                                user,
+                                isPersistent: false);
+
+                            UserDTO userView = _mapper.Map<UserDTO>(user);
+
+                            return Ok(new ResponseDTO<UserDTO> { SingleUser = userView });
+                        }
+                    }
                 }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex.Message + " In Register Route");
+                    if (ex.InnerException is not null)
+                    {
+                        _logger.LogError(ex?.InnerException?.Message + " In Register Route");
+                    }
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
+                }
+
             }
+            _logger.LogWarning(ErrorMessages.MissingValues + " In Register Route");
             return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.MissingValues });
         }
 
@@ -101,7 +135,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByIdAsync(data.user_id);
+                var user = await _userManager.FindByIdAsync(data.user_id);
                 try
                 {
                     user!.Status = ValidStatus.Valid_Status.unavailable;
@@ -109,16 +143,22 @@ namespace NekkoChat.Server.Controllers
                     await _signInManager.SignOutAsync();
 
                     _context.AspNetUsers.Update(user);
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
                     UserDTO userView = _mapper.Map<UserDTO>(user);
                     return Ok(new ResponseDTO<UserDTO>());
                 }
                 catch (Exception ex)
                 {
-                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ex.Message, InternalMessage = ex?.InnerException?.Message, Error = ErrorMessages.MissingValues });
+                    _logger.LogError(ex.Message + " In Logout Route");
+                    if (ex.InnerException is not null)
+                    {
+                        _logger.LogError(ex?.InnerException?.Message + " In Logout Route");
+                    }
+                    return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues });
                 }
             }
+            _logger.LogWarning(ErrorMessages.MissingValues + " In Logout Route");
             return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorRegular, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues });
         }
     }

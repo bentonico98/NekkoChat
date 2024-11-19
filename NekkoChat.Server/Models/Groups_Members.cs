@@ -7,11 +7,7 @@ namespace NekkoChat.Server.Models
     {
         [Key]
         public int id { get; set; }
-
-        [ForeignKey(nameof(NekkoChat.Server.Models.Groups.id)), Required]
         public int group_id { get; set; }
-
-        [ForeignKey(nameof(NekkoChat.Server.Models.AspNetUsers.Id)), Required]
         public string? user_id { get; set; }
 
     }

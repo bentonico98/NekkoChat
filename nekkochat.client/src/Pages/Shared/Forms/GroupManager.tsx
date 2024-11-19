@@ -1,43 +1,212 @@
-import { Modal, Button, Container, Row, Col } from 'react-bootstrap';
+import { Modal, Button, Container, Form } from 'react-bootstrap';
 import { Search, } from '@chatscope/chat-ui-kit-react';
 import GroupButton from '../GroupButton';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
-import useGetUserFriendList from '../../../Hooks/Friends/useGetUserFriendList';
-import { iuserStore, iUserViewModel } from '../../../Constants/Types/CommonTypes';
-import { closeModal } from '../../../Store/Slices/userSlice';
-import useSearchUserByName from '../../../Hooks/useSearchUserByName';
-import { useState } from 'react';
+import { iGroupRequestTypes, iparticipants, iuserStore, iUserViewModel } from '../../../Constants/Types/CommonTypes';
+import { closeModal, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../../Store/Slices/userSlice';
+import { useEffect, useState } from 'react';
+import MessageServicesClient from '../../../Utils/MessageServicesClient';
 
-type inputTypes = {
-    id: string, userName: string
+import avatar from "../../../assets/avatar.png";
+
+import { Box, Paper, Typography, MobileStepper, Stack, Divider } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import useGetUserFriendList from '../../../Hooks/Friends/useGetUserFriendList';
+import useSearchUserByName from '../../../Hooks/useSearchUserByName';
+import useDisplayMessage from '../../../Hooks/useDisplayMessage';
+import RegularSkeleton from '../Skeletons/RegularSkeleton';
+import NotificationServiceClient from '../../../Utils/NotificationServiceClient';
+import GetNotificationName from '../../../Utils/GetNotificationName ';
+import PrivateChatsServerServices from '../../../Utils/PrivateChatsServerServices';
+interface iGroupRequestTypesv2 {
+    sender_id?: string,
+    user_id?: string,
+    group_id?: number,
+    groupname?: string,
+    grouptype?: string,
+    groupdesc?: string,
+    groupphoto?: string,
+    value?: string,
+    participants: iparticipants[]
 }
 
 export default function GroupManager() {
 
+    const theme = useTheme();
+
+    const navigate = useNavigate();
+
     const user: iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
-    const { friend, value, setValue } = useGetUserFriendList(user.value.id);
-    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName();
 
-    const [participants, setParticipants] = useState<inputTypes[]>([]);
+    const { displayInfo, setDisplayInfo } = useDisplayMessage();
 
-    const handleGroupCreation = () => { };
+    useEffect(() => {
+        if (displayInfo.hasError) {
+            dispatch(toggleErrorModal({ status: true, message: displayInfo.error }));
+        }
+        if (displayInfo.hasMsj) {
+            dispatch(toggleMsjModal({ status: true, message: displayInfo.msj }));
+        }
+        if (displayInfo.hasNotification) {
+            dispatch(toggleNotification({ status: true, message: displayInfo.notification }));
+        }
+        dispatch(toggleLoading(displayInfo.isLoading));
 
-    const addParticipant = (id: string, userName:string, isChecked: boolean) => {
+    }, [displayInfo]);
+
+    const { friend, value, setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
+    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
+
+    const [isValid, setValid] = useState<boolean>(false);
+
+    const [groupInfo, setGroupInfo] = useState<iGroupRequestTypesv2>({
+        sender_id: user.value.id,
+        user_id: user.value.id,
+        participants: [],
+        groupname: "",
+        groupdesc: "",
+        groupphoto: "",
+        grouptype: "",
+        group_id: 0,
+        value: user.value.userName + " has created this group!"
+    });
+
+    const steps = [
+        {
+            label: 'Add Group Information',
+            description: `Please, give your group an identity.`,
+            elements: [<Form>
+                <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Name</Form.Label>
+                    <Form.Control type="text" placeholder="Groupname" value={groupInfo.groupname} onChange={(e) => { setGroupInfo({ ...groupInfo, groupname: e.target.value }); }} />
+                </Form.Group>
+            </Form>, <Form>
+                <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Type</Form.Label>
+                    <Form.Control type="text" placeholder="Category of Group" value={groupInfo.grouptype} onChange={(e) => { setGroupInfo({ ...groupInfo, grouptype: e.target.value }); }} />
+                </Form.Group>
+            </Form>],
+        },
+        {
+            label: 'Customize your group',
+            description:
+                'Set up a profile picture.',
+            elements: [<Form>
+                <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
+                    <Form.Label>Profile Picture</Form.Label>
+                    <Form.Control type="file" value={groupInfo.groupphoto} onChange={(e) => { setGroupInfo({ ...groupInfo, groupphoto: e.target.value }); }} />
+                </Form.Group>
+            </Form>],
+        },
+        {
+            label: 'Write a welcome message',
+            description: `Try writting a custom description for your group.`,
+            elements: [<Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+                <Form.Label>Description</Form.Label>
+                <Form.Control as="textarea" rows={3} value={groupInfo.groupdesc} onChange={(e) => { setGroupInfo({ ...groupInfo, groupdesc: e.target.value }); }} />
+            </Form.Group>],
+        },
+    ]
+
+    const [activeStep, setActiveStep] = useState<number>(0);
+    const maxSteps = steps.length;
+
+    const handleNext = () => {
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    };
+
+    const handleBack = () => {
+        setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    };
+
+    const handleGroupCreation = async (info: iGroupRequestTypes) => {
+        if (!info.groupphoto) {
+            info.groupphoto = `${avatar}`;
+        }
+        if (!isValid) return 0;
+
+        setDisplayInfo({ isLoading: true });
+
+        const res = await MessageServicesClient.createGroup(info);
+        if (res.success) {
+            setDisplayInfo({
+                hasMsj: true,
+                msj: res.message,
+                isLoading: false
+            });
+
+            info.participants!.forEach(async (el: iparticipants) => {
+                let notificationSent = await NotificationServiceClient.CreateNotification({
+                    user_id: el.id,
+                    operation: "Added To A Groupchat.",
+                    from: 'Unknown',
+                    from_id: user.value.id,
+                    type: GetNotificationName('group'),
+                    url: '/groupchats'
+                });
+
+                if (notificationSent.success) {
+                    await PrivateChatsServerServices.SendNotificationToUser({
+                        user_id: el.id,
+                        operation: "Added To A Groupchat.",
+                        from: 'Unknown',
+                        from_id: user.value.id,
+                        type: GetNotificationName('group'),
+                        url: '/groupchats'
+                    }, setDisplayInfo);
+                } else {
+                    setDisplayInfo({
+                        hasError: true,
+                        isLoading: true,
+                        error: notificationSent.error
+                    });
+                }
+            });
+            navigate("/groupchats/chat/" + res.singleUser);
+        } else {
+            if (res.internalMessage) return setDisplayInfo({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            setDisplayInfo({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
+        }
+        return res.success;
+    };
+
+    const addParticipant = (id: string, name: string, isChecked: boolean) => {
+        setDisplayInfo({ isLoading: true });
+
         if (isChecked) {
-            if (participants.length > 0) {
-                let exists = participants.some((el: inputTypes)=> el.id === id);
+            if (groupInfo.participants?.length > 0) {
+                let exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
                 if (exists) return;
             }
-            setParticipants([...participants, { id, userName }]);
+            setGroupInfo({
+                ...groupInfo, participants: [...groupInfo?.participants,
+                {
+                    id,
+                    name,
+                    connectionid: "0000000000000",
+                    profilePic: '/src/assets/avatar.png'
+                }]
+            });
+            setDisplayInfo({ isLoading: false });
 
         } else {
-            if (participants.length > 0) {
-                const newArray: inputTypes[] = participants.filter((el: inputTypes) => el.id !== id);
-                setParticipants((p: inputTypes[]) => {
-                    p = newArray;
-                    return p;
+            if (groupInfo!.participants?.length > 0) {
+                const newArray = groupInfo?.participants?.filter((el: iparticipants) => el.id !== id);
+                setGroupInfo({
+                    ...groupInfo, participants: newArray
                 });
+                setDisplayInfo({ isLoading: false });
             }
         }
     };
@@ -46,65 +215,135 @@ export default function GroupManager() {
         dispatch(closeModal());
     }
 
+    useEffect(() => {
+        if (
+            groupInfo.sender_id &&
+            groupInfo.groupname &&
+            groupInfo.grouptype &&
+            groupInfo.groupdesc &&
+            groupInfo.participants.length > 0) {
+            setValid(true);
+        } else {
+            setValid(false);
+        }
+
+    }, [groupInfo]);
+
     return (
-        <div>
-            <Modal.Dialog>
+        <Container style={{ width: 1000, maxWidth: '100%' }}>
+            <Modal.Dialog >
                 <Modal.Header>
                     <Modal.Title>New Group</Modal.Title>
                 </Modal.Header>
 
+                <Stack direction="row" spacing={2}>
+                    <Box sx={{ width: "100%", maxWidth: '100%' }}>
+                        <Search
+                            placeholder="Search..."
+                            onChange={(e) => setValue(e)}
+                            onClearClick={() => {
+                                setValue("");
+                                resetSearch();
+                            }} />
+                    </Box>
+
+                    <Box>
+                        <Button
+                            variant="primary"
+                            onClick={() => { searchFromList(value, friend); }} >Search</Button>
+                    </Box>
+                </Stack>
+
                 <Modal.Body>
-                    <Container>
-                        <Row>
-                            <Col xs={8}>
-                                <Search
-                                    placeholder="Search..."
-                                    onChange={(e) => setValue(e)}
-                                    onClearClick={() => {
-                                        setValue("");
-                                        resetSearch();
-                                    }} />
-                            </Col>
-                            <Col>
-                                <Button
-                                    variant="primary"
-                                    onClick={() => { searchFromList(value, friend); }} >Search</Button>
-                            </Col>
-                        </Row>
-                    </Container>
-
-                    <Container>
-                        {searchFriends.length > 0 && <div>
-                            <h5>Search Results</h5>
-                            {searchFriends.map((el: iUserViewModel, idx: number) =>
-                                <GroupButton
-                                    item={el}
-                                    idx={idx}
-                                    key={idx}
-                                    func={addParticipant} />
-                            )}
-                        </div>}
-
-                        <h5>My Friends</h5>
-                        <hr />
-                        {friend.length > 0 && friend.map((el: iUserViewModel, idx: number) => {
-                            return <GroupButton
+                    {searchFriends.length > 0 && <div>
+                        <Typography variant="h5" className="my-1">Search Results</Typography>
+                        {searchFriends.map((el: iUserViewModel, idx: number) =>
+                            <GroupButton
                                 item={el}
                                 idx={idx}
                                 key={idx}
                                 func={addParticipant} />
-                        })}
-                    </Container>
+                        )}
+                    </div>}
 
+                    <Stack direction="row" spacing={5}>
+                        <Box sx={{ maxWidth: 600, flexGrow: 1, overflowY: "auto" }}>
+                            <Typography variant="h5" className="my-2">My Friends</Typography>
+                            <Divider />
+                            {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+                                return <GroupButton
+                                    item={el}
+                                    idx={idx}
+                                    key={idx}
+                                    func={addParticipant} />
+                            }) : <RegularSkeleton />}
+                        </Box>
+
+                        <Box sx={{width:400, maxWidth: 400, flexGrow: 1 }}>
+                            <Paper
+                                square
+                                elevation={0}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    height: 50,
+                                    pl: 2,
+                                    bgcolor: 'background.default',
+                                }}
+                            >
+                                <Typography>{steps[activeStep].label}</Typography>
+                            </Paper>
+                            <Box sx={{ height: 255, maxWidth: 400, width: '100%', p: 2 }}>
+                                {steps[activeStep].description}
+                                <hr />
+                                {steps[activeStep].elements}
+                            </Box>
+                            <MobileStepper
+                                variant="text"
+                                steps={maxSteps}
+                                position="static"
+                                activeStep={activeStep}
+                                nextButton={
+                                    <Button
+                                        size="sm"
+                                        onClick={handleNext}
+                                        disabled={activeStep === maxSteps - 1}
+                                    >
+                                        Next
+                                        {theme.direction === 'rtl' ? (
+                                            <KeyboardArrowLeft />
+                                        ) : (
+                                            <KeyboardArrowRight />
+                                        )}
+                                    </Button>
+                                }
+                                backButton={
+                                    <Button size="sm" onClick={handleBack} disabled={activeStep === 0}>
+                                        {theme.direction === 'rtl' ? (
+                                            <KeyboardArrowRight />
+                                        ) : (
+                                            <KeyboardArrowLeft />
+                                        )}
+                                        Back
+                                    </Button>
+                                }
+                            />
+                        </Box>
+                    </Stack>
+                    
                 </Modal.Body>
 
                 <Modal.Footer>
                     <Button
                         className="mx-1"
-                        variant="danger" onClick={handleCancel}>Cancel</Button>
-                    <Button variant="primary" onClick={handleGroupCreation}>Create Group</Button>
+                        variant="danger"
+                        onClick={handleCancel}>Cancel</Button>
+                    <Button
+                        variant="primary"
+                        disabled={!isValid}
+                        onClick={() => { handleGroupCreation(groupInfo); }}>Create Group</Button>
                 </Modal.Footer>
             </Modal.Dialog>
-        </div>
+        </Container>
     );
 }

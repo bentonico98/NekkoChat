@@ -10,6 +10,9 @@ using NekkoChat.Server.Models;
 using Microsoft.OpenApi.Any;
 using NekkoChat.Server.Constants.Interfaces;
 using NekkoChat.Server.Utils;
+using Microsoft.AspNetCore.Diagnostics;
+using NekkoChat.Server.Constants;
+using Serilog;
 //using BlazorServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,11 +27,13 @@ builder.Services.AddSwaggerGen();
 
 //Configuracion para SignalR
 builder.Services.AddResponseCompression(options =>
+builder.Services.AddResponseCompression(options =>
 {
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
 });
 
 //Config DB Context
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDb") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
 
@@ -36,7 +41,8 @@ options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDb") ?? throw 
 //Config for Identity
 builder.Services.AddIdentity<AspNetUsers, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddAuthorization();
-builder.Services.Configure<IdentityOptions>(options => {
+builder.Services.Configure<IdentityOptions>(options =>
+{
     options.SignIn.RequireConfirmedPhoneNumber = false;
     options.SignIn.RequireConfirmedEmail = false;
     options.SignIn.RequireConfirmedAccount = false;
@@ -60,11 +66,21 @@ builder.Services.AddCors(options =>
                    .AllowAnyMethod()
                    .AllowCredentials();
         });
-}); 
+});
 
 //Necessary Injections
 builder.Services.AddScoped<iMessageService, MessageServices>();
 builder.Services.AddScoped<iGroupChatMessageService, GroupChatMessageServices>();
+builder.Services.AddScoped<iNotificationService, NotificationService>();
+builder.Services.AddTransient<iFriendRequestService, FriendRequestService>();
+
+//Serilog Configurations
+var logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
 
 //Signal R Config
 builder.Services.AddSignalR();
@@ -80,6 +96,9 @@ var app = builder.Build();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+//Serilog Configurations
+//app.UseSerilogRequestLogging();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -88,6 +107,30 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseExceptionHandler(appError =>
+{
+    appError.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+
+        var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+
+        if (contextFeature is not null)
+        {
+            Console.WriteLine($"Error: {contextFeature.Error}");
+            await context.Response.WriteAsJsonAsync<ResponseDTO<object>>(new ResponseDTO<object>
+            {
+                Success = false,
+                StatusCode = context.Response.StatusCode,
+                Error = ErrorMessages.ErrorMessage,
+                Message = ErrorMessages.ErrorMessage,
+                InternalMessage = ErrorMessages.ErrorMessage
+            });
+        }
+    });
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

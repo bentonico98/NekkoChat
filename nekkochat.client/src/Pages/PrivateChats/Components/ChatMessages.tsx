@@ -1,17 +1,18 @@
 ﻿import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
-import avatar from "../../../assets/avatar.png";
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
-import useGetReceiver from "../../../Hooks/useGetReceiver";
 import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
 
 import { useNavigate } from "react-router-dom";
-import useGetParticipants from "../../../Hooks/useGetParticipants";
 import { useState } from "react";
-import { Container, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import {  Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
-import { iChatMessagesProps, iChatSchema } from "../../../Constants/Types/CommonTypes";
+import { iChatMessagesProps, iChatSchema, iuserStore } from "../../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
-
+import useGetReceiver from '../../../Hooks/useGetReceiver';
+import useGetParticipants from '../../../Hooks/useGetParticipants';
+import { useAppSelector } from '../../../Hooks/storeHooks';
+import { UserState } from '../../../Store/Slices/userSlice';
+import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages(
     {
         messages,
@@ -20,11 +21,13 @@ export default function ChatMessages(
         sender,
         receiver,
         participants,
-        isTyping
+        isTyping,
+        DisplayMessage
     }: iChatMessagesProps) {
 
-    const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender);
-    const { getParticipantName } = useGetParticipants(sender);
+    const user : UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender, DisplayMessage);
+    const { getParticipantName, getPic } = useGetParticipants(sender);
 
     const navigate = useNavigate();
 
@@ -60,24 +63,42 @@ export default function ChatMessages(
         if (!message_id) return;
         if (!user_id) return;
 
-        const deleted = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
+        DisplayMessage({ isLoading: true });
 
-        console.log(deleted);
+        const res = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
+
+        if (res.success) {
+            DisplayMessage({
+                hasMsj: true,
+                msj: "Deletion " + res.message,
+                isLoading: false
+            });
+        } else {
+            if (res.internalMessage) return DisplayMessage({
+                hasError: true,
+                error: res.internalMessage,
+                isLoading: true
+            });
+            DisplayMessage({
+                hasError: true,
+                error: res.error,
+                isLoading: true
+            });
+        }
     }
 
     return (
         <>
             {messages.length > 0 ?
-
-                <ChatContainer className="flexibleContainer">
+                <ChatContainer style={{ minHeight: "100vh" }}>
 
                     {/*Chat Header*/}
 
                     <ConversationHeader>
-                        <ConversationHeader.Back onClick={() => { navigate(-1); }} />
                         <Avatar
-                            src={avatar}
-                            name={FirstLetterUpperCase(getParticipantName(participants))} />
+                            src={getPic(participants)}
+                            name={FirstLetterUpperCase(getParticipantName(participants))}
+                            onClick={() => { navigate("/account/" + receiver); }} />
                         <ConversationHeader.Content
                             userName={FirstLetterUpperCase(getParticipantName(participants))}
                             info={getLastOnline(messages)} />
@@ -146,6 +167,9 @@ export default function ChatMessages(
                     {/*Chat Component*/}
 
                     <MessageList
+                        autoScrollToBottom={true}
+                        autoScrollToBottomOnMount={true}
+                        scrollBehavior="smooth"
                         typingIndicator={isTyping &&
                             isTyping.typing &&
                             isTyping.user_id === receiver &&
@@ -165,7 +189,7 @@ export default function ChatMessages(
                                         handleSetInfo(chat, `${el.id}`);
                                     }}
                                 >
-                                    <Avatar src={avatar} name={el.username} />
+                                    {el.user_id === sender ? <Avatar src={user.value.profilePhotoUrl} name={el.username} /> : <Avatar src={getPic(participants)} name={el.username} />}
                                 </Message>
                             );
                         })}
@@ -248,6 +272,7 @@ export default function ChatMessages(
                     {/*Box to Send Message*/}
 
                     <MessageInput
+                        style={{ textAlign: 'right' }}
                         className="textBoxInput"
                         placeholder="Type message here"
                         disabled={!connected}
@@ -264,17 +289,21 @@ export default function ChatMessages(
                             }
                         }}
                         onSend={async (e) => {
-                            await MessageServicesClient.sendMessageToUser({
+                            const res = await MessageServicesClient.sendMessageToUser({
                                 chat_id: chat,
                                 sender_id: sender,
                                 receiver_id: receiver.toString(),
                                 value: e
-                            })
+                            });
+                            if (!res.success) {
+                                DisplayMessage({
+                                    hasError: true,
+                                    error: "Unable To Send Message."
+                                });
+                            }
                         }} />
                 </ChatContainer>
-                : <Container style={{ minHeight: "100vh", zIndex:90000 }}>
-                    <h1>NekkoChat Privado</h1>
-                </Container>}
+                : <NekkoSpinner/>}
         </>
     );
 }

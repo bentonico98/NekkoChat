@@ -8,8 +8,6 @@ namespace NekkoChat.Server.Models
     {
         [Key]
         public int id { get; set; }
-
-        [ForeignKey(nameof(NekkoChat.Server.Models.Groups.id)), Required]
         public int group_id { get; set; }
 
         [Column(TypeName = "jsonb")]

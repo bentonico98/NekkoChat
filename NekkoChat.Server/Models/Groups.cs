@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNet.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NekkoChat.Server.Models
 {
@@ -12,6 +14,6 @@ namespace NekkoChat.Server.Models
         public string? type { get; set; }
         public string? description { get; set; } = null;
         public string? profilePhotoUrl { get; set; }
-
+       // public AspNetUsers[] AllUsers { get; set; } = [];
     }
 }

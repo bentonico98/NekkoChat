@@ -2,12 +2,11 @@
 {
     public class UserRequest
     {
-        public string? sender_id { get; set; }
-        public string? receiver_id { get; set; }
-        public string? user_id { get; set; }
-        public string? operation { get; set; }
-        public string? status { get; set; }
-
-        public string? connectionid { get; set; }
+        public string sender_id { get; set; } = string.Empty;
+        public string receiver_id { get; set; } = string.Empty;
+        public string user_id { get; set; } = string.Empty;
+        public string operation { get; set; } = string.Empty;
+        public string status { get; set; } = string.Empty;
+        public string connectionid { get; set; } = string.Empty;
     }
 }

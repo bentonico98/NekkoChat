@@ -12,15 +12,17 @@ export default class MessageServicesClient {
 
     public static async sendMessageToUser(data: iServerRequestTypes) {
 
-        let url = ServerLinks.getSendMessageUrl();
+        let url = ServerLinks.getSendMessageUrl(data.chat_id);
         const result = await axios.put(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
-        });;
-        await PrivateChatsServerServices.SendMessageToUserInvoke(data);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
+        });
+
+        if (result.success) {
+            await PrivateChatsServerServices.SendMessageToUserInvoke(data);
+        }
         return result;
     }
 
@@ -30,11 +32,10 @@ export default class MessageServicesClient {
         let url = ServerLinks.getReadMessageUrl(data.chat_id);
 
         const result = await axios.put(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -46,11 +47,10 @@ export default class MessageServicesClient {
         let url = ServerLinks.getDeleteMessageUrl(data.chat_id);
 
         const result = await axios.delete(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -62,11 +62,10 @@ export default class MessageServicesClient {
         let url = ServerLinks.getDeleteMessageUrl(data);
 
         const result = await axios.delete(url, data).then((res) => {
-            console.log(res.status);
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -86,7 +85,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -99,7 +98,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -107,14 +106,14 @@ export default class MessageServicesClient {
 
 
     //// USER SERVICES
-    public static async getUserById(user_id: string) {
-        let url = ServerLinks.getUserById(user_id);
+    public static async getUserById(user_id: string, sender_id:string) {
+        let url = ServerLinks.getUserById(user_id, sender_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -129,7 +128,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -142,12 +141,11 @@ export default class MessageServicesClient {
         let url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
-            console.log(res);
             return res.data;
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -168,7 +166,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch((err) => {
             console.log(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -183,7 +181,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -200,7 +198,7 @@ export default class MessageServicesClient {
         }).catch(function (error) {
             // handle error
             console.log(error);
-            return new ResponseViewModel(false, 500, null, null, error);
+            return new ResponseViewModel(false, 500, null, null, error.response.data.error);
         }).finally(async function () {
             // always executed
             //console.log('funcciono?');
@@ -218,10 +216,12 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
-        await GroupChatsServerServices.SendMessageToGroupInvoke(data);
+        if (result.success) {
+            await GroupChatsServerServices.SendMessageToGroupInvoke(data);
+        }
         return result;
     }
 
@@ -236,7 +236,7 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;
@@ -252,7 +252,22 @@ export default class MessageServicesClient {
             return res.data;
         }).catch(err => {
             console.error(err);
-            return new ResponseViewModel(false, 500, null, null, err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
+        });
+
+        return result;
+    }
+    public static async createGroup(data: iGroupRequestTypes) {
+        if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+        if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getCreateGroupChatUrl();
+
+        const result = await axios.post(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
         });
 
         return result;

@@ -74,3 +74,4 @@ namespace NekkoChat.Server.Hubs
         }
     }
 }
+

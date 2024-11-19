@@ -26,5 +26,6 @@
     <Folder Include="src\Pages\Settings\" />
     <Folder Include="src\Pages\VideoChats\" />
     <Folder Include="src\Store\Slices\" />
+    <Folder Include="src\StateManagement\" />
   </ItemGroup>
 </Project>

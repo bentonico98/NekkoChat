@@ -33,7 +33,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByEmailAsync(data.email);
+                var user = await _userManager.FindByEmailAsync(data.email);
                 try
                 {
                     var date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -59,7 +59,7 @@ namespace NekkoChat.Server.Controllers
                     _logger.LogError(ex.Message + " In Login Route");
                     if (ex.InnerException is not null)
                     {
-                        _logger.LogError(ex?.InnerException?.Message + " In Notification - Get Route");
+                        _logger.LogError(ex?.InnerException?.Message + " In Login Route");
                     }
                     return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
                 }
@@ -119,7 +119,7 @@ namespace NekkoChat.Server.Controllers
                     _logger.LogError(ex.Message + " In Register Route");
                     if (ex.InnerException is not null)
                     {
-                        _logger.LogError(ex?.InnerException?.Message + " In Notification - Get Route");
+                        _logger.LogError(ex?.InnerException?.Message + " In Register Route");
                     }
                     return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
                 }
@@ -135,7 +135,7 @@ namespace NekkoChat.Server.Controllers
         {
             if (ModelState.IsValid)
             {
-                AspNetUsers user = await _userManager.FindByIdAsync(data.user_id);
+                var user = await _userManager.FindByIdAsync(data.user_id);
                 try
                 {
                     user!.Status = ValidStatus.Valid_Status.unavailable;
@@ -153,7 +153,7 @@ namespace NekkoChat.Server.Controllers
                     _logger.LogError(ex.Message + " In Logout Route");
                     if (ex.InnerException is not null)
                     {
-                        _logger.LogError(ex?.InnerException?.Message + " In Notification - Get Route");
+                        _logger.LogError(ex?.InnerException?.Message + " In Logout Route");
                     }
                     return StatusCode(500, new ResponseDTO<UserDTO> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.MissingValues });
                 }

@@ -20,6 +20,10 @@ import useGetUser from "../../Hooks/useGetUser";
 import useSignalServer from "../../Hooks/useSignalServer";
 import useGetChatFromUser from "../../Hooks/useGetChatFromUser";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
+
+import nekkoAlt from "../../assets/nekkoAlt.png";
+import { Box, Stack, Typography } from '@mui/material';
+
 export default function Inbox() {
 
     const { state } = useLocation();
@@ -111,7 +115,7 @@ export default function Inbox() {
                     setCurrentConversation={fetchMessage}
                     DisplayMessage={setDisplayInfo} />
 
-                {currentConvo.length > 0 && <ChatMessages
+                {messages.length > 0 ? <ChatMessages
                     messages={messages}
                     participants={currentConvo[0].participants}
                     connected={connected}
@@ -120,7 +124,22 @@ export default function Inbox() {
                     chat={chatID}
                     isTyping={isTyping}
                     DisplayMessage={setDisplayInfo}
-                />}
+                /> : <Box style={{ minHeight: "100vh", minWidth: "70%", display: 'flex', alignItems: 'center', justifyContent: "center" }}>
+                    <Box>
+                        <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent: 'center' }}>
+                            <img
+                                alt=""
+                                src={nekkoAlt}
+                                width="300"
+                                height="300"
+                                className="d-inline-block align-top"
+                            />
+
+                        </Stack>
+                        <Typography className="text-muted" variant="body1" >Send and receive messages to your fellow cat lovers.</Typography>
+                        <Typography className="text-muted" variant="body1" >Add your favorite your fellow cat lovers as friend.</Typography>
+                    </Box>
+                </Box>}
 
             </MainContainer>
             <Modal

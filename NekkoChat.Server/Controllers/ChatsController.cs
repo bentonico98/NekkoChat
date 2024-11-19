@@ -32,7 +32,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
-        public IActionResult Get([FromQuery] string id, [FromQuery] string type = "all")
+        public async Task<IActionResult> Get([FromQuery] string id, [FromQuery] string type = "all")
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -65,40 +65,43 @@ namespace NekkoChat.Server.Controllers
                     UserChats.Add(conversation);
                 }
 
-                foreach (var userChat in UserChats)
+                await Task.Run(() =>
                 {
-                    IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
-                    chat = chat.Where((u) => u.chat_id == userChat.id);
-
-                    foreach (var c in chat)
+                    foreach (var userChat in UserChats)
                     {
-                        using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
-                        {
-                            AspNetUsers participants = new();
-                            if (userChat.sender_id != id)
-                            {
-                                if (!string.IsNullOrEmpty(userChat.sender_id))
-                                {
-                                    participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
-                                }
-                            }
-                            else
-                            {
-                                if (!string.IsNullOrEmpty(userChat.receiver_id))
-                                {
-                                    participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
-                                }
-                            }
+                        IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
+                        chat = chat.Where((u) => u.chat_id == userChat.id);
 
-                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                        foreach (var c in chat)
+                        {
+                            using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                             {
-                                MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
-                                contents.status = participants!.Status;
-                                ChatsContent.Add(contents);
+                                AspNetUsers participants = new();
+                                if (userChat.sender_id != id)
+                                {
+                                    if (!string.IsNullOrEmpty(userChat.sender_id))
+                                    {
+                                        participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
+                                    }
+                                }
+                                else
+                                {
+                                    if (!string.IsNullOrEmpty(userChat.receiver_id))
+                                    {
+                                        participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
+                                    }
+                                }
+
+                                if (c is not null && !string.IsNullOrEmpty(c.content))
+                                {
+                                    MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
+                                    contents.status = participants!.Status;
+                                    ChatsContent.Add(contents);
+                                }
                             }
                         }
                     }
-                }
+                });
 
                 if (ChatsContent == null)
                 {
@@ -121,7 +124,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET chats/chat/5 -- BUSCA UN CHAT ESPECIFICO
         [HttpGet("chat/{id}")]
-        public IActionResult GetChatByUserId([FromRoute] string id)
+        public async Task<IActionResult> GetChatByUserId([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -136,13 +139,17 @@ namespace NekkoChat.Server.Controllers
                 IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
                 chat = chat.Where((u) => u.chat_id == chat_id);
 
-                foreach (var c in chat)
+                await Task.Run(() =>
                 {
-                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                    foreach (var c in chat)
                     {
-                        currentChats.Add(JsonDocument.Parse(c.content));
+                        if (c is not null && !string.IsNullOrEmpty(c.content))
+                        {
+                            currentChats.Add(JsonDocument.Parse(c.content));
+                        }
                     }
-                }
+                });
+
                 return Ok(new ResponseDTO<object> { User = currentChats });
             }
             catch (Exception ex)

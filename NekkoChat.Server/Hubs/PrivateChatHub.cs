@@ -14,8 +14,8 @@ namespace NekkoChat.Server.Hubs
             if (string.IsNullOrEmpty(sender_id) ||
                 string.IsNullOrEmpty(receiver_id)) return Task.FromResult(TypedResults.Unauthorized);
 
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+            var sender = await _context.AspNetUsers.FindAsync(sender_id);
+            var receiver = await _context.AspNetUsers.FindAsync(receiver_id);
 
             string senderconnectionid = "";
             string receiverconnectionid = "";
@@ -37,8 +37,8 @@ namespace NekkoChat.Server.Hubs
             if (string.IsNullOrEmpty(sender_id) ||
                 string.IsNullOrEmpty(receiver_id)) return Task.FromResult(TypedResults.Unauthorized);
 
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(receiver_id);
+            var sender = await _context.AspNetUsers.FindAsync(sender_id);
+            var receiver = await _context.AspNetUsers.FindAsync(receiver_id);
 
             string senderconnectionid = "";
             string receiverconnectionid = "";
@@ -62,7 +62,7 @@ namespace NekkoChat.Server.Hubs
 
             if (!string.IsNullOrEmpty(data.user_id)) return Task.FromResult(TypedResults.Unauthorized);
 
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.user_id);
+            var receiver = await _context.AspNetUsers.FindAsync(data.user_id);
 
             if (receiver is not null && !string.IsNullOrEmpty(receiver.ConnectionId))
             {

@@ -9,13 +9,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { iChatSchema, iGroupChatMessagesProps, iuserStore } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
-import { Container } from '@mui/material';
 import useGetGroup from '../../../Hooks/Group/useGetGroup';
 import { UserState } from '../../../Store/Slices/userSlice';
 import { useAppSelector } from '../../../Hooks/storeHooks';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
-
-
+import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages({
     messages,
     connected,
@@ -43,7 +41,6 @@ export default function ChatMessages({
         <>
             {messages.length > 0 ?
                 <ChatContainer style={{ minHeight: "100vh" }}>
-
                     {/*Chat Header*/}
                     <ConversationHeader>
                         <Avatar
@@ -60,7 +57,15 @@ export default function ChatMessages({
 
                     {/*Chat Component*/}
 
-                    <MessageList typingIndicator={isTyping && isTyping.typing && isTyping.user_id !== sender && isTyping.group_id == receiver.toString() && <TypingIndicator content={`${isTyping.username} is typing`} />}>
+                    <MessageList
+                        autoScrollToBottom={true}
+                        autoScrollToBottomOnMount={true}
+                        scrollBehavior="smooth"
+                        typingIndicator={isTyping &&
+                            isTyping.typing &&
+                            isTyping.user_id !== sender &&
+                            isTyping.group_id == receiver.toString() &&
+                            <TypingIndicator content={`${isTyping.username} is typing`} />}>
                         <MessageSeparator content={startDate} />
                         {messages.map((el: iChatSchema, idx: number) => {
                             return (
@@ -82,6 +87,7 @@ export default function ChatMessages({
                     {/*Box to Send Message*/}
 
                     <MessageInput
+                        style={{ textAlign: 'right' }}
                         className="textBoxInput text-right"
                         placeholder="Type message here"
                         disabled={!connected}
@@ -104,7 +110,7 @@ export default function ChatMessages({
                                 groupdesc: groupDesc,
                                 groupphoto: groupPhoto,
                                 value: e,
-                                participants: [{ id: "0", name: "None", connectionid: "00000000", profilePic:"/src/assets/avatar.png" }]
+                                participants: [{ id: "0", name: "None", connectionid: "00000000", profilePic: "/src/assets/avatar.png" }]
                             });
                             if (!res.success) {
                                 DisplayMessage({
@@ -113,10 +119,7 @@ export default function ChatMessages({
                                 });
                             }
                         }} />
-                </ChatContainer>
-                : <Container style={{ minHeight: "100vh" }}>
-                        <h1>NekkoChat</h1>
-                </Container>}
+                </ChatContainer> : <NekkoSpinner/>}
         </>
     );
 }

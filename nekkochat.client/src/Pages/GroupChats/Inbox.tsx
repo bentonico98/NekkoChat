@@ -19,7 +19,9 @@ import useGetUser from "../../Hooks/Group/useGetUser";
 import useSignalServer from "../../Hooks/Group/useSignalServer";
 import useGetGroupsFromUser from "../../Hooks/Group/useGetGroupsFromUser";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
-import NekkoSpinner from "../Shared/Skeletons/NekkoSpinner";
+import { Box, Stack, Typography } from '@mui/material';
+
+import nekkoAlt from "../../assets/nekkoAlt.png";
 
 Modal.setAppElement("#root");
 export default function Inbox() {
@@ -121,7 +123,23 @@ export default function Inbox() {
                         receiver={chatID}
                         isTyping={isTyping}
                         DisplayMessage={setDisplayInfo}
-                    /> : <NekkoSpinner />}
+                    /> :  <Box style={{ minHeight: "100vh", minWidth: "70%", display: 'flex', alignItems: 'center', justifyContent: "center" }}>
+                    <Box>
+                        <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent: 'center' }}>
+                            <img
+                                alt=""
+                                src={nekkoAlt}
+                                width="300"
+                                height="300"
+                                className="d-inline-block align-top"
+                            />
+
+                        </Stack>
+                        <Typography className="text-muted" variant="body1" >Create groups.</Typography>
+                        <Typography className="text-muted" variant="body1" >Enter your favorite groups.</Typography>
+                        <Typography className="text-muted" variant="body1" >Up to 200 members allowed per group.</Typography>
+                    </Box>
+                </Box>}
 
             </MainContainer>
             <Modal

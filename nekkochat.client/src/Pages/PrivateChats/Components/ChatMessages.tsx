@@ -4,7 +4,7 @@ import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerService
 
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Container, Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import {  Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
 import { iChatMessagesProps, iChatSchema, iuserStore } from "../../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
@@ -12,6 +12,7 @@ import useGetReceiver from '../../../Hooks/useGetReceiver';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import { useAppSelector } from '../../../Hooks/storeHooks';
 import { UserState } from '../../../Store/Slices/userSlice';
+import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages(
     {
         messages,
@@ -89,7 +90,7 @@ export default function ChatMessages(
     return (
         <>
             {messages.length > 0 ?
-                <ChatContainer style={{minHeight: "100vh"}}>
+                <ChatContainer style={{ minHeight: "100vh" }}>
 
                     {/*Chat Header*/}
 
@@ -97,7 +98,7 @@ export default function ChatMessages(
                         <Avatar
                             src={getPic(participants)}
                             name={FirstLetterUpperCase(getParticipantName(participants))}
-                            onClick={() => { navigate("/account/" + receiver); } } />
+                            onClick={() => { navigate("/account/" + receiver); }} />
                         <ConversationHeader.Content
                             userName={FirstLetterUpperCase(getParticipantName(participants))}
                             info={getLastOnline(messages)} />
@@ -166,6 +167,9 @@ export default function ChatMessages(
                     {/*Chat Component*/}
 
                     <MessageList
+                        autoScrollToBottom={true}
+                        autoScrollToBottomOnMount={true}
+                        scrollBehavior="smooth"
                         typingIndicator={isTyping &&
                             isTyping.typing &&
                             isTyping.user_id === receiver &&
@@ -268,7 +272,8 @@ export default function ChatMessages(
                     {/*Box to Send Message*/}
 
                     <MessageInput
-                        className="textBoxInput text-right"
+                        style={{ textAlign: 'right' }}
+                        className="textBoxInput"
                         placeholder="Type message here"
                         disabled={!connected}
                         sendOnReturnDisabled={!connected}
@@ -298,9 +303,7 @@ export default function ChatMessages(
                             }
                         }} />
                 </ChatContainer>
-                : <Container style={{ minHeight: "100vh", zIndex: 90000 }}>
-                    <h1>NekkoChat Privado</h1>
-                </Container>}
+                : <NekkoSpinner/>}
         </>
     );
 }

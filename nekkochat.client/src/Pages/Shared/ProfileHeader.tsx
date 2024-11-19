@@ -1,7 +1,7 @@
 import avatar from "../../assets/avatar.png";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faBars, faPerson } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faBars } from '@fortawesome/free-solid-svg-icons';
 
 import { Stack, Image, Button } from "react-bootstrap";
 import { openModal, openProfileModal, UserState, openSettingModal } from "../../Store/Slices/userSlice";
@@ -24,14 +24,13 @@ export default function ProfileHeader() {
         dispatch(openSettingModal());
     }
     return (
-        <Stack direction="horizontal" gap={3} className="p-2" >
-            <Image src={user.value.profilePhotoUrl || avatar} roundedCircle fluid width={50} className="p-2" />
-            <Typography>{user.value.fname} {user.value.lname}</Typography>
-            <Stack direction="horizontal" gap={2} >
-                <Button type="submit" variant="light" onClick={handleProfileButton} >{<FontAwesomeIcon icon={faPerson} />}</Button>
-                <Button type="submit" variant="light" onClick={handleAddButton}  >{<FontAwesomeIcon icon={faAdd} />}</Button>
-                <Button type="submit" variant="light" onClick={handleSettingsButton} >{<FontAwesomeIcon icon={faBars} />}</Button>
+        <Stack direction="horizontal" gap={4} className="p-2" >
+            <Stack direction="horizontal" style={{ cursor: 'pointer' }} onClick={handleProfileButton}>
+                <Image  src={user.value.profilePhotoUrl || avatar}  roundedCircle fluid width={50} className="p-2" />
+                <Typography >{user.value.fname} {user.value.lname}</Typography>
             </Stack>
+            <Button type="submit" variant="light" onClick={handleAddButton}  >{<FontAwesomeIcon icon={faAdd} />}</Button>
+            <Button type="submit" variant="light" onClick={handleSettingsButton} >{<FontAwesomeIcon icon={faBars} />}</Button>
         </Stack>
     );
 }

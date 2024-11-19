@@ -17,7 +17,7 @@ namespace NekkoChat.Server.Utils
 
             using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                AspNetUsers sender = await ctx.AspNetUsers.FindAsync(data.from_id);
+                var sender = await ctx.AspNetUsers.FindAsync(data.from_id);
 
                 if (sender is null) return false;
 

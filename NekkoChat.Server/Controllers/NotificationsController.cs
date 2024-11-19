@@ -24,7 +24,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET: <NotificationsController>
         [HttpGet]
-        public IActionResult Get([FromQuery] string user_id)
+        public async Task<IActionResult> Get([FromQuery] string user_id)
         {
             if (string.IsNullOrEmpty(user_id))
             {
@@ -39,15 +39,18 @@ namespace NekkoChat.Server.Controllers
 
                 IQueryable<Notifications> notifications = _context.notifications.Where((n) => n.User_Id == user_id);
 
-                if(notifications is null || !notifications.Any()) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
-                foreach (var notification in notifications)
+                if (notifications is null || !notifications.Any()) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                await Task.Run(() =>
                 {
-                    if (notification is not null && !string.IsNullOrEmpty(notification.Notification))
+                    foreach (var notification in notifications)
                     {
-                        NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
-                        userNotifications.Add(output);
+                        if (notification is not null && !string.IsNullOrEmpty(notification.Notification))
+                        {
+                            NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
+                            userNotifications.Add(output);
+                        }
                     }
-                }
+                });
 
                 return Ok(new ResponseDTO<SingleNotificationSchema> { User = userNotifications[0]!.notifications.OrderByDescending((n) => n.date).ToList() });
             }
@@ -110,7 +113,7 @@ namespace NekkoChat.Server.Controllers
             bool isCreated = await _nSrv.ReadNotification(data);
             try
             {
-                
+
                 if (ModelState.IsValid)
                 {
                     isCreated = await _nSrv.ReadNotification(data);
@@ -119,7 +122,6 @@ namespace NekkoChat.Server.Controllers
                 if (!isCreated)
                 {
                     _logger.LogDebug("Operation Failed In Notification - Read Route");
-
                     return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
                 }
 

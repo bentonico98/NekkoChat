@@ -28,7 +28,7 @@ namespace NekkoChat.Server.Utils
         {
             using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                AspNetUsers user = await ctx.AspNetUsers.FindAsync(user_id);
+                var user = await ctx.AspNetUsers.FindAsync(user_id);
 
                 if(user is null) return false;
 
@@ -46,7 +46,7 @@ namespace NekkoChat.Server.Utils
         {
             using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                AspNetUsers user = await ctx.AspNetUsers.FindAsync(user_id);
+                var user = await ctx.AspNetUsers.FindAsync(user_id);
 
                 if (user is null) return false;
 

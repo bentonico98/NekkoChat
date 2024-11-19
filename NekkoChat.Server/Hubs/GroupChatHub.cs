@@ -5,6 +5,8 @@ using System.Security.Claims;
 using NekkoChat.Server.Constants.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.AspNet.Identity;
+using NekkoChat.Server.Constants;
 namespace NekkoChat.Server.Hubs
 {
     public class GroupChatHub(ApplicationDbContext context, IServiceProvider serviceProvider) : Hub, iCustomChatHubs
@@ -17,9 +19,10 @@ namespace NekkoChat.Server.Hubs
 
             int groupID = Convert.ToInt32(group_id);
 
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            Groups group = await _context.groups.FindAsync(groupID);
+            var sender = await _context.AspNetUsers.FindAsync(sender_id);
+            var group = await _context.groups.FindAsync(groupID);
 
+            if (sender is null || group is null) return Task.FromResult(TypedResults.Unauthorized);
 
             IQueryable<Groups_Members> filteredMembers = from m in _context.groups_members select m;
             filteredMembers = filteredMembers.Where((m) => m.group_id == groupID);
@@ -53,9 +56,10 @@ namespace NekkoChat.Server.Hubs
 
             int groupID = Convert.ToInt32(group_id);
 
-            AspNetUsers sender = await _context.AspNetUsers.FindAsync(sender_id);
-            Groups group = await _context.groups.FindAsync(groupID);
+            var sender = await _context.AspNetUsers.FindAsync(sender_id);
+            var group = await _context.groups.FindAsync(groupID);
 
+            if (sender is null || group is null) return Task.FromResult(TypedResults.Unauthorized);
 
             IQueryable<Groups_Members> filteredMembers = from m in _context.groups_members select m;
             filteredMembers = filteredMembers.Where((m) => m.group_id == groupID);
@@ -87,7 +91,7 @@ namespace NekkoChat.Server.Hubs
 
             if (!string.IsNullOrEmpty(data.user_id)) return Task.FromResult(TypedResults.Unauthorized);
 
-            AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.user_id)!;
+            var receiver = await _context.AspNetUsers.FindAsync(data.user_id)!;
 
             if (receiver is not null && !string.IsNullOrEmpty(receiver.ConnectionId))
             {

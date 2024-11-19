@@ -449,7 +449,7 @@ namespace NekkoChat.Server.Utils
                 {
                     using (var db = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                     {
-                        AspNetUsers user = await db.AspNetUsers.FindAsync(participant.id)!;
+                        var user = await db.AspNetUsers.FindAsync(participant.id)!;
                         if (user is not null)
                         {
                             payload.Add(new ParticipantsSchema
@@ -484,8 +484,8 @@ namespace NekkoChat.Server.Utils
 
             using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
             {
-                AspNetUsers sender = await _context.AspNetUsers.FindAsync(data.sender_id);
-                AspNetUsers receiver = await _context.AspNetUsers.FindAsync(data.receiver_id);
+                var sender = await _context.AspNetUsers.FindAsync(data.sender_id);
+                var receiver = await _context.AspNetUsers.FindAsync(data.receiver_id);
 
                 if (sender is null || receiver is null || chat_id <= 0) return false;
 

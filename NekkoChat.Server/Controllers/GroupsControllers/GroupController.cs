@@ -31,7 +31,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
-        public IActionResult Get([FromQuery] string user_id)
+        public async Task<IActionResult> Get([FromQuery] string user_id)
         {
             if (string.IsNullOrEmpty(user_id))
             {
@@ -47,28 +47,32 @@ namespace NekkoChat.Server.Controllers
                 IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
 
                 conversations = conversations.Where((c) => c.user_id == user_id);
-                foreach (var conversation in conversations)
-                {
-                    GroupChats.Add(conversation);
-                }
 
-                if (GroupChats.Count() > 0)
+                await Task.Run(() =>
                 {
-                    foreach (var userChat in GroupChats)
+                    foreach (var conversation in conversations)
                     {
-                        IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
-                        chat = chat.Where((u) => u.group_id == userChat.group_id);
+                        GroupChats.Add(conversation);
+                    }
 
-                        foreach (var c in chat)
+                    if (GroupChats.Count() > 0)
+                    {
+                        foreach (var userChat in GroupChats)
                         {
-                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                            IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
+                            chat = chat.Where((u) => u.group_id == userChat.group_id);
+
+                            foreach (var c in chat)
                             {
-                                GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                                ChatsContent.Add(payload);
+                                if (c is not null && !string.IsNullOrEmpty(c.content))
+                                {
+                                    GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                                    ChatsContent.Add(payload);
+                                }
                             }
                         }
                     }
-                }
+                });
 
                 if (ChatsContent == null)
                 {
@@ -91,7 +95,7 @@ namespace NekkoChat.Server.Controllers
 
         // GET groupschat/chat/5 -- BUSCA UN CHAT ESPECIFICO
         [HttpGet("chat/{id}")]
-        public IActionResult GetGroupByUserId([FromRoute] string id)
+        public async Task<IActionResult> GetGroupByUserId([FromRoute] string id)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -108,14 +112,17 @@ namespace NekkoChat.Server.Controllers
                 IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
                 chat = chat.Where((u) => u.group_id == chat_id);
 
-                foreach (var c in chat)
+                await Task.Run(() =>
                 {
-                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                    foreach (var c in chat)
                     {
-                        GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                        currentChats.Add(payload);
+                        if (c is not null && !string.IsNullOrEmpty(c.content))
+                        {
+                            GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                            currentChats.Add(payload);
+                        }
                     }
-                }
+                });
 
                 if (currentChats.Count() <= 0) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
@@ -144,45 +151,49 @@ namespace NekkoChat.Server.Controllers
             }
             try
             {
-                Groups group = await _context.groups.FindAsync(group_id);
+                var group = await _context.groups.FindAsync(group_id);
                 List<string> participantsIds = new();
                 List<ParticipantsSchema> participants = new();
 
                 if (group is null) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
                 IQueryable<Groups_Members> participantsList = _context.groups_members.Where((gm) => gm.group_id == group_id);
-                if (participantsList.Any())
-                {
-                    foreach (var p in participantsList)
-                    {
-                        if (p is not null && !string.IsNullOrEmpty(p.user_id))
-                        {
-                            participantsIds.Add(p.user_id);
-                        }
-                    }
-                }
 
-                if (participantsIds.Count() > 0)
+                await Task.Run(async () =>
                 {
-                    foreach (var p in participantsIds)
+                    if (participantsList.Any())
                     {
-                        using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                        foreach (var p in participantsList)
                         {
-                            AspNetUsers user = await ctx.AspNetUsers.FindAsync(p)!;
-                            if (user is not null)
+                            if (p is not null && !string.IsNullOrEmpty(p.user_id))
                             {
-                                ParticipantsSchema userView = new ParticipantsSchema
-                                {
-                                    id = user.Id,
-                                    name = $"{user.Fname} {user.Lname}",
-                                    connectionid = !string.IsNullOrEmpty(user.ConnectionId) ? user.ConnectionId : "",
-                                    profilePic = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? user.ProfilePhotoUrl : "/src/assets/avatar.png"
-                                };
-                                participants.Add(userView);
+                                participantsIds.Add(p.user_id);
                             }
                         }
                     }
-                }
+
+                    if (participantsIds.Count() > 0)
+                    {
+                        foreach (var p in participantsIds)
+                        {
+                            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                            {
+                                var user = await ctx.AspNetUsers.FindAsync(p)!;
+                                if (user is not null)
+                                {
+                                    ParticipantsSchema userView = new ParticipantsSchema
+                                    {
+                                        id = user.Id,
+                                        name = $"{user.Fname} {user.Lname}",
+                                        connectionid = !string.IsNullOrEmpty(user.ConnectionId) ? user.ConnectionId : "",
+                                        profilePic = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? user.ProfilePhotoUrl : "/src/assets/avatar.png"
+                                    };
+                                    participants.Add(userView);
+                                }
+                            }
+                        }
+                    }
+                });
 
                 GroupDTO groupView = new GroupDTO
                 {
@@ -193,6 +204,7 @@ namespace NekkoChat.Server.Controllers
                     profilePhotoUrl = group.profilePhotoUrl
                 };
                 groupView.participants = participants.ToArray();
+
                 return Ok(new ResponseDTO<GroupDTO> { SingleUser = groupView });
             }
             catch (Exception ex)

@@ -76,7 +76,6 @@ export default function Index() {
                 </Paper>
             </Box>
             <Link to="/inbox" className="text-muted">{<FontAwesomeIcon icon={faCopyright} />} Derechos Reservados Por Benjunior Dorlouis & Lenny Garcia </Link>
-
         </>
     );
 }

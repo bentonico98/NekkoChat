@@ -13,7 +13,6 @@ import InboxGroup from "../Pages/GroupChats/Inbox";
 import FriendList from "../Pages/Friend/Index";
 import FriendProfile from "../Pages/Friend/Account";
 import GroupProfile from "../Pages/Friend/GroupProfile";
-import VideoChats from "../Pages/VideoChats/Index";
 import Settings from "../Pages/Settings/Index";
 
 import AppLayout from "../Layouts/AppLayout";
@@ -31,7 +30,7 @@ export default function PrivateChatRoutes() {
 
                     <Route path="chats">
                         <Route index element={<Inbox />} />
-                        <Route path="video" element={<VideoChats />} />
+                        <Route path="videocall" element={<VideoCall />} />
                     </Route>
 
                     <Route path="groupchats">
@@ -50,8 +49,6 @@ export default function PrivateChatRoutes() {
                     <Route path="profile" element={<FriendList />} />
 
                     <Route path="settings" element={<Settings />} />
-
-                    <Route path="/chats/videocall" element={<VideoCall />} />
                 </Route>
 
 

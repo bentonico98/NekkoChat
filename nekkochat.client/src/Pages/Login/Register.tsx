@@ -141,7 +141,7 @@ export default function Register() {
 
     const formik = useFormik({
         initialValues: {
-            email : '',
+            email: '',
             fname: '',
             lname: '',
             password: '',
@@ -159,8 +159,8 @@ export default function Register() {
     });
 
     return (
-        <Container fixed>
-            <Stack spacing={5} direction="column" >
+        <Container>
+            <Stack spacing={5} direction="column" className="text-center">
                 <Box className="mt-5">
                     <img
                         alt=""
@@ -350,18 +350,16 @@ export default function Register() {
                     {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
 
                     <Row>
-                        <FormGroup>
-                            <FormGroup>
-                                <FormControlLabel
-                                    onChange={formik.handleChange}
-                                    value={formik.values.remember}
-                                    name="remember"
-                                    control={<Checkbox />}
-                                    label="Remember" />
-                            </FormGroup>
+                        <FormGroup style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: "1rem", paddingBottom: "1rem" }}>
+                            <FormControlLabel
+                                onChange={formik.handleChange}
+                                value={formik.values.remember}
+                                name="remember"
+                                control={<Checkbox />}
+                                label="Remember" />
                         </FormGroup>
                     </Row>
-                    
+
                     <Button
                         color="primary"
                         variant="contained"

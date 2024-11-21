@@ -30,7 +30,6 @@ export class VideoCallComnicationHandler {
     constructor(callbacks: VideoCallHandlerCallbacksType) {
 
         this.callbacks = callbacks;
-        this.peerConnection = 
         this.connection = callbacks.connection;
         this.peerConnection = callbacks.peerConnection;
         this.setupListeners();
@@ -58,7 +57,6 @@ export class VideoCallComnicationHandler {
         await this.handleStablishIce();
     });
 
-        
         this.connection.on('offer', async (sdp: string) => {
             try {
                 if (this.peerConnection) {
@@ -224,7 +222,7 @@ export class VideoCallComnicationHandler {
 
             await VideocallServerServices.SendCallExit(user_id, this.receiverId);
 
-            window.location.href = "/";
+            window.location.href = "/chats/videocall";
         }
     }
 }

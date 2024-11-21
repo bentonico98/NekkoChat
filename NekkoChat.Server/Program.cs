@@ -27,15 +27,13 @@ builder.Services.AddSwaggerGen();
 
 //Configuracion para SignalR
 builder.Services.AddResponseCompression(options =>
-builder.Services.AddResponseCompression(options =>
 {
     options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
 });
 
 //Config DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDb") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
+options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDbBen") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
 
 
 //Config for Identity
@@ -54,14 +52,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173")
+            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
     options.AddPolicy("SignalROrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173")
+            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();

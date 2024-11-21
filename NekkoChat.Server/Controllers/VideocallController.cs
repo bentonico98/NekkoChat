@@ -8,6 +8,7 @@ using NekkoChat.Server.Models;
 using NekkoChat.Server.Constants.Types;
 using Microsoft.EntityFrameworkCore;
 using NekkoChat.Server.Utils;
+using NekkoChat.Server.Constants;
 
 namespace NekkoChat.Server.Controllers
 {
@@ -23,6 +24,12 @@ namespace NekkoChat.Server.Controllers
         [HttpGet("users/")]
         public async Task<IActionResult> Get(string user_id)
         {
+            if (string.IsNullOrEmpty(user_id))
+            {
+                _logger.LogWarning("User Id is null in Occurred In Video Route");
+                return NotFound(new ResponseDTO<object> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist });
+
+            }
             try
             {
                  var user = await _videocallServices.GetFriendsAsync(user_id);
@@ -31,7 +38,8 @@ namespace NekkoChat.Server.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Message = "An error ocurred", Error = ex.Message });
+                _logger.LogError(ex.Message + " Occurred In Video Route");
+                return StatusCode(500, new ResponseDTO<object> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage });
             }
         }
     }

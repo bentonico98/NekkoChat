@@ -44,7 +44,7 @@ export default function Index() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container >
+        <Container>
             <Typography variant="h3" className="my-4">Friends List</Typography>
 
             <Divider />
@@ -60,7 +60,7 @@ export default function Index() {
             </Stack>
 
             <Row style={{ overflowY: "auto", overflowX: "hidden" }}>
-                {friendRequest.length > 0 && <div>
+                {friendRequest.length > 0 && <Box>
                     <Typography variant="h3" className="my-2">Pending Friend Requests</Typography>
                     {friendRequest.map((el: iUserViewModel, idx: number) => {
                         return <Col xs={4} key={idx}>
@@ -73,9 +73,9 @@ export default function Index() {
                         </Col>
                     })}
                     <Divider />
-                </div>}
+                </Box>}
 
-                {searchFriends.length > 0 && <div>
+                {searchFriends.length > 0 && <Box>
                     <Typography variant="h5" className="my-3">Search Results</Typography>
                     {searchFriends.map((el: iUserViewModel, idx: number) => {
                         return <Col xs={4} key={idx}>
@@ -88,7 +88,7 @@ export default function Index() {
                         </Col>
                     })}
                     <Divider />
-                </div>}
+                </Box>}
 
                 <Typography variant="h5" className="my-3">My Friends</Typography>
                 {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {

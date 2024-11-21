@@ -8,7 +8,7 @@ export default class VideocallServerServices {
         .build();*/
 
     public static conn: signalR.HubConnection = new signalR.HubConnectionBuilder() //devtunel
-        .withUrl("https://c3b5hzpq-7198.use2.devtunnels.ms/videocallhub", { withCredentials: false })
+        .withUrl("https://062r207b-7198.use2.devtunnels.ms/videocallhub", { withCredentials: false })
         .withAutomaticReconnect()
         .build();
 

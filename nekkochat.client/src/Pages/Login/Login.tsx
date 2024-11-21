@@ -124,7 +124,7 @@ export default function Login() {
 
     return (
         <Container maxWidth="sm">
-            <Stack spacing={5} direction="column" >
+            <Stack spacing={5} direction="column" className="text-center" >
                 <Box className="mt-5">
                     <img
                         alt=""
@@ -184,8 +184,8 @@ export default function Login() {
 
                     {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
 
-                    <Row>
-                        <FormGroup>
+                    <Row >
+                        <FormGroup style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: "1rem", paddingBottom: "1rem" }}>
                             <FormControlLabel
                                 onChange={formik.handleChange}
                                 value={formik.values.remember}

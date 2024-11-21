@@ -1,4 +1,3 @@
-import { Container } from "react-bootstrap";
 import NekkoNavbar from "../Pages/Shared/NekkoNavbar";
 import { Outlet, useNavigate } from "react-router-dom";
 import RegularSnackbar from "../Pages/Shared/RegularSnackbar";
@@ -6,7 +5,7 @@ import ErrorSnackbar from "../Pages/Shared/ErrorSnackbar";
 import NotificationSnackbar from "../Pages/Shared/NotificationSnackbar";
 import NekkoSpinner from "../Pages/Shared/Skeletons/NekkoSpinner";
 import useServer from "../Hooks/Server/useServer";
-import { useEffect} from "react";
+import { useEffect } from "react";
 import useDisplayMessage from "../Hooks/useDisplayMessage";
 import { useAppDispatch, useAppSelector } from "../Hooks/storeHooks";
 import { closeProfileModal, closeSettingModal, logout, toggleNotification } from "../Store/Slices/userSlice";
@@ -24,7 +23,7 @@ export default function AppLayout() {
     const { established } = useServer();
 
     const ListenningForNotifications = async () => {
-         NotificationServerServices.Listen(setDisplayInfo);
+        NotificationServerServices.Listen(setDisplayInfo);
     }
 
     const dispatch = useAppDispatch();
@@ -54,7 +53,7 @@ export default function AppLayout() {
                 navigate("/login");
             }, 300000);
         }
-        
+
     }, [established]);
     function afterOpenModal() {
         // references are now sync'd and can be accessed.
@@ -68,31 +67,30 @@ export default function AppLayout() {
     return (
         <>
             <NekkoNavbar />
-            <Container style={{ minHeight: "100vh", minWidth: "100%" }}>
-                {established && <Outlet />}
-                <Modal
-                    isOpen={modalOpened}
-                    onAfterOpen={afterOpenModal}
-                    onRequestClose={close}
-                    style={customStyles}
-                    contentLabel="Example Modal"
-                >
-                    <ProfileManager />
-                </Modal>
-                <Modal
-                    isOpen={settingOpened}
-                    onAfterOpen={afterOpenModal}
-                    onRequestClose={close}
-                    style={customStyles}
-                    contentLabel="Example Modal"
-                >
-                    <SettingsManager />
-                </Modal>
-                <NekkoSpinner />
-            </Container>
+            {established && <Outlet />}
+            <Modal
+                isOpen={modalOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Example Modal"
+            >
+                <ProfileManager />
+            </Modal>
+            <Modal
+                isOpen={settingOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Example Modal"
+            >
+                <SettingsManager />
+            </Modal>
+            <NekkoSpinner />
             <RegularSnackbar />
             <ErrorSnackbar />
             <NotificationSnackbar />
+
         </>
     );
 }

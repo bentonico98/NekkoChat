@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState } from 'react';
 import Button from '@mui/material/Button';
 import Snackbar, { SnackbarCloseReason } from '@mui/material/Snackbar';
-import { useNavigate } from 'react-router-dom';
+//import { useNavigate } from 'react-router-dom';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import CallIcon from '@mui/icons-material/Call';
@@ -18,7 +18,7 @@ export default function SimpleSnackbar() {
     const [open, setOpen] = useState(false);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
 
-    const navigate = useNavigate();
+    ///const navigate = useNavigate();
 
     const [senderId, setSenderId] = useState<string | null>();
     const [profileData, setProfileData] = useState<IProfileData | null>(null)
@@ -66,9 +66,9 @@ export default function SimpleSnackbar() {
 
     const handleAnswer = async () => {
         setOpen(false);
-        navigate("/chats/videocall/", { replace: true });
+        //navigate("/chats/videocall/", { replace: true });
         await VideocallServerServices.SendOfferVideoNotification(String(senderId), Receiver_id, true);
-        navigate(0)
+        //navigate(0)
     };
 
     const action = (

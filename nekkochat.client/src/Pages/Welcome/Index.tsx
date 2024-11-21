@@ -75,7 +75,9 @@ export default function Index() {
                     </Stack>
                 </Paper>
             </Box>
-            <Link to="/inbox" className="text-muted">{<FontAwesomeIcon icon={faCopyright} />} Derechos Reservados Por Benjunior Dorlouis & Lenny Garcia </Link>
+            <Box sx={{display:'flex', justifyContent:'center'} }>
+                <Link to="/inbox" className="text-muted">{<FontAwesomeIcon icon={faCopyright} />} Derechos Reservados Por Benjunior Dorlouis & Lenny Garcia </Link>
+            </Box>
         </>
     );
 }

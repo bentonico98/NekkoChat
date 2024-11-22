@@ -67,7 +67,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
 
     return (
         <div>
-            <VideoCallButton margin={'0.65rem 0.3rem 0 0'} onClick={handleOpen}><SendIcon /></VideoCallButton>
+            <VideoCallButton margin={'0.3rem'} onClick={handleOpen}><SendIcon /></VideoCallButton>
             <Modal
                 sx={{ width: "auto" }}
                 open={open}

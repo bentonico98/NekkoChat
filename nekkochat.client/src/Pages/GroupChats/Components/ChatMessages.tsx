@@ -40,7 +40,7 @@ export default function ChatMessages({
     return (
         <>
             {messages.length > 0 ?
-                <ChatContainer style={{ minHeight: "100vh" }}>
+                <ChatContainer>
                     {/*Chat Header*/}
                     <ConversationHeader>
                         <Avatar

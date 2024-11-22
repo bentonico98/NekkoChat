@@ -44,7 +44,7 @@ export default function Index() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container>
+        <Container className="text-center">
             <Typography variant="h3" className="my-4">Friends List</Typography>
 
             <Divider />

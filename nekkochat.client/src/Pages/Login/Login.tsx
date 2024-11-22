@@ -204,7 +204,6 @@ export default function Login() {
                         Login
                     </Button>
                 </form>
-                <Divider />
                 <Box>
                     <Typography>Not Registered Yet? <Link color="inherit" href="register">Create an Account</Link></Typography>
                 </Box>

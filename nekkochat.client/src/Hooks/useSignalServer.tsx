@@ -21,13 +21,7 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
 
         DisplayMessage({ isLoading: true });
 
-        if (res.success) {
-            DisplayMessage({
-                hasMsj: true,
-                msj: res.message + " Established Connection.",
-                isLoading: false
-            });
-        } else {
+        if (!res.success) {
             if (res.internalMessage) return DisplayMessage({
                 hasError: true,
                 error: res.internalMessage,

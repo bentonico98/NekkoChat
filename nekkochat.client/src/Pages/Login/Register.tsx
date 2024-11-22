@@ -161,7 +161,7 @@ export default function Register() {
     return (
         <Container>
             <Stack spacing={5} direction="column" className="text-center">
-                <Box className="mt-5">
+                <Box >
                     <img
                         alt=""
                         src={nekkoAlt}
@@ -173,7 +173,7 @@ export default function Register() {
                     />{' '}
                 </Box>
                 <Divider />
-                <Typography variant="body1" component="h3" className="mt-5">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
+                <Typography variant="body1" component="h3" className="mt-2">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
                 <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
                     <Row>
                         <Col>
@@ -369,7 +369,6 @@ export default function Register() {
                         Register
                     </Button>
                 </form>
-                <Divider />
                 <Box>
                     <Typography>Already Registered? <Link color="inherit" href="login">Login</Link></Typography>
                 </Box>

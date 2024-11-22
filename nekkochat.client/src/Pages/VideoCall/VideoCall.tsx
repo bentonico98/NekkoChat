@@ -3,6 +3,8 @@ import Box from '@mui/material/Box';
 import React, { useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
+import ChatIcon from '@mui/icons-material/Chat';
+import SettingsIcon from '@mui/icons-material/Settings';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import VideocallServerServices from '../../Utils/VideoCallService'
@@ -16,20 +18,28 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { AlertSnackbar, AlertSnackbarType } from './Components/AlertSnackbar';
 import { VideoCallComnicationHandler } from './Components/Handlers/VideoComunicationHandler';
 import { HubConnection } from '@microsoft/signalr';
+import { openSettingModal } from '../../Store/Slices/userSlice';
+import { useAppDispatch } from '../../Hooks/storeHooks';
+import { Badge } from 'react-bootstrap';
+import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
+import UserAuthServices from '../../Utils/UserAuthServices';
 
 export const VideoCall: React.FC = () => {
 
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const receiverId = useRef<string>("");
+    const [receiverName, setReceiverName] = useState<string>("Unknown");
     const [isOfferState, setIsOfferState] = useState<boolean>(true);
     const [isConnectionStablish, setIsConnectionStablish] = useState<boolean>(false);
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
     const [isMicOn, setIsMicOn] = useState<boolean>(true);
+    const [isOnCall, setIsOnCall] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<boolean>(false);
     const [data, setData] = useState<IUserData[]>([{ id: "", profilePhotoUrl: null, userName: "" }]);
@@ -44,15 +54,15 @@ export const VideoCall: React.FC = () => {
     const theme = useTheme();
     const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
 
-    const [position, setPosition] = useState({ top: '5vh', left: isMediumScreen? '75vw' : '0' });
-    
+    const [position, setPosition] = useState({ top: '5vh', left: isMediumScreen ? '75vw' : '0' });
+
     const user = JSON.parse(localStorage.getItem("user") || '{}');
     const user_name = user.userName;
     const user_photo = user.profilePhotoUrl
     const user_id = user.id;
 
     const user_data: IProfileData = { name: user_name, photo: user_photo };
-    
+
     const { connected, conn } = useVideocallSignalServer();
     let connection: HubConnection;
 
@@ -69,20 +79,20 @@ export const VideoCall: React.FC = () => {
         });
     }, [user_id])
 
-        useEffect(() => {
-            if (connected) {
-                connection = conn?.connection;
-                if (peerConnection.current) {
-                    if (!videocallComunicationHandlerRef.current) {
-                        videocallComunicationHandlerRef.current = VideoCallComnicationHandler.getInstance({
-                            onOfferStateChange: setIsOfferState,
-                            onConnectionEstablished: setIsConnectionStablish,
-                            onRenegotiated: setIsRenegotiated,
-                            connection: connection,
-                            peerConnection: peerConnection.current
-                        });
-                    }
+    useEffect(() => {
+        if (connected) {
+            connection = conn?.connection;
+            if (peerConnection.current) {
+                if (!videocallComunicationHandlerRef.current) {
+                    videocallComunicationHandlerRef.current = VideoCallComnicationHandler.getInstance({
+                        onOfferStateChange: setIsOfferState,
+                        onConnectionEstablished: setIsConnectionStablish,
+                        onRenegotiated: setIsRenegotiated,
+                        connection: connection,
+                        peerConnection: peerConnection.current
+                    });
                 }
+            }
 
             connection.on('renegotiation', async (sender_id: string, receiver_id: string, sdp: string) => {
                 videocallComunicationHandlerRef.current!.handleRenegotiation(sender_id, receiver_id, sdp);
@@ -91,18 +101,22 @@ export const VideoCall: React.FC = () => {
             connection.on('callexit', async () => {
                 handleAlertSnackbar("DISCONNECTED");
                 if (remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = null; 
+                    remoteVideoRef.current.srcObject = null;
                 }
 
                 if (peerConnection.current) {
-                    peerConnection.current.close(); 
-                    peerConnection.current = null; 
+                    peerConnection.current.close();
+                    peerConnection.current = null;
                 }
             });
 
-            connection.on('offervideonotification', async (sender_id: string, receiver_id: string, isAccepted:boolean) => {
+            connection.on('offervideonotification', async (sender_id: string, receiver_id: string, isAccepted: boolean) => {
                 if (isAccepted) {
                     receiverId.current = receiver_id;
+                    const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
+                    if (res.success) {
+                        setReceiverName((prev) => prev = res.singleUser.userName);
+                    }
                     setTimeout(() => {
                         VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
                     }, 5000);
@@ -111,17 +125,25 @@ export const VideoCall: React.FC = () => {
                     if (user_id === sender_id) {
                         handleAlertSnackbar("REJECTION");
                     }
-                    
+
                 }
             });
 
             connection.on('connectedvideonotification', async (sender_id: string, receiver_id: string) => {
                 console.log(receiver_id + " " + sender_id)
                 if (user_id === receiver_id) {
-                    setTimeout( async () => {
+                    const res = await UserAuthServices.SearchUserById(sender_id,receiver_id);
+                    if (res.success) {
+                        setReceiverName((prev) => prev = res.singleUser.userName);
+                    }
+                    setTimeout(async () => {
                         await videocallComunicationHandlerRef.current!.handleAnswer(sender_id, receiver_id);
                     }, 2000);
                 } else if (user_id === sender_id) {
+                    const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
+                    if (res.success) {
+                        setReceiverName((prev) => prev = res.singleUser.userName);
+                    }
                     await videocallComunicationHandlerRef.current!.handleCall(sender_id, receiver_id);
                 }
             });
@@ -133,10 +155,10 @@ export const VideoCall: React.FC = () => {
                 connection.off('offericecandidate');
                 connection.off('answericecandidate');
                 connection.off('renegotiation');
-                
+
             };
-            }
-        }, [connected, conn, isRenegotiated]);
+        }
+    }, [connected, conn, isRenegotiated]);
 
     useEffect(() => {
         document.addEventListener('mousemove', handleMouseMove);
@@ -162,7 +184,7 @@ export const VideoCall: React.FC = () => {
                 localStream.current = stream;
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
-                   // videoRef.current.play();
+                    // videoRef.current.play();
                 }
                 if (peerConnection.current) {
                     stream.getTracks().forEach(track => {
@@ -192,14 +214,15 @@ export const VideoCall: React.FC = () => {
                 const remoteVideo = remoteVideoRef.current;
                 if (remoteVideo) {
                     if (remoteVideo.srcObject) {
-                        remoteVideo.pause(); 
+                        setIsOnCall(true);
+                        remoteVideo.pause();
                         remoteVideo.srcObject = stream;
-                        
                     } else {
-
+                        setIsOnCall(true);
                         remoteVideo.srcObject = stream;
                         remoteVideo.addEventListener('loadedmetadata', () => {
                             remoteVideo.play().catch(error => {
+                                setIsOnCall(false);
                                 console.error("Error al intentar reproducir el video:", error);
                             });
                         }, { once: true });
@@ -207,9 +230,6 @@ export const VideoCall: React.FC = () => {
                 }
             });
         };
-        
-       
-
     }, [isVideoOn, isMicOn, isOfferState, isConnectionStablish, user_id, probando, isRenegotiated]);
 
     const handleMicState = () => {
@@ -269,7 +289,7 @@ export const VideoCall: React.FC = () => {
         }
     };
 
-    const handleAlertSnackbar = (type:string) => {
+    const handleAlertSnackbar = (type: string) => {
         if (type == "DISCONNECTED") {
             setAlertSnackbarData({ message: "El usuario se ha desconectado", isOpen: true, severity: "warning" })
         }
@@ -279,7 +299,7 @@ export const VideoCall: React.FC = () => {
     }
 
     const handleSnackbarClose = () => {
-        setAlertSnackbarData((prevState) => ({ ...prevState, isOpen:false}));
+        setAlertSnackbarData((prevState) => ({ ...prevState, isOpen: false }));
     };
 
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -325,67 +345,92 @@ export const VideoCall: React.FC = () => {
     const handleTouchEnd = () => {
         setIsDragging(false);
     };
-    
+
     return (
         <Box sx={{
             margin: 0,
             padding: 0,
-            height: "105vh",
-            width: "100vw",
-            backgroundColor: "#DBDBDB",
-            overflowY: "hidden",
         }}>
-            <AlertSnackbar message={alertSnackbarData!.message} isOpen={alertSnackbarData!.isOpen} severity={alertSnackbarData!.severity} onClose={handleSnackbarClose} /> 
-                <Box sx={{
-                    height: "80vh",
-                    position:"relative",
-                    width: "80vw",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+            <AlertSnackbar
+                message={alertSnackbarData!.message}
+                isOpen={alertSnackbarData!.isOpen}
+                severity={alertSnackbarData!.severity}
+                onClose={handleSnackbarClose} />
+            <Box sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
                 borderRadius: "1rem",
-                margin: isMediumScreen? "3rem 5rem 0.5rem 5rem": "-1rem 0 0 2.4rem",
-
-
-                }}>
-                {isVideoOn ?
-                    < video id="local" style={{ borderRadius: "1rem", height: isMediumScreen ? "90vh" : "auto", width: isMediumScreen ? "auto" : "100vw", }} autoPlay ref={videoRef} onClick={() => { console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play(); }} />
-                        :
-                        <Box sx={{
-                        backgroundColor: "#777",
-                        height: isMediumScreen ? "75vh" : "60vh",
-                        width: isMediumScreen ?"60vw" : "110vw",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "1rem"
-                        }}>
-                            <VideocamOffIcon sx={{
-                                fontSize: "4rem",
-                                color: "white"
-                            }} /></Box>
-                    }
-                   
-                </Box>
-                <Box sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    
+                margin: isMediumScreen ? "3rem 5rem 0.5rem 5rem" : "-1rem 0 0 2.4rem",
             }}>
-                <SendModal Users={data} loading={loading} error={error} data={user_data} />
-                <VideoCallButton  onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
+                {isVideoOn ?
+                    <Box sx={{
+                        height: isMediumScreen ? "65vh" : "auto",
+                        width: isMediumScreen ? "auto" : "100vw",
+                        minWidth: "42.5vw",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position:"relative"
+                    }}>
+                        <video
+                            id="local"
+                            style={{
+                                borderRadius: "1rem",
+                            }}
+                            autoPlay
+                            ref={videoRef}
+                            onClick={() => {
+                                console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
+                            }} />
+                        <Badge
+                            bg="primary"
+                            style={{
+                                position: "absolute",
+                                top: "1rem",
+                                left: "2rem",
+                                zIndex:"9999"
+                            }}>{FirstLetterUpperCase(user_name)}</Badge>
+                    </Box>
+                    :
+                    <Box sx={{
+                        backgroundColor: "#777",
+                        height: isMediumScreen ? "65vh" : "auto",
+                        width: isMediumScreen ? "auto" : "100vw",
+                        minWidth: "42.5vw",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "1rem"
+                    }}>
+                        <VideocamOffIcon sx={{
+                            fontSize: "4rem",
+                            color: "white"
+                        }} /></Box>
+                }
+
+            </Box>
+            <Box sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+
+            }}>
+                <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
                 <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
+                <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<SettingsIcon />}</VideoCallButton>
+                <SendModal Users={data} loading={loading} error={error} data={user_data} />
+                <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<ChatIcon />}</VideoCallButton>
+                {isOnCall && 
                 <VideoCallButton bgcolor={"#ff4343"} bgcolorHover={"#ff6666"} onClick={(() => {
                     if (videocallComunicationHandlerRef.current) {
                         videocallComunicationHandlerRef.current?.handleLeaveCall(videoRef, remoteVideoRef)
                     }
                     else {
-                        navigate("/")
+                        navigate("/chats/videocall")
                     }
-                    
-                })}>salir</VideoCallButton>
-                </Box>
+                    })}>END</VideoCallButton>}
+            </Box>
 
             <Box sx={{
                 height: "15rem",
@@ -409,7 +454,15 @@ export const VideoCall: React.FC = () => {
                     autoPlay
                     ref={remoteVideoRef}
                 />
+                {isOnCall &&
+                    <Badge
+                        bg="primary"
+                        style={{
+                            position: "absolute",
+                            top: "1rem",
+                            left: "3rem"
+                        }}>{FirstLetterUpperCase(receiverName)}</Badge>}
             </Box>
-            </Box>
+        </Box>
     );
 }

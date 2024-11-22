@@ -108,7 +108,7 @@ export default function Inbox() {
 
     return (
         <>
-            <MainContainer>
+            <MainContainer style={{overflowY:'hidden'} }>
                 <SideBox
                     messages={conversations}
                     user={user_id}
@@ -124,7 +124,7 @@ export default function Inbox() {
                     chat={chatID}
                     isTyping={isTyping}
                     DisplayMessage={setDisplayInfo}
-                /> : <Box style={{ minHeight: "100vh", minWidth: "70%", display: 'flex', alignItems: 'center', justifyContent: "center" }}>
+                /> : <Box style={{ minWidth: "70%", display: 'flex', alignItems: 'center', justifyContent: "center" }}>
                     <Box>
                         <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent: 'center' }}>
                             <img
@@ -140,7 +140,6 @@ export default function Inbox() {
                         <Typography className="text-muted" variant="body1" >Add your favorite your fellow cat lovers as friend.</Typography>
                     </Box>
                 </Box>}
-
             </MainContainer>
             <Modal
                 isOpen={modalOpened}

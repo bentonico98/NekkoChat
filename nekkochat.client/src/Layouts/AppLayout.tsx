@@ -16,6 +16,7 @@ import SettingsManager from "../Pages/Shared/Forms/SettingsManager";
 import customStyles from "../Constants/Styles/ModalStyles";
 import NotificationServerServices from "../Utils/NotificationServerServices";
 import UserAuthServices from "../Utils/UserAuthServices";
+import SimpleSnackbar from "../Pages/VideoCall/Components/AnswerButtom";
 
 export default function AppLayout() {
     const { setDisplayInfo } = useDisplayMessage();
@@ -90,7 +91,7 @@ export default function AppLayout() {
             <RegularSnackbar />
             <ErrorSnackbar />
             <NotificationSnackbar />
-
+            <SimpleSnackbar />
         </>
     );
 }

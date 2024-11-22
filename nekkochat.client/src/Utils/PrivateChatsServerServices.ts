@@ -13,7 +13,6 @@ export default class PrivateChatsServerServices {
         if (privateServer.state != "Disconnected") {
 
             try {
-
                 privateServer.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
                     addToChat(user_id, msj, false);
                 });

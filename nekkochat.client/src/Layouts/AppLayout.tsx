@@ -8,7 +8,8 @@ import useServer from "../Hooks/Server/useServer";
 import { useEffect } from "react";
 import useDisplayMessage from "../Hooks/useDisplayMessage";
 import { useAppDispatch, useAppSelector } from "../Hooks/storeHooks";
-import { closeProfileModal, closeSettingModal, logout, toggleNotification } from "../Store/Slices/userSlice";
+
+import { closeGroupModal, closeModal, closeProfileModal, closeSettingModal, logout, toggleNotification } from "../Store/Slices/userSlice";
 import Modal from "react-modal";
 import ProfileManager from "../Pages/Shared/Forms/ProfileManager";
 import SettingsManager from "../Pages/Shared/Forms/SettingsManager";
@@ -17,6 +18,9 @@ import customStyles from "../Constants/Styles/ModalStyles";
 import NotificationServerServices from "../Utils/NotificationServerServices";
 import UserAuthServices from "../Utils/UserAuthServices";
 import SimpleSnackbar from "../Pages/VideoCall/Components/AnswerButtom";
+import NekkoChatSpeedDialer from "../Pages/Shared/NekkoSpeedDialer";
+import PrivateChatManager from "../Pages/Shared/Forms/PrivateChatManager";
+import GroupManager from "../Pages/Shared/Forms/GroupManager";
 
 export default function AppLayout() {
     const { setDisplayInfo } = useDisplayMessage();
@@ -28,8 +32,10 @@ export default function AppLayout() {
     }
 
     const dispatch = useAppDispatch();
-    const modalOpened = useAppSelector(state => state.user.profileModal);
+    const profileOpened = useAppSelector(state => state.user.profileModal);
     const settingOpened = useAppSelector(state => state.user.settingModal);
+    const privateOpened = useAppSelector(state => state.user.modalOpened);
+    const groupOpened = useAppSelector(state => state.user.modalGroupOpened);
 
     const navigate = useNavigate();
 
@@ -54,7 +60,6 @@ export default function AppLayout() {
                 navigate("/login");
             }, 300000);
         }
-
     }, [established]);
     function afterOpenModal() {
         // references are now sync'd and can be accessed.
@@ -63,6 +68,8 @@ export default function AppLayout() {
     function close() {
         dispatch(closeProfileModal());
         dispatch(closeSettingModal());
+        dispatch(closeModal());
+        dispatch(closeGroupModal());
     }
 
     return (
@@ -70,11 +77,11 @@ export default function AppLayout() {
             <NekkoNavbar />
             {established && <Outlet />}
             <Modal
-                isOpen={modalOpened}
+                isOpen={profileOpened}
                 onAfterOpen={afterOpenModal}
                 onRequestClose={close}
                 style={customStyles}
-                contentLabel="Example Modal"
+                contentLabel="Profile Modal"
             >
                 <ProfileManager />
             </Modal>
@@ -83,15 +90,34 @@ export default function AppLayout() {
                 onAfterOpen={afterOpenModal}
                 onRequestClose={close}
                 style={customStyles}
-                contentLabel="Example Modal"
+                contentLabel="Settings Modal"
             >
                 <SettingsManager />
+            </Modal>
+            <Modal
+                isOpen={privateOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Private Chat Modal"
+            >
+                <PrivateChatManager />
+            </Modal>
+            <Modal
+                isOpen={groupOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Group Modal"
+            >
+                <GroupManager />
             </Modal>
             <NekkoSpinner />
             <RegularSnackbar />
             <ErrorSnackbar />
             <NotificationSnackbar />
             <SimpleSnackbar />
+            <NekkoChatSpeedDialer />
         </>
     );
 }

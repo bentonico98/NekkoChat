@@ -1,9 +1,9 @@
-//import { useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import { Outlet } from "react-router-dom";
-//import UserAuthServices from "../Utils/UserAuthServices";
+import UserAuthServices from "../Utils/UserAuthServices";
 
 export default function AltLayout() {
-    /*const navigate = () => {
+    const navigate = () => {
         window.location.href = "/inbox"
     }
 
@@ -11,7 +11,7 @@ export default function AltLayout() {
         if (UserAuthServices.isAuthenticated()) {
             navigate();
         }
-    }, []);*/
+    }, []);
 
     return (
         <Outlet />

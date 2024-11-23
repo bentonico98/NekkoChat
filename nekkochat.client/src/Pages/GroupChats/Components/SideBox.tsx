@@ -9,21 +9,36 @@ import useGetReceiver from "../../../Hooks/useGetReceiver";
 import ProfileHeaderSkeleton from "../../Shared/Skeletons/ProfileHeaderSkeleton";
 import ConversationSkeleton from "../../Shared/Skeletons/ConversationSkeleton";
 import { Divider } from "@mui/material";
+import { useEffect, useState } from "react";
 export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
+
+    const [data, setData] = useState<iConversationClusterProps[]>([]);
+
+    const refresh = () => {
+        if (messages.length > 0) {
+            setData([...messages]);
+        }
+    };
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            refresh();
+        }
+    }, [messages]);
 
     return (
         <Sidebar
             position="left"
             scrollable={false}
             style={{ minHeight: "100vh" }}>
-            {user ? <ProfileHeader /> : <ProfileHeaderSkeleton />}
+            {user ? <ProfileHeader item={messages} func={setData} refresh={refresh} category="Group Chats" key={1} /> : <ProfileHeaderSkeleton />}
 
             <Divider />
-            {messages && messages.length > 0 ? 
+            {data && data.length > 0 ? 
             <ConversationList>
-                {messages.map((el: iConversationClusterProps, idx: number) => {
+                    {data.map((el: iConversationClusterProps, idx: number) => {
                     return (<Conversation
                         key={idx}
                         name={FirstLetterUpperCase(el.groupname || "Unknown")}

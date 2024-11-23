@@ -1,36 +1,86 @@
-import avatar from "../../assets/avatar.png";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faBars } from '@fortawesome/free-solid-svg-icons';
-
-import { Stack, Image, Button } from "react-bootstrap";
-import { openModal, openProfileModal, UserState, openSettingModal } from "../../Store/Slices/userSlice";
-import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
-import { iuserStore } from "../../Constants/Types/CommonTypes";
-import { Typography } from "@mui/material";
-
-export default function ProfileHeader() {
-
+import { Box, Stack, Typography } from "@mui/material";
+import { Search } from "@chatscope/chat-ui-kit-react";
+import { useState } from "react";
+import { iConversationClusterProps, iuserStore } from "../../Constants/Types/CommonTypes";
+import { useAppSelector } from "../../Hooks/storeHooks";
+import { UserState } from "../../Store/Slices/userSlice";
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import ChatIcon from '@mui/icons-material/Chat';
+interface iCustomProps {
+    item: iConversationClusterProps[],
+    func: (arg: iConversationClusterProps[]) => void,
+    refresh: () => void,
+    category: string
+}
+export default function ProfileHeader({ item, func, refresh, category }: iCustomProps) {
+    const [value, setValue] = useState<string>('');
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
-    const dispatch = useAppDispatch();
 
-    const handleAddButton = () => {
-        dispatch(openModal());
+    const filterSearch = () => {
+        if (item.length <= 0) return
+        if (!value) return
+
+        var payload = [];
+
+        if (category === "Chats") {
+            payload = filterArray(item);
+        } else {
+            payload = filterArrayGroup(item);
+        }
+
+        if (payload.length <= 0) return;
+
+        func([...payload]);
     }
-    const handleProfileButton = () => {
-        dispatch(openProfileModal());
+
+    const filterArray = (item: iConversationClusterProps[]) => {
+        const payload: iConversationClusterProps[] = [];
+
+        item.forEach((arr) => {
+            arr.participants.forEach((part) => {
+                if (part.name.toLowerCase().includes(value) && part.id != user.value.id) {
+                    payload.push(arr);
+                }
+            })
+        });
+
+        return payload;
     }
-    const handleSettingsButton = () => {
-        dispatch(openSettingModal());
+
+    const filterArrayGroup = (item: iConversationClusterProps[]) => {
+        const payload: iConversationClusterProps[] = [];
+
+        item.forEach((arr) => {
+            if (arr.groupname && arr.groupname.toLowerCase().includes(value)) {
+                payload.push(arr);
+            }
+        });
+
+        return payload;
     }
+
+
     return (
-        <Stack direction="horizontal" gap={4} className="p-2" >
-            <Stack direction="horizontal" style={{ cursor: 'pointer' }} onClick={handleProfileButton}>
-                <Image  src={user.value.profilePhotoUrl || avatar}  roundedCircle fluid width={50} className="p-2" />
-                <Typography >{user.value.fname} {user.value.lname}</Typography>
-            </Stack>
-            <Button type="submit" variant="light" onClick={handleAddButton}  >{<FontAwesomeIcon icon={faAdd} />}</Button>
-            <Button type="submit" variant="light" onClick={handleSettingsButton} >{<FontAwesomeIcon icon={faBars} />}</Button>
+        <Stack direction="column" >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingX: '1rem', paddingY: '0.5rem' }}>
+                <Typography variant="h6">{category}</Typography>
+                {category === "Chats" ? <ChatIcon sx={{ color: 'gray' }} /> : <GroupAddIcon sx={{ color: 'gray' }} />}
+            </Box>
+            <Box sx={{ width: "100%", maxWidth: '100%' }}>
+                <Search
+                    placeholder="Search..."
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            filterSearch();
+                        }
+                    }}
+                    onChange={(e) => setValue(e)}
+                    onClearClick={() => {
+                        setValue("");
+                        refresh();
+                    }} />
+            </Box>
         </Stack>
     );
 }

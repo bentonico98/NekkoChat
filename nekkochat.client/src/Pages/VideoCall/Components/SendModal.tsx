@@ -2,25 +2,17 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
-import Modal from '@mui/material/Modal';
 import SendIcon from '@mui/icons-material/Send';
-import Grid from '@mui/material/Grid2';
 import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import CircularProgress from '@mui/material/CircularProgress';
 import { VideoCallButton } from './VideoCallButtom';
-
-const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-};
+import { Stack } from '@mui/material';
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
+import { Image } from "react-bootstrap";
+import avatar from "../../../assets/avatar.png";
+import Modal from "react-modal";
+import customStyles from '../../../Constants/Styles/ModalStyles';
 
 export type IUserData = {
     id: string,
@@ -69,14 +61,14 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
         <div>
             <VideoCallButton margin={'0.3rem'} onClick={handleOpen}><SendIcon /></VideoCallButton>
             <Modal
-                sx={{ width: "auto" }}
-                open={open}
-                onClose={handleClose}
+                style={customStyles}
+                isOpen={open}
+                onRequestClose={handleClose}
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={style}>
-                    <Typography sx={{ padding: "1rem" }} variant="h6">Seleccione a la persona que desea invitar</Typography>
+                <Box>
+                    <Typography sx={{ padding: "1rem" }} variant="h6">Choose the person you want to invite</Typography>
                     {
                         loading ?
                             <Box sx={{ display: 'flex', justifyContent:"center", alignItem:"center" }}>
@@ -84,21 +76,30 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
                         </Box >
                             : error ?
                         <Box sx={{ display: 'flex', justifyContent: "center", alignItem: "center" }}>
-                             <Typography variant={"h6" }>Could not get data</Typography>
+                             <Typography variant={"h6" }>No Data</Typography>
                         </Box> :
-                        Users.map((user) => {
+                        Users.map((user,idx) => {
                         return (
-                            <Grid key={user.id}  container>
-                                <Grid size={8} sx={{ padding: "0 4rem", display: "flex", alignItems: "start", justifyContent: "start" }}>
-                                    <img style={{ borderRadius: "50%", width: "3rem", height: "3rem" }} src={user.profilePhotoUrl != null ? user.profilePhotoUrl : "../../../../public/defaultAvatar.jpg"} />
-                                    <Typography sx={{ padding: "1rem" }} variant="subtitle2">{user.userName}</Typography>
-                              </Grid>
-                                <Grid size={4}>
-                                    <Button onClick={() => {
-                                        handleInvokeVideoNotification(user.id, data);
-                                    }}><SendIcon /></Button>
-                              </Grid>
-                            </Grid>
+                            <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "5rem", display: "flex", justifyContent: "space-around", flexWrap: "wrap", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2`}>
+                                <Box>
+                                    <Image src={user.profilePhotoUrl != null ? user.profilePhotoUrl : avatar} roundedCircle fluid  style={{ maxHeight: "50px", maxWidth:'50px' }} />
+                                </Box>
+
+                                <Box>
+                                    <Typography variant="h6" >{FirstLetterUpperCase(user!.userName)}</Typography>
+                                </Box>
+
+                                <Box>
+                                    <Box>
+                                        <Stack direction="row" spacing={1} >
+                                            <Button onClick={() => {
+                                                handleInvokeVideoNotification(user.id, data);
+                                                handleClose();
+                                            }}><SendIcon /></Button>
+                                        </Stack>
+                                    </Box>
+                                </Box>
+                            </Stack>
                         )
                     })}
                 </Box>

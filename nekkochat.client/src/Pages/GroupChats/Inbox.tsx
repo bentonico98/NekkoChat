@@ -9,11 +9,9 @@ import ChatMessages from "./Components/ChatMessages";
 
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 
-import { getUserData, closeModal, toggleErrorModal, toggleMsjModal, toggleNotification, toggleLoading } from "../../Store/Slices/userSlice";
+import { getUserData,  toggleErrorModal, toggleMsjModal, toggleNotification, toggleLoading } from "../../Store/Slices/userSlice";
 
 import Modal from "react-modal";
-import customStyles from "../../Constants/Styles/ModalStyles";
-import GroupManager from "../Shared/Forms/GroupManager";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 import useGetUser from "../../Hooks/Group/useGetUser";
 import useSignalServer from "../../Hooks/Group/useSignalServer";
@@ -33,7 +31,6 @@ export default function Inbox() {
     });
 
     const user = useAppSelector((state) => state.user);
-    const modalOpened = useAppSelector(state => state.user.modalOpened);
     const dispatch = useAppDispatch();
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
@@ -51,14 +48,6 @@ export default function Inbox() {
         dispatch(toggleLoading(displayInfo.isLoading));
 
     }, [displayInfo]);
-    function afterOpenModal() {
-        // references are now sync'd and can be accessed.
-        // subtitle.style.color = '#f00';
-    }
-
-    function close() {
-        dispatch(closeModal());
-    }
 
     const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username }: iTypingComponentProps, groupID: string, groupName: string) => {
         if (!msj && !user) {
@@ -142,15 +131,6 @@ export default function Inbox() {
                 </Box>}
 
             </MainContainer>
-            <Modal
-                isOpen={modalOpened}
-                onAfterOpen={afterOpenModal}
-                onRequestClose={close}
-                style={customStyles}
-                contentLabel="Example Modal"
-            >
-                <GroupManager />
-            </Modal>
         </>
 
     );

@@ -71,7 +71,7 @@ function NekkoNavbar() {
                 <Nav>
                     <Nav.Link href="/inbox">{<FontAwesomeIcon icon={faInbox} />} Inbox</Nav.Link>
                     <Nav.Link href="/groupchats">{<FontAwesomeIcon icon={faPeopleGroup} />} Groupchats</Nav.Link>
-                    <Nav.Link href="/chats/videocall">{<FontAwesomeIcon icon={faVideoCamera} />} VideoCalls</Nav.Link>
+                    <Nav.Link href="/chats/videocall">{<FontAwesomeIcon icon={faVideoCamera} />} Videocalls</Nav.Link>
                     <Nav.Link href="/friends">{<FontAwesomeIcon icon={faUserFriends} />} Friends</Nav.Link>
                 </Nav>
                 <Nav>

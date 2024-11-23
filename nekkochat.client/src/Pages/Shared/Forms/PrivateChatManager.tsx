@@ -87,7 +87,7 @@ export default function PrivateChatManager() {
 
                         <Divider />
 
-                        <Typography variant="h5" className="my-2">My Friends</Typography>
+                        <Typography variant="h6" className="my-2">My Friends</Typography>
                         {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
                             return <FriendButton
                                     key={idx}

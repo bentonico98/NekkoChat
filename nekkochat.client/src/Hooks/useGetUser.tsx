@@ -22,7 +22,6 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
                 if (res.success) {
                     setconversations(res.user);
                     DisplayMessage({ isLoading: false });
-
                 } else {
                     if (res.internalMessage) return DisplayMessage({
                         hasError:true,

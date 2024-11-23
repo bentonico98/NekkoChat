@@ -251,9 +251,9 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
     }
 
     return (
-        <Stack key={idx} direction="row" spacing={ 3} sx={{ display: "flex", justifyContent: "space-around", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
+        <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "4rem", display: "flex", flexWrap: "wrap", justifyContent: "space-around", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
             <Box>
-                <Image src={avatar} roundedCircle fluid width={50} />
+                <Image src={item ? item!.profilePhotoUrl : avatar} roundedCircle fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
             </Box>
 
             <Box>

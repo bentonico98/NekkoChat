@@ -13,13 +13,13 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
     }
 
     const setConnectionId = async (id: string, conn: string) => {
+        DisplayMessage({ isLoading: true });
+
         const res = await UserAuthServices.SetConnectionId({
             user_id: id,
             sender_id: id,
             connectionid: conn
         });
-
-        DisplayMessage({ isLoading: true });
 
         if (!res.success) {
             if (res.internalMessage) return DisplayMessage({
@@ -33,6 +33,7 @@ export default function useSignalServer(user: iuserStore, addToChat: any, Displa
                 isLoading: true
             });
         }
+        DisplayMessage({ isLoading: false });
     }
 
     //Mantiene la conexion abierta

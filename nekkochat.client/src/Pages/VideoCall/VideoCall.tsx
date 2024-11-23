@@ -23,6 +23,7 @@ import { useAppDispatch } from '../../Hooks/storeHooks';
 import { Badge } from 'react-bootstrap';
 import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
 import UserAuthServices from '../../Utils/UserAuthServices';
+import { Container } from '@mui/material';
 
 export const VideoCall: React.FC = () => {
 
@@ -108,6 +109,7 @@ export const VideoCall: React.FC = () => {
                     peerConnection.current.close();
                     peerConnection.current = null;
                 }
+                setIsOnCall(false);
             });
 
             connection.on('offervideonotification', async (sender_id: string, receiver_id: string, isAccepted: boolean) => {
@@ -115,7 +117,7 @@ export const VideoCall: React.FC = () => {
                     receiverId.current = receiver_id;
                     const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
                     if (res.success) {
-                        setReceiverName((prev) => prev = res.singleUser.userName);
+                        setReceiverName(res.singleUser.userName);
                     }
                     setTimeout(() => {
                         VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
@@ -124,6 +126,7 @@ export const VideoCall: React.FC = () => {
                 else {
                     if (user_id === sender_id) {
                         handleAlertSnackbar("REJECTION");
+                        setIsOnCall(false);
                     }
 
                 }
@@ -132,18 +135,20 @@ export const VideoCall: React.FC = () => {
             connection.on('connectedvideonotification', async (sender_id: string, receiver_id: string) => {
                 console.log(receiver_id + " " + sender_id)
                 if (user_id === receiver_id) {
-                    const res = await UserAuthServices.SearchUserById(sender_id,receiver_id);
+                    const res = await UserAuthServices.SearchUserById(sender_id, receiver_id);
                     if (res.success) {
-                        setReceiverName((prev) => prev = res.singleUser.userName);
+                        setReceiverName(res.singleUser.userName);
                     }
                     setTimeout(async () => {
+                        setIsOnCall(true);
                         await videocallComunicationHandlerRef.current!.handleAnswer(sender_id, receiver_id);
                     }, 2000);
                 } else if (user_id === sender_id) {
                     const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
                     if (res.success) {
-                        setReceiverName((prev) => prev = res.singleUser.userName);
+                        setReceiverName(res.singleUser.userName);
                     }
+                    setIsOnCall(true);
                     await videocallComunicationHandlerRef.current!.handleCall(sender_id, receiver_id);
                 }
             });
@@ -347,61 +352,54 @@ export const VideoCall: React.FC = () => {
     };
 
     return (
-        <Box sx={{
-            margin: 0,
-            padding: 0,
-        }}>
-            <AlertSnackbar
-                message={alertSnackbarData!.message}
-                isOpen={alertSnackbarData!.isOpen}
-                severity={alertSnackbarData!.severity}
-                onClose={handleSnackbarClose} />
-            <Box sx={{
-                display: "inline-flex",
+        <>
+            {alertSnackbarData!.isOpen &&
+                <AlertSnackbar
+                    message={alertSnackbarData!.message}
+                    isOpen={alertSnackbarData!.isOpen}
+                    severity={alertSnackbarData!.severity}
+                    onClose={handleSnackbarClose} />}
+
+            <Container sx={{
+                display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 borderRadius: "1rem",
-                margin: isMediumScreen ? "3rem 5rem 0.5rem 5rem" : "-1rem 0 0 2.4rem",
+                padding: ".5rem"
             }}>
                 {isVideoOn ?
                     <Box sx={{
-                        height: isMediumScreen ? "65vh" : "auto",
-                        width: isMediumScreen ? "auto" : "100vw",
                         minWidth: "42.5vw",
+                        height: "80vh",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        position:"relative"
+                        borderRadius: "1rem",
+                        flexGrow: "1"
                     }}>
                         <video
                             id="local"
                             style={{
                                 borderRadius: "1rem",
+                                height: "100%"
                             }}
                             autoPlay
                             ref={videoRef}
                             onClick={() => {
                                 console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
                             }} />
-                        <Badge
-                            bg="primary"
-                            style={{
-                                position: "absolute",
-                                top: "1rem",
-                                left: "2rem",
-                                zIndex:"9999"
-                            }}>{FirstLetterUpperCase(user_name)}</Badge>
                     </Box>
                     :
                     <Box sx={{
                         backgroundColor: "#777",
-                        height: isMediumScreen ? "65vh" : "auto",
-                        width: isMediumScreen ? "auto" : "100vw",
+                        height: "80vh",
                         minWidth: "42.5vw",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        borderRadius: "1rem"
+                        borderRadius: "1rem",
+                        justifySelf:"center",
+                        flexGrow: "1"
                     }}>
                         <VideocamOffIcon sx={{
                             fontSize: "4rem",
@@ -409,7 +407,31 @@ export const VideoCall: React.FC = () => {
                         }} /></Box>
                 }
 
-            </Box>
+                {isOnCall && <Box sx={{
+                    minWidth: "42.5vw",
+                    height: "80vh",
+                    position: "relative",
+                }}
+                    onMouseDown={handleMouseDown}
+                    onTouchStart={handleTouchStart}
+                >
+                    <video
+                        id='remoto'
+                        style={{ borderRadius: "1rem", height: "100%" }}
+                        autoPlay
+                        ref={remoteVideoRef}
+                    />
+                    {isOnCall &&
+                        <Badge
+                            bg="primary"
+                            style={{
+                                position: "absolute",
+                                top: "1rem",
+                                left: "1rem"
+                            }}>{FirstLetterUpperCase(receiverName)}</Badge>}
+                </Box>}
+            </Container>
+
             <Box sx={{
                 display: "flex",
                 alignItems: "center",
@@ -421,48 +443,16 @@ export const VideoCall: React.FC = () => {
                 <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<SettingsIcon />}</VideoCallButton>
                 <SendModal Users={data} loading={loading} error={error} data={user_data} />
                 <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<ChatIcon />}</VideoCallButton>
-                {isOnCall && 
-                <VideoCallButton bgcolor={"#ff4343"} bgcolorHover={"#ff6666"} onClick={(() => {
-                    if (videocallComunicationHandlerRef.current) {
-                        videocallComunicationHandlerRef.current?.handleLeaveCall(videoRef, remoteVideoRef)
-                    }
-                    else {
-                        navigate("/chats/videocall")
-                    }
+                {isOnCall &&
+                    <VideoCallButton bgcolor={"#ff4343"} bgcolorHover={"#ff6666"} onClick={(() => {
+                        if (videocallComunicationHandlerRef.current) {
+                            videocallComunicationHandlerRef.current?.handleLeaveCall(videoRef, remoteVideoRef)
+                        }
+                        else {
+                            navigate("/chats/videocall")
+                        }
                     })}>END</VideoCallButton>}
             </Box>
-
-            <Box sx={{
-                height: "15rem",
-                width: "15rem",
-                position: "absolute",
-                top: position.top,
-                left: position.left,
-                zIndex: "10",
-                display: "block",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "1rem",
-                cursor: isDragging ? 'grabbing' : 'grab',
-            }}
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
-            >
-                <video
-                    id='remoto'
-                    style={{ borderRadius: "1rem", width: "100%", height: "100%", zIndex: "2" }}
-                    autoPlay
-                    ref={remoteVideoRef}
-                />
-                {isOnCall &&
-                    <Badge
-                        bg="primary"
-                        style={{
-                            position: "absolute",
-                            top: "1rem",
-                            left: "3rem"
-                        }}>{FirstLetterUpperCase(receiverName)}</Badge>}
-            </Box>
-        </Box>
+        </>
     );
 }

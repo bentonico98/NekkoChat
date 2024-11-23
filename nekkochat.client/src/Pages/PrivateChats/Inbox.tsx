@@ -9,11 +9,8 @@ import ChatSchema from "../../Schemas/ChatSchema";
 
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 
-import { closeModal, getUserData, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from "../../Store/Slices/userSlice";
+import { getUserData, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from "../../Store/Slices/userSlice";
 
-import Modal from "react-modal";
-import customStyles from "../../Constants/Styles/ModalStyles";
-import PrivateChatManager from "../Shared/Forms/PrivateChatManager";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { iChatSchema, iTypingComponentProps } from "../../Constants/Types/CommonTypes";
 import useGetUser from "../../Hooks/useGetUser";
@@ -38,15 +35,6 @@ export default function Inbox() {
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
-    const modalOpened = useAppSelector(state => state.user.modalOpened);
-
-    function afterOpenModal() {
-        // references are now sync'd and can be accessed.
-        // subtitle.style.color = '#f00';
-    }
-    function close() {
-        dispatch(closeModal());
-    }
 
     const addToChat = (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => {
         if (!msj && !user) {
@@ -141,15 +129,6 @@ export default function Inbox() {
                     </Box>
                 </Box>}
             </MainContainer>
-            <Modal
-                isOpen={modalOpened}
-                onAfterOpen={afterOpenModal}
-                onRequestClose={close}
-                style={customStyles}
-                contentLabel="Example Modal"
-            >
-                <PrivateChatManager />
-            </Modal>
         </>
 
     );

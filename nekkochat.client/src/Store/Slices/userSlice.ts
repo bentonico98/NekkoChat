@@ -6,6 +6,7 @@ import UserAuthServices from "../../Utils/UserAuthServices";
 export interface UserState {
     value: object,
     modalOpened: boolean,
+    modalGroupOpened: boolean,
     errorModalOpened: boolean,
     msjModalOpened: boolean,
     notificationModal: boolean,
@@ -21,6 +22,7 @@ export interface UserState {
 const initialState: UserState = {
     value: JSON.parse(localStorage.getItem("user") || '{}'),
     modalOpened: false,
+    modalGroupOpened: false,
     errorModalOpened: false,
     msjModalOpened: false,
     notificationModal: false,
@@ -69,6 +71,12 @@ export const userSlice = createSlice({
         },
         closeModal: (state) => {
             state.modalOpened = false;
+        },
+        openGroupModal: (state) => {
+            state.modalGroupOpened = true;
+        },
+        closeGroupModal: (state) => {
+            state.modalGroupOpened = false;
         },
         openProfileModal: (state) => {
             state.profileModal = true;
@@ -132,6 +140,8 @@ export const {
     logout,
     openModal,
     closeModal,
+    closeGroupModal,
+    openGroupModal,
     openProfileModal,
     closeProfileModal,
     openSettingModal,

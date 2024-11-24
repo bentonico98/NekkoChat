@@ -1,4 +1,4 @@
-﻿import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+﻿import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader,  VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 import MessageServicesClient from "../../../Utils/MessageServicesClient";
 import PrivateChatsServerServices from "../../../Utils/PrivateChatsServerServices";
 
@@ -6,12 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {  Divider, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
 import { ContentCut, ContentPaste, ContentCopy, Delete, Archive, Favorite } from "@mui/icons-material"
-import { iChatMessagesProps, iChatSchema, iuserStore } from "../../../Constants/Types/CommonTypes";
+import { iChatMessagesProps, iChatSchema, iuserStore, iUserVideoCallTypes } from "../../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetReceiver from '../../../Hooks/useGetReceiver';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
-import { useAppSelector } from '../../../Hooks/storeHooks';
-import { UserState } from '../../../Store/Slices/userSlice';
+import { useAppSelector, useAppDispatch } from '../../../Hooks/storeHooks';
+import { openUserProfileModal, setProfileId, UserState } from '../../../Store/Slices/userSlice';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages(
     {
@@ -30,6 +30,7 @@ export default function ChatMessages(
     const { getParticipantName, getPic } = useGetParticipants(sender);
 
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
     const [chat_id, setChat_id] = useState<number>(chat);
     const [message_id, setMessage_id] = useState<string>("0");
@@ -98,13 +99,22 @@ export default function ChatMessages(
                         <Avatar
                             src={getPic(participants)}
                             name={FirstLetterUpperCase(getParticipantName(participants))}
-                            onClick={() => { navigate("/account/" + receiver); }} />
+                            onClick={() => {
+                                dispatch(setProfileId(receiver.toString()));
+                                dispatch(openUserProfileModal());
+                            }} />
                         <ConversationHeader.Content
                             userName={FirstLetterUpperCase(getParticipantName(participants))}
-                            info={getLastOnline(messages)} />
+                            info={"last online on " + getLastOnline(messages)} />
                         <ConversationHeader.Actions>
-                            <VoiceCallButton />
-                            <VideoCallButton />
+                            <VideoCallButton onClick={() => {
+                                const state: iUserVideoCallTypes = {
+                                    id: receiver.toString(),
+                                    name: FirstLetterUpperCase(getParticipantName(participants)),
+                                    photo: getPic(participants)
+                                }
+                                navigate("/chats/videocall?externalCall=true", { state });
+                            } } />
                             <EllipsisButton
                                 orientation="vertical"
                                 onClick={handleClick} />

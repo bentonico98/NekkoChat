@@ -1,4 +1,4 @@
-import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, VoiceCallButton, VideoCallButton, EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
+import { ChatContainer, MessageList, Message, MessageInput, Avatar, ConversationHeader, AddUserButton , EllipsisButton, TypingIndicator, MessageSeparator } from '@chatscope/chat-ui-kit-react';
 
 import avatar from "../../../assets/avatar.png";
 
@@ -14,6 +14,11 @@ import { UserState } from '../../../Store/Slices/userSlice';
 import { useAppSelector } from '../../../Hooks/storeHooks';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
+import Modal from "react-modal";
+import customStyles from '../../../Constants/Styles/ModalStyles';
+import GroupManagerAlt from '../../Shared/Forms/GroupManagerAlt';
+import { useState } from 'react';
+
 export default function ChatMessages({
     messages,
     connected,
@@ -37,6 +42,19 @@ export default function ChatMessages({
 
     const navigate = useNavigate();
 
+    const [modalOpened, setModalOpened] = useState<boolean>(false);
+
+    function open() {
+        setModalOpened(true);
+    }
+    function afterOpenModal() {
+        // references are now sync'd and can be accessed.
+        // subtitle.style.color = '#f00';
+    }
+    function close() {
+        setModalOpened(false);
+    }
+
     return (
         <>
             {messages.length > 0 ?
@@ -49,8 +67,7 @@ export default function ChatMessages({
                             onClick={() => { navigate("/group/" + receiver); }} />
                         <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
-                            <VoiceCallButton />
-                            <VideoCallButton />
+                            <AddUserButton onClick={open} />
                             <EllipsisButton orientation="vertical" />
                         </ConversationHeader.Actions>
                     </ConversationHeader>
@@ -119,7 +136,24 @@ export default function ChatMessages({
                                 });
                             }
                         }} />
-                </ChatContainer> : <NekkoSpinner/>}
+                </ChatContainer> : <NekkoSpinner />}
+
+            <Modal
+                isOpen={modalOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Group Modal"
+            >
+                <GroupManagerAlt
+                    groupname={groupName}
+                    groupdesc={groupDesc}
+                    groupphoto={groupPhoto}
+                    grouptype={groupType}
+                    participants={participants}
+                    group_id={receiver}
+                />
+            </Modal>
         </>
     );
 }

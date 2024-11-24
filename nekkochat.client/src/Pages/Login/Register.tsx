@@ -88,7 +88,7 @@ export default function Register() {
     useEffect(() => {
         if (loggedIn) {
             dispatch(login({ success: loggedIn, user: currentUser }));
-            navigate("/inbox");
+            window.location.href = "/inbox";
         }
     }, [loggedIn]);
 

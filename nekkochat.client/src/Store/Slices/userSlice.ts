@@ -13,10 +13,14 @@ export interface UserState {
     notificationCount: string,
     profileModal: boolean,
     settingModal: boolean,
+    videoSettingModal: boolean,
     error: string | null | undefined
     message: string | null | undefined
     notification: string | null | undefined,
+    profileId:string,
     isLoading: boolean | undefined,
+    userProfileModalOpened: boolean,
+
 }
 
 const initialState: UserState = {
@@ -29,10 +33,13 @@ const initialState: UserState = {
     notificationCount: "0",
     profileModal: false,
     settingModal: false,
+    videoSettingModal: false,
     isLoading: false,
     error: null,
     message: null,
     notification: null,
+    profileId: "0",
+    userProfileModalOpened: false,
 }
 
 export const userSlice = createSlice({
@@ -43,7 +50,7 @@ export const userSlice = createSlice({
             const user = JSON.parse(localStorage.getItem("user") || '{}');
             state.value = user;
         },
-        refreshUserData:  (state, action: PayloadAction<string>) => {
+        refreshUserData: (state, action: PayloadAction<string>) => {
             if (action.payload) {
                 UserAuthServices.RefreshUserById(action.payload).then((res) => {
                     if (res.success) {
@@ -84,11 +91,23 @@ export const userSlice = createSlice({
         closeProfileModal: (state) => {
             state.profileModal = false;
         },
+        openUserProfileModal: (state) => {
+            state.userProfileModalOpened = true;
+        },
+        closeUserProfileModal: (state) => {
+            state.userProfileModalOpened = false;
+        },
         openSettingModal: (state) => {
             state.settingModal = true;
         },
         closeSettingModal: (state) => {
             state.settingModal = false;
+        },
+        openVideoSettingModal: (state) => {
+            state.videoSettingModal = true;
+        },
+        closeVideoSettingModal: (state) => {
+            state.videoSettingModal = false;
         },
         toggleMsjModal: (state, action: PayloadAction<{ status: boolean, message: string | null | undefined }>) => {
             state.msjModalOpened = action.payload.status;
@@ -130,6 +149,10 @@ export const userSlice = createSlice({
             if (!action.payload) return
             state.notificationCount = action.payload;
         },
+        setProfileId: (state, action: PayloadAction<string>) => {
+            if (!action.payload) return
+            state.profileId = action.payload;
+        },
     }
 });
 
@@ -144,13 +167,18 @@ export const {
     openGroupModal,
     openProfileModal,
     closeProfileModal,
+    openUserProfileModal,
+    closeUserProfileModal,
     openSettingModal,
     closeSettingModal,
+    openVideoSettingModal,
+    closeVideoSettingModal,
     toggleMsjModal,
     toggleErrorModal,
     toggleNotification,
     toggleLoading,
-    setNotificationCount
+    setNotificationCount,
+    setProfileId
 } = userSlice.actions;
 
 export const selectUser = (state: RootState) => state.user;

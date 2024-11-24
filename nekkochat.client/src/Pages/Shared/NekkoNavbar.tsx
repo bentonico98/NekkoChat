@@ -35,25 +35,14 @@ function NekkoNavbar() {
 
     const [show, setShow] = React.useState<boolean>(false);
 
-    const navigate = () => {
-        window.location.href = "/login"
-    }
-
     const handleShow = () => setShow(true);
 
     const handleLogout = async () => {
         dispatch(toggleLoading(true));
-        await UserAuthServices.Logout({ user_id: user.value.id });
         dispatch(logout());
-        navigate();
+        await UserAuthServices.Logout({ user_id: user.value.id });
+        window.location.href = "/login";
     }
-
-    React.useLayoutEffect(() => {
-        if (!UserAuthServices.isAuthenticated()) {
-            dispatch(toggleLoading(true));
-            navigate();
-        }
-    }, []);
 
     return (
         <Navbar bg="light" sticky="top" data-bs-theme="light">

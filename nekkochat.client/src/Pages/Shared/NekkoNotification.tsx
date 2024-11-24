@@ -58,9 +58,9 @@ export default function NekkoNotification({ item }: iCustomProps) {
         <>
             {item.type ?
                 <Button onClick={() => handleClick(item!.id, item!.url)} >
-                    <Card className={tabColor} sx={{ display: 'flex', maxHeight: "90px", justifyContent: 'space-between' }}>
+                    <Card className={tabColor} sx={{ display: 'flex', flexWrap:"wrap", maxHeight: "90px", minWidth: "360px", justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                            <CardContent sx={{ flex: '1 0 auto' }}>
+                            <CardContent sx={{ flex: '1 0 auto', textAlign:"left" }}>
                                 <Typography component="div" variant="h5">
                                     {FirstLetterUpperCase(GetUserNotificationService(item.type))}
                                 </Typography>
@@ -74,7 +74,7 @@ export default function NekkoNotification({ item }: iCustomProps) {
                                 </Typography>
                             </CardContent>
                         </Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
+                        <Box sx={{ position: "fixed", right:"0.5rem", display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
                             <Button variant="text" size="large" onClick={() => { handleDeleteButton(item!.id, item!.url) } }  >{<FontAwesomeIcon className={buttonColor} icon={faTrashAlt} />}</Button>
                         </Box>
                     </Card>

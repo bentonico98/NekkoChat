@@ -1,9 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate,  useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import React, { useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import VideocamOffIcon from '@mui/icons-material/VideocamOff';
-import ChatIcon from '@mui/icons-material/Chat';
 import SettingsIcon from '@mui/icons-material/Settings';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
@@ -18,7 +17,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { AlertSnackbar, AlertSnackbarType } from './Components/AlertSnackbar';
 import { VideoCallComnicationHandler } from './Components/Handlers/VideoComunicationHandler';
 import { HubConnection } from '@microsoft/signalr';
-import { openSettingModal } from '../../Store/Slices/userSlice';
+import { openVideoSettingModal } from '../../Store/Slices/userSlice';
 import { useAppDispatch } from '../../Hooks/storeHooks';
 import { Badge } from 'react-bootstrap';
 import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
@@ -66,6 +65,7 @@ export const VideoCall: React.FC = () => {
 
     const { connected, conn } = useVideocallSignalServer();
     let connection: HubConnection;
+
 
     useEffect(() => {
         const url = ServerLinks.getVideocallUsersUrl(user_id);
@@ -351,6 +351,17 @@ export const VideoCall: React.FC = () => {
         setIsDragging(false);
     };
 
+    const { state } = useLocation();
+    const [ searchParams ] = useSearchParams();
+    const [externalCall] = useState(searchParams.get("externalCall") || false);
+
+    useEffect(() => {
+        if (externalCall) {
+            const data = {name: state.name, photo: state.photo}
+            VideocallServerServices.SendVideoNotification(user_id, state.id, JSON.stringify(data));
+        }
+    }, []);
+
     return (
         <>
             {alertSnackbarData!.isOpen &&
@@ -375,19 +386,29 @@ export const VideoCall: React.FC = () => {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: "1rem",
-                        flexGrow: "1"
+                        flexGrow: "1",
                     }}>
-                        <video
-                            id="local"
-                            style={{
-                                borderRadius: "1rem",
-                                height: "100%"
-                            }}
-                            autoPlay
-                            ref={videoRef}
-                            onClick={() => {
-                                console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
-                            }} />
+                        <div style={{ position: "relative", height: "100%" }}>
+                            <video
+                                id="local"
+                                style={{
+                                    borderRadius: "1rem",
+                                    height: "100%"
+                                }}
+                                autoPlay
+                                ref={videoRef}
+                                onClick={() => {
+                                    console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
+                                }} />
+                            <Badge
+                                bg="primary"
+                                style={{
+                                    position: "absolute",
+                                    top: "1rem",
+                                    left: "1rem",
+                                    zIndex: "1000"
+                                }}>{FirstLetterUpperCase(user_name)}</Badge>
+                        </div>
                     </Box>
                     :
                     <Box sx={{
@@ -398,7 +419,7 @@ export const VideoCall: React.FC = () => {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: "1rem",
-                        justifySelf:"center",
+                        justifySelf: "center",
                         flexGrow: "1"
                     }}>
                         <VideocamOffIcon sx={{
@@ -427,7 +448,8 @@ export const VideoCall: React.FC = () => {
                             style={{
                                 position: "absolute",
                                 top: "1rem",
-                                left: "1rem"
+                                left: "1rem",
+                                zIndex: "10"
                             }}>{FirstLetterUpperCase(receiverName)}</Badge>}
                 </Box>}
             </Container>
@@ -440,9 +462,8 @@ export const VideoCall: React.FC = () => {
             }}>
                 <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
                 <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
-                <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<SettingsIcon />}</VideoCallButton>
+                <VideoCallButton onClick={() => { dispatch(openVideoSettingModal()); }}>{<SettingsIcon />}</VideoCallButton>
                 <SendModal Users={data} loading={loading} error={error} data={user_data} />
-                <VideoCallButton onClick={() => { dispatch(openSettingModal()); }}>{<ChatIcon />}</VideoCallButton>
                 {isOnCall &&
                     <VideoCallButton bgcolor={"#ff4343"} bgcolorHover={"#ff6666"} onClick={(() => {
                         if (videocallComunicationHandlerRef.current) {

@@ -1,4 +1,4 @@
-import { Modal, Button, Container} from 'react-bootstrap';
+import { Modal, Button, Container } from 'react-bootstrap';
 import { Search } from '@chatscope/chat-ui-kit-react';
 import FriendButton from '../FriendButton';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
@@ -77,11 +77,12 @@ export default function PrivateChatManager() {
                             <Typography variant="h5" className="my-2">Search Results</Typography>
                             {searchFriends.map((el: iUserViewModel, idx: number) => {
                                 return <FriendButton
-                                        key={idx}
-                                        id={el.id}
-                                        idx={idx}
-                                        item={el}
-                                        DisplayMessage={setDisplayInfo} />
+                                    key={idx}
+                                    id={el.id}
+                                    idx={idx}
+                                    item={el}
+                                    DisplayMessage={setDisplayInfo}
+                                    searchSafe={false} />
                             })}
                         </div>}
 
@@ -90,11 +91,12 @@ export default function PrivateChatManager() {
                         <Typography variant="h6" className="my-2">My Friends</Typography>
                         {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
                             return <FriendButton
-                                    key={idx}
-                                    id={el.id}
-                                    idx={idx}
-                                    item={el}
-                                    DisplayMessage={setDisplayInfo} />
+                                key={idx}
+                                id={el.id}
+                                idx={idx}
+                                item={el}
+                                DisplayMessage={setDisplayInfo}
+                                searchSafe={false} />
                         }) : <RegularSkeleton />}
                     </Container>
                 </Modal.Body>

@@ -42,10 +42,10 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
 
     const { connected, conn } = useVideocallSignalServer();
 
-    let connection: any 
+    let connection: any
 
     React.useEffect(() => {
-        if (connected) { 
+        if (connected) {
             connection = conn?.connection;
         }
         else {
@@ -54,7 +54,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
     }, [connected, connection]);
 
     const handleInvokeVideoNotification = (receiver_id: string, data: IProfileData) => {
-        VideocallServerServices.SendVideoNotification( sender_id, receiver_id, JSON.stringify(data))
+        VideocallServerServices.SendVideoNotification(sender_id, receiver_id, JSON.stringify(data))
     }
 
     return (
@@ -71,37 +71,37 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
                     <Typography sx={{ padding: "1rem" }} variant="h6">Choose the person you want to invite</Typography>
                     {
                         loading ?
-                            <Box sx={{ display: 'flex', justifyContent:"center", alignItem:"center" }}>
-                            <CircularProgress />
-                        </Box >
+                            <Box sx={{ display: 'flex', justifyContent: "center", alignItem: "center" }}>
+                                <CircularProgress />
+                            </Box >
                             : error ?
-                        <Box sx={{ display: 'flex', justifyContent: "center", alignItem: "center" }}>
-                             <Typography variant={"h6" }>No Data</Typography>
-                        </Box> :
-                        Users.map((user,idx) => {
-                        return (
-                            <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "5rem", display: "flex", justifyContent: "space-around", flexWrap: "wrap", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2`}>
-                                <Box>
-                                    <Image src={user.profilePhotoUrl != null ? user.profilePhotoUrl : avatar} roundedCircle fluid  style={{ maxHeight: "50px", maxWidth:'50px' }} />
-                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: "center", alignItem: "center" }}>
+                                    <Typography variant={"h6"}>No Data</Typography>
+                                </Box> :
+                                Users.map((user, idx) => {
+                                    return (
+                                        <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "5rem", display: "flex", justifyContent: "space-between", flexWrap: "wrap", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2`}>
+                                            <Box>
+                                                <Image src={user.profilePhotoUrl != null ? user.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
+                                            </Box>
 
-                                <Box>
-                                    <Typography variant="h6" >{FirstLetterUpperCase(user!.userName)}</Typography>
-                                </Box>
+                                            <Box>
+                                                <Typography variant="h6" >{FirstLetterUpperCase(user!.userName)}</Typography>
+                                            </Box>
 
-                                <Box>
-                                    <Box>
-                                        <Stack direction="row" spacing={1} >
-                                            <Button onClick={() => {
-                                                handleInvokeVideoNotification(user.id, data);
-                                                handleClose();
-                                            }}><SendIcon /></Button>
+                                            <Box>
+                                                <Box>
+                                                    <Stack direction="row" spacing={1} >
+                                                        <Button onClick={() => {
+                                                            handleInvokeVideoNotification(user.id, data);
+                                                            handleClose();
+                                                        }}><SendIcon /></Button>
+                                                    </Stack>
+                                                </Box>
+                                            </Box>
                                         </Stack>
-                                    </Box>
-                                </Box>
-                            </Stack>
-                        )
-                    })}
+                                    )
+                                })}
                 </Box>
             </Modal>
         </div>

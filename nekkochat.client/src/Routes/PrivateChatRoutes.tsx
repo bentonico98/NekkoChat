@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { VideoCall } from "../Pages/VideoCall/VideoCall";
 
 import WelcomePage from "../Pages/Welcome/Index";
@@ -11,21 +11,22 @@ import Register from "../Pages/Login/Register";
 import InboxGroup from "../Pages/GroupChats/Inbox";
 
 import FriendList from "../Pages/Friend/Index";
-import FriendProfile from "../Pages/Friend/Account";
 import GroupProfile from "../Pages/Friend/GroupProfile";
 import Settings from "../Pages/Settings/Index";
 
 import AppLayout from "../Layouts/AppLayout";
 import AltLayout from "../Layouts/AltLayout";
+import UserAuthServices from "../Utils/UserAuthServices";
 
 export default function PrivateChatRoutes() {
+    const isLoggedIn = UserAuthServices.isAuthenticated();
 
     return (
         <BrowserRouter>
             <Routes>
                 {/* Rutas de la APP */}
 
-                <Route path="/" element={<AppLayout />}>
+                <Route path="/" element={isLoggedIn ? <AppLayout /> : <Navigate to="/login"/>}>
                     <Route path="inbox" element={<Inbox />} />
 
                     <Route path="chats">
@@ -39,10 +40,7 @@ export default function PrivateChatRoutes() {
 
                     <Route path="friends">
                         <Route index element={<FriendList />} />
-                        <Route path=":user_id" element={<FriendProfile />} />
                     </Route>
-
-                    <Route path="/account/:user_id" element={<FriendProfile />} />
 
                     <Route path="/group/:user_id" element={<GroupProfile />} />
 
@@ -54,7 +52,7 @@ export default function PrivateChatRoutes() {
 
                 {/* Rutas de Autenticacion */}
 
-                <Route path="/" element={<AltLayout />} >
+                <Route path="/" element={!isLoggedIn ? <AltLayout /> : <Navigate to="/inbox" />} >
                     <Route index element={<WelcomePage />} />
                     <Route path="login" element={<Login />} />
                     <Route path="register" element={<Register />} />

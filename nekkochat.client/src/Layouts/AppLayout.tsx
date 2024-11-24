@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import useDisplayMessage from "../Hooks/useDisplayMessage";
 import { useAppDispatch, useAppSelector } from "../Hooks/storeHooks";
 
-import { closeGroupModal, closeModal, closeProfileModal, closeSettingModal, logout, toggleNotification } from "../Store/Slices/userSlice";
+import { closeGroupModal, closeModal, closeProfileModal, closeSettingModal, closeUserProfileModal, closeVideoSettingModal, logout, toggleNotification } from "../Store/Slices/userSlice";
 import Modal from "react-modal";
 import ProfileManager from "../Pages/Shared/Forms/ProfileManager";
 import SettingsManager from "../Pages/Shared/Forms/SettingsManager";
@@ -21,6 +21,8 @@ import SimpleSnackbar from "../Pages/VideoCall/Components/AnswerButtom";
 import NekkoChatSpeedDialer from "../Pages/Shared/NekkoSpeedDialer";
 import PrivateChatManager from "../Pages/Shared/Forms/PrivateChatManager";
 import GroupManager from "../Pages/Shared/Forms/GroupManager";
+import VideoSettingsManager from "../Pages/Shared/Forms/VideoSettingsManager";
+import UserProfileManager from "../Pages/Shared/Forms/UserProfileManager";
 
 export default function AppLayout() {
     const { setDisplayInfo } = useDisplayMessage();
@@ -33,9 +35,11 @@ export default function AppLayout() {
 
     const dispatch = useAppDispatch();
     const profileOpened = useAppSelector(state => state.user.profileModal);
+    const userProfileOpened = useAppSelector(state => state.user.userProfileModalOpened);
     const settingOpened = useAppSelector(state => state.user.settingModal);
     const privateOpened = useAppSelector(state => state.user.modalOpened);
     const groupOpened = useAppSelector(state => state.user.modalGroupOpened);
+    const videoSettingsOpened = useAppSelector(state => state.user.videoSettingModal);
 
     const navigate = useNavigate();
 
@@ -70,8 +74,9 @@ export default function AppLayout() {
         dispatch(closeSettingModal());
         dispatch(closeModal());
         dispatch(closeGroupModal());
+        dispatch(closeVideoSettingModal());
+        dispatch(closeUserProfileModal());
     }
-
     return (
         <>
             <NekkoNavbar />
@@ -86,6 +91,15 @@ export default function AppLayout() {
                 <ProfileManager />
             </Modal>
             <Modal
+                isOpen={userProfileOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="User Profile Modal"
+            >
+                <UserProfileManager />
+            </Modal>
+            <Modal
                 isOpen={settingOpened}
                 onAfterOpen={afterOpenModal}
                 onRequestClose={close}
@@ -93,6 +107,15 @@ export default function AppLayout() {
                 contentLabel="Settings Modal"
             >
                 <SettingsManager />
+            </Modal>
+            <Modal
+                isOpen={videoSettingsOpened}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={close}
+                style={customStyles}
+                contentLabel="Settings Modal"
+            >
+                <VideoSettingsManager />
             </Modal>
             <Modal
                 isOpen={privateOpened}

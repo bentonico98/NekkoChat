@@ -11,7 +11,7 @@ import useGetParticipants from '../../../Hooks/useGetParticipants';
 import useGetReceiver from '../../../Hooks/useGetReceiver';
 import ConversationSkeleton from '../../Shared/Skeletons/ConversationSkeleton';
 import ProfileHeaderSkeleton from '../../Shared/Skeletons/ProfileHeaderSkeleton';
-
+import avatar from "../../../assets/avatar.png";
 export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
@@ -77,7 +77,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                                 });
                             }}>
                             <Avatar
-                                src={getPic(el.participants)}
+                                src={getPic(el.participants) || avatar}
                                 name={el.participants[el.participants.length - 1].name}
                                 status={GetUserStatusService(parseInt(el!.status || "0"))} />
                         </Conversation>);

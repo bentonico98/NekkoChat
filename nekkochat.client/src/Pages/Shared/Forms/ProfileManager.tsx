@@ -47,30 +47,30 @@ export default function ProfileManager() {
                 <Modal.Body>
                     <Container>
                         <Row>
-                            <Col xs={12}>
-                                <Image src={user.value.profilePhotoUrl} roundedCircle fluid width={100} className="p-2" />
+                            <Col xs={12} style={{ display: 'flex', flexDirection: 'column', alignItems:"center" }}>
+                                <Image src={user.value.profilePhotoUrl} roundedCircle fluid width={200}  />
                                 <form onSubmit={(e) => { e.preventDefault(); changeProfilePicture() }} id="nekkoform" encType="multipart/form-data">
                                     <input name="file" type="file" />
                                     <Button type="submit">{<FontAwesomeIcon id="nekkoFileButton" style={{ cursor: "pointer" }}  icon={faPen} />}</Button>
                                 </form>
                             </Col>
                             <Col>
-                                <Typography variant="h6">First Name: {FirstLetterUpperCase(user.value.fname || "Unknown")}</Typography>
-                                <Typography variant="h6">Last Name: {FirstLetterUpperCase(user.value.lname || "Unknown")}</Typography>
+                                <Typography variant="h6">First Name: <Typography variant="subtitle1" className="text-muted">{FirstLetterUpperCase(user.value.fname || "Unknown")}</Typography></Typography>
+                                <Typography variant="h6">Last Name: <Typography variant="subtitle1" className="text-muted">{FirstLetterUpperCase(user.value.lname || "Unknown")}</Typography></Typography>
                             </Col>
                         </Row>
                        
                         <Row>
-                            <Typography variant="h6">About</Typography>
-                            <Typography variant="body2">{user.value.about || "Hi, Let's get to know eachother."}</Typography>
+                            <Typography variant="h6" className="text-bold">About</Typography>
+                            <Typography variant="body2" className="text-muted">{user.value.about || "Hi, Let's get to know eachother."}</Typography>
                         </Row>
                         <Row>
-                            <Typography variant="h6">Phone Number</Typography>
-                            <Typography variant="body2">{user.value.phoneNumber || "Unspecified"}</Typography>
+                            <Typography variant="h6" className="text-bold">Phone Number</Typography>
+                            <Typography variant="body2" className="text-muted">{user.value.phoneNumber || "Unspecified"}</Typography>
                         </Row>
                         <Row>
-                            <Typography variant="h6">Friends</Typography>
-                            <Typography variant="body2">{user.value.friends_Count || "0"}</Typography>
+                            <Typography variant="h6" className="text-bold">Friends</Typography>
+                            <Typography variant="body2" className="text-muted">{user.value.friends_Count || "0"}</Typography>
                         </Row>
 
                         <Button variant="danger" onClick={() => { handleClickButton() }}>Logout</Button>

@@ -1,4 +1,4 @@
-import { Container, Row, Image, Button, Col } from "react-bootstrap";
+import { Container, Image, Button } from "react-bootstrap";
 
 import avatar from "../../assets/avatar.png";
 
@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
 import GetNotificationName from "../../Utils/GetNotificationName ";
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
 import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 import ParticipantButton from "../Shared/ParticipantButton";
@@ -333,62 +333,51 @@ export default function GroupProfile() {
         }
     }
     return (
-        <Container>
-            <Row>
-                <Col xs={12}>
-                    <Image
-                        src={userInfo.profilePhotoUrl || avatar}
-                        roundedCircle
-                        fluid
-                        width={250}
-                        className="p-2" />
-                </Col>
-                <Col className="my-3">
-                    <Typography variant="h4">{FirstLetterUpperCase(userInfo.name || "Unknown")}</Typography>
-                </Col>
-            </Row>
-            <Row className="my-3">
-                <Col>
-                    <Col>
-                        <Button
-                            onClick={() => {
-                                handlePhoneButton();
-                            }}
-                            className="mx-1">{
-                                <FontAwesomeIcon icon={faPhone} />}
-                        </Button>
-                        <Button
-                            className="mx-1"
-                            onClick={() => {
-                                handleMessageButton(user.value.id, userInfo.id, "Hello");
-                            }}>{<FontAwesomeIcon icon={faMessage} />}
-                        </Button>
-                        <Button
-                            variant="danger"
-                            onClick={() => {
-                                handleManageFriendButton("remove", userInfo.id, user.value.id);
-                            }}
-                            className="mx-1">{
-                                <FontAwesomeIcon icon={faTrashCan} />}
-                        </Button>
-                    </Col>
+        <>
+            <Container className="text-center">
+                <Image
+                    src={userInfo.profilePhotoUrl || avatar}
+                    fluid
+                    width={150}
+                />
+                <Typography variant="h4" className="my-3">{FirstLetterUpperCase(userInfo.name || "Unknown")}</Typography>
 
-                </Col>
-            </Row>
-            <Stack direction="column" className="my-3" spacing={3}>
-                <Row>
-                    <Typography variant="h6">Description</Typography>
-                    <Typography variant="body2">{userInfo.description || "Hi, Let's get to know eachother."}</Typography>
-                </Row>
-                <Typography variant="h6">Participants</Typography>
-                <Stack direction="row">
-                    {userInfo.participants.length > 0 && userInfo.participants.map((el: iparticipants, idx: number) => {
-                        return (
-                            <ParticipantButton key={ idx} item={el} />
-                        );
-                    })}
+                <Stack direction="row" spacing={1} style={{ alignContent: "center", justifyContent: "center" }}>
+                    <Button
+                        onClick={() => {
+                            handlePhoneButton();
+                        }}>{<FontAwesomeIcon icon={faPhone} />}
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            handleMessageButton(user.value.id, userInfo.id, "Hello");
+                        }}>{<FontAwesomeIcon icon={faMessage} />}
+                    </Button>
+                    <Button
+                        variant="danger"
+                        onClick={() => {
+                            handleManageFriendButton("remove", userInfo.id, user.value.id);
+                        }}>{<FontAwesomeIcon icon={faTrashCan} />}
+                    </Button>
                 </Stack>
-            </Stack>
-        </Container>
+
+                <Stack direction="column" className="my-2" spacing={3}>
+                    <Box>
+                        <Typography variant="h6">Description</Typography>
+                        <Typography variant="body2" className="text-muted">{userInfo.description || "Hi, Let's get to know eachother."}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="h6">Participants</Typography>
+                        <Stack direction="row" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                            {userInfo.participants.length > 0 && userInfo.participants.map((el: iparticipants, idx: number) => {
+                                return (
+                                    <ParticipantButton key={idx} item={el} />
+                                );
+                            })}
+                        </Stack>
+                    </Box>
+                </Stack>
+            </Container>
+        </>
     );
 }

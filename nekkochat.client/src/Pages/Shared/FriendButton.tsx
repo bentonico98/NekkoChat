@@ -2,12 +2,12 @@ import { Button, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMessage, faInfoCircle, faPhone, faAdd, faCheck, faCancel } from '@fortawesome/free-solid-svg-icons';
+import { faMessage, faInfoCircle,  faAdd, faCheck, faCancel, faVideoCamera } from '@fortawesome/free-solid-svg-icons';
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { useAppSelector } from "../../Hooks/storeHooks";
+import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
-import { iDisplayMessageTypes, iuserStore, iUserViewModel } from "../../Constants/Types/CommonTypes";
-import { UserState } from "../../Store/Slices/userSlice";
+import { iDisplayMessageTypes, iuserStore, iUserVideoCallTypes, iUserViewModel } from "../../Constants/Types/CommonTypes";
+import { openUserProfileModal, setProfileId, UserState } from "../../Store/Slices/userSlice";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
@@ -20,15 +20,24 @@ type incomingProps = {
     item?: iUserViewModel
     id: string,
     idx: number,
-    DisplayMessage: (obj: iDisplayMessageTypes) => void
+    DisplayMessage: (obj: iDisplayMessageTypes) => void,
+    searchSafe?: boolean
 }
-export default function FriendButton({ id, idx, item, DisplayMessage }: incomingProps) {
+export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe = true }: incomingProps) {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const dispatch = useAppDispatch();
 
     const navigate = useNavigate();
 
-    const handlePhoneButton = () => { }
+    const handlePhoneButton = () => {
+        const state: iUserVideoCallTypes = {
+            id: item!.id,
+            name: item!.userName,
+            photo: item!.profilePhotoUrl
+        }
+        navigate("/chats/videocall?externalCall=true", { state });
+    }
 
     const handleManageFriendButton = async (
         operation: string = 'add',
@@ -247,13 +256,16 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
     }
 
     const handleInfoButton = (id: string) => {
-        navigate(`/account/${id}`);
+        //navigate(`/account/${id}`);
+        if (!id) return;
+        dispatch(setProfileId(id));
+        dispatch(openUserProfileModal());
     }
 
     return (
-        <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "4rem", display: "flex", flexWrap: "wrap", justifyContent: "space-around", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
+        <Stack key={idx} direction="row" sx={{ maxHeight: "4rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
             <Box>
-                <Image src={item ? item!.profilePhotoUrl : avatar} roundedCircle fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
+                <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
             </Box>
 
             <Box>
@@ -284,7 +296,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                                     onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
                                         <FontAwesomeIcon icon={faCancel} />}
                                 </Button>}
-                        
+
                             <Button
                                 onClick={() => {
                                     handleInfoButton(id);
@@ -292,9 +304,10 @@ export default function FriendButton({ id, idx, item, DisplayMessage }: incoming
                                     <FontAwesomeIcon icon={faInfoCircle} />}
                             </Button>
                         </Stack> : <Stack direction="row" spacing={1} >
-                            <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faPhone} />}</Button>
+                            <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faVideoCamera} />}</Button>
                             <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
-                            <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>
+                            {searchSafe &&
+                                <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
                         </Stack>
                     }
                 </Box>

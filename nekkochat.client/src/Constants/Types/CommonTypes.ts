@@ -4,7 +4,11 @@ export interface ErrorInterface {
     password?: string,
     confirmpassword?: string,
 }
-
+export interface iUserVideoCallTypes{
+    name: string,
+    photo: string,
+    id:string
+}
 export interface iLoginTypes {
     email: string,
     password: string,
@@ -170,7 +174,7 @@ export interface iGroupChatMessagesProps {
     chat?: number,
     sender: string,
     receiver: number,
-    participants?: iparticipants[],
+    participants: iparticipants[],
     isTyping: iTypingComponentProps,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
 

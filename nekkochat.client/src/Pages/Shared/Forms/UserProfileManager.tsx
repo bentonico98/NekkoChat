@@ -1,25 +1,25 @@
-import { Container, Row, Image, Button, Col } from "react-bootstrap";
+import UserAuthServices from '../../../Utils/UserAuthServices';
+import { Container,  Image, Button } from "react-bootstrap";
 
-import avatar from "../../assets/avatar.png";
+import avatar from "../../../assets/avatar.png";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faMessage, faTrashCan, faAdd, faStopCircle, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate, useParams } from "react-router-dom";
+import { faMessage, faTrashCan, faAdd, faStopCircle, faVideo, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import UserAuthServices from "../../Utils/UserAuthServices";
-import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
-import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from "../../Store/Slices/userSlice";
-import { iuserStore } from "../../Constants/Types/CommonTypes";
-import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
-import useDisplayMessage from "../../Hooks/useDisplayMessage";
-import NotificationServiceClient from "../../Utils/NotificationServiceClient";
-import GetNotificationName from "../../Utils/GetNotificationName ";
-import { Typography } from "@mui/material";
-import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
-import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
+import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from '../../../Store/Slices/userSlice';
+import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
+import { iuserStore, iUserVideoCallTypes } from '../../../Constants/Types/CommonTypes';
+import useDisplayMessage from '../../../Hooks/useDisplayMessage';
+import GetNotificationName from '../../../Utils/GetNotificationName ';
+import PrivateChatsServerServices from '../../../Utils/PrivateChatsServerServices';
+import GroupChatsServerServices from '../../../Utils/GroupChatsServerServices';
+import NotificationServiceClient from '../../../Utils/NotificationServiceClient';
+import MessageServicesClient from '../../../Utils/MessageServicesClient';
+import { Box, Stack, Typography } from '@mui/material';
+import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-export default function Account() {
+export default function UserProfileManager() {
 
     const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
@@ -42,7 +42,7 @@ export default function Account() {
 
     const navigate = useNavigate();
 
-    const { user_id } = useParams() as { user_id: string };
+    const user_id = useAppSelector((state) => state.user.profileId);
 
     const [userInfo, setUserInfo] = useState({
         id: user_id ? user_id : "0",
@@ -80,7 +80,14 @@ export default function Account() {
         });
     }, [user_id]);
 
-    const handlePhoneButton = () => { }
+    const handlePhoneButton = () => {
+        const state: iUserVideoCallTypes = {
+            id: userInfo!.id,
+            name: userInfo!.userName,
+            photo: userInfo!.profilePhotoUrl
+        }
+        navigate("/chats/videocall?externalCall=true", { state });
+    }
 
     const handleManageFriendButton = async (
         operation: string = 'add',
@@ -100,7 +107,7 @@ export default function Account() {
                     receiver_id
                 });
 
-            if(res.success){
+            if (res.success) {
                 setDisplayInfo({
                     hasMsj: true,
                     msj: res.message + " Accepted Request.",
@@ -335,87 +342,81 @@ export default function Account() {
         }
     }
     return (
-        <Container>
-            <Row>
-                <Col xs={12}>
-                    <Image
-                        src={userInfo.profilePhotoUrl || avatar}
-                        roundedCircle
-                        fluid
-                        width={250}
-                        className="p-2" />
-                </Col>
-                <Col>
-                    <Typography variant="h4">{FirstLetterUpperCase(userInfo.fname || "Unknown")} {FirstLetterUpperCase(userInfo.lname || "Unknown")}</Typography>
-                </Col>
-            </Row>
-            <Row>
-                <Col>
-                    {userInfo!.isFriend ?
-                        <Col>
-                            {userInfo.isSender &&
-                                <Button
-                                    variant="info"
-                                    onClick={() => {
-                                        handleManageFriendButton("accept", userInfo.id, user.value.id);
-                                    }}>{
-                                        <FontAwesomeIcon icon={faCheck} />}
-                                </Button>}
+        <Container style={{ maxWidth: "max-content" }}>
+            <Stack direction="column" style={{ maxWidth: "100%", display: 'flex', alignItems: "center" }}>
+                <Image
+                    src={userInfo.profilePhotoUrl || avatar}
+                    roundedCircle
+                    fluid
+                    width={150}
+                    className="p-2" />
+                <Typography variant="h4">{FirstLetterUpperCase(userInfo.fname || "Unknown")} {FirstLetterUpperCase(userInfo.lname || "Unknown")}</Typography>
+            </Stack>
+            <Stack direction="row" style={{  display:"flex", justifyContent:"center", alignContent: "center" }}>
+                {userInfo!.isFriend ?
+                    <Box>
+                        {userInfo.isSender &&
                             <Button
+                                variant="info"
                                 onClick={() => {
-                                    handlePhoneButton();
-                                }}
-                                className="mx-1">{
-                                    <FontAwesomeIcon icon={faPhone} />}
-                            </Button>
-                            <Button
-                                className="mx-1"
-                                onClick={() => {
-                                    handleMessageButton(user.value.id, userInfo.id, "Hello");
-                                }}>{<FontAwesomeIcon icon={faMessage} />}
-                            </Button>
-                            <Button
-                                variant="danger"
-                                onClick={() => {
-                                    handleManageFriendButton("remove", userInfo.id, user.value.id);
-                                }}
-                                className="mx-1">{
-                                    <FontAwesomeIcon icon={faTrashCan} />}
-                            </Button>
-                        </Col>
-                        :
-                        <Col>
-                            <Button
-                                variant="danger"
-                                className="mx-1"
-                                onClick={() => {
-                                    handleManageFriendButton("add", userInfo!.id, user.value.id);
+                                    handleManageFriendButton("accept", userInfo.id, user.value.id);
                                 }}>{
-                                    <FontAwesomeIcon icon={faAdd} />}
-                            </Button>
-                            <Button
-                                variant="danger"
-                                onClick={() => {
-                                    handleManageFriendButton("block", userInfo.id, user.value.id);
-                                }}
-                                className="mx-1">{
-                                    <FontAwesomeIcon icon={faStopCircle} />}
-                            </Button>
-                        </Col>}
-                </Col>
-            </Row>
-            <Row>
+                                    <FontAwesomeIcon icon={faCheck} />}
+                            </Button>}
+                        <Button
+                            onClick={() => {
+                                handlePhoneButton();
+                            }}
+                            className="mx-1">{
+                                <FontAwesomeIcon icon={faVideo} />}
+                        </Button>
+                        <Button
+                            className="mx-1"
+                            onClick={() => {
+                                handleMessageButton(user.value.id, userInfo.id, "Hello");
+                            }}>{<FontAwesomeIcon icon={faMessage} />}
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                handleManageFriendButton("remove", userInfo.id, user.value.id);
+                            }}
+                            className="mx-1">{
+                                <FontAwesomeIcon icon={faTrashCan} />}
+                        </Button>
+                    </Box>
+                    :
+                    <Box>
+                        <Button
+                            variant="danger"
+                            className="mx-1"
+                            onClick={() => {
+                                handleManageFriendButton("add", userInfo!.id, user.value.id);
+                            }}>{
+                                <FontAwesomeIcon icon={faAdd} />}
+                        </Button>
+                        <Button
+                            variant="danger"
+                            onClick={() => {
+                                handleManageFriendButton("block", userInfo.id, user.value.id);
+                            }}
+                            className="mx-1">{
+                                <FontAwesomeIcon icon={faStopCircle} />}
+                        </Button>
+                    </Box>}
+            </Stack>
+            <Stack direction="column" style={{  display:'flex', alignItems:"center" }}>
                 <Typography variant="h6">About</Typography>
                 <Typography variant="body2">{userInfo.about || "Hi, Let's get to know eachother."}</Typography>
-            </Row>
-            <Row>
+            </Stack>
+            <Stack direction="column" style={{  display: 'flex', alignItems: "center" }}>
                 <Typography variant="h6">Phone Number</Typography>
                 <Typography variant="body2">{userInfo.phoneNumber || "Unspecified"}</Typography>
-            </Row>
-            <Row>
+            </Stack>
+            <Stack direction="column" style={{  display: 'flex', alignItems: "center" }}>
                 <Typography variant="h6">Friends</Typography>
                 <Typography variant="body2">{userInfo.friends_Count || "0"}</Typography>
-            </Row>
+            </Stack>
         </Container>
     );
 }

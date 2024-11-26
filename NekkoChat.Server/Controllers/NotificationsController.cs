@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using NekkoChat.Server.Constants;
 using NekkoChat.Server.Constants.Interfaces;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using NekkoChat.Server.Schemas;
+using System.Text;
 using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -16,11 +18,13 @@ namespace NekkoChat.Server.Controllers
     public class NotificationsController(
         ApplicationDbContext context,
         iNotificationService notificationService,
-        ILogger<NotificationsController> logger) : ControllerBase
+        ILogger<NotificationsController> logger,
+        IDistributedCache cache) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly iNotificationService _nSrv = notificationService;
         private readonly ILogger<NotificationsController> _logger = logger;
+        private readonly IDistributedCache _cache = cache;
 
         // GET: <NotificationsController>
         [HttpGet]
@@ -37,20 +41,42 @@ namespace NekkoChat.Server.Controllers
                 List<NotificationSchema> userNotifications = new();
                 List<SingleNotificationSchema> userViewNotifications = new();
 
-                IQueryable<Notifications> notifications = _context.notifications.Where((n) => n.User_Id == user_id);
+                string cacheKey = user_id + "notifications";
 
-                if (notifications is null || !notifications.Any()) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
-                await Task.Run(() =>
+                var cacheData = await _cache.GetAsync(cacheKey);
+
+                if (cacheData is not null)
                 {
-                    foreach (var notification in notifications)
+                    var cacheDataString = Encoding.UTF8.GetString(cacheData);
+                    userNotifications = JsonSerializer.Deserialize<List<NotificationSchema>>(cacheDataString)!;
+                }
+                else
+                {
+                    IQueryable<Notifications> notifications = _context.notifications.Where((n) => n.User_Id == user_id);
+
+                    if (notifications is null || !notifications.Any()) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    await Task.Run(() =>
                     {
-                        if (notification is not null && !string.IsNullOrEmpty(notification.Notification))
+                        foreach (var notification in notifications)
                         {
-                            NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
-                            userNotifications.Add(output);
+                            if (notification is not null && !string.IsNullOrEmpty(notification.Notification))
+                            {
+                                NotificationSchema output = JsonSerializer.Deserialize<NotificationSchema>(notification.Notification)!;
+                                userNotifications.Add(output);
+                            }
                         }
-                    }
-                });
+                    });
+
+                    string cacheDataString = JsonSerializer.Serialize<List<NotificationSchema>>(userNotifications);
+
+                    var dataToCache = Encoding.UTF8.GetBytes(cacheDataString);
+
+                    DistributedCacheEntryOptions cacheOpts = new DistributedCacheEntryOptions()
+                        .SetAbsoluteExpiration(DateTime.Now.AddMinutes(5))
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+                    await _cache.SetAsync(cacheKey, dataToCache, cacheOpts);
+                }
 
                 return Ok(new ResponseDTO<SingleNotificationSchema> { User = userNotifications[0]!.notifications.OrderByDescending((n) => n.date).ToList() });
             }
@@ -63,13 +89,6 @@ namespace NekkoChat.Server.Controllers
                 }
                 return StatusCode(500, new ResponseDTO<SingleNotificationSchema> { Success = false, Message = ErrorMessages.ErrorMessage, InternalMessage = ErrorMessages.ErrorMessage, Error = ErrorMessages.WrongCredentials });
             }
-        }
-
-        // GET <NotificationsController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
         }
 
         // POST <NotificationsController>

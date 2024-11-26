@@ -6,13 +6,13 @@ using NekkoChat.Server.Utils;
 using NekkoChat.Server.Models;
 using Microsoft.VisualBasic;
 using System.Text.Json;
-using Newtonsoft.Json;
 using NekkoChat.Server.Constants;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Constants.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Nest;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace NekkoChat.Server.Controllers
@@ -23,12 +23,14 @@ namespace NekkoChat.Server.Controllers
         ApplicationDbContext context,
         ILogger<ChatsController> logger,
         iMessageService messageServices,
-        IServiceProvider srv) : ControllerBase
+        IServiceProvider srv,
+        IDistributedCache cache) : ControllerBase
     {
         private readonly ApplicationDbContext _context = context;
         private readonly ILogger<ChatsController> _logger = logger;
         private readonly iMessageService _messageServices = messageServices;
         private readonly IServiceProvider _srv = srv;
+        private readonly IDistributedCache _cache = cache;
 
         // GET: Chats/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
@@ -44,69 +46,89 @@ namespace NekkoChat.Server.Controllers
             {
                 List<Chats> UserChats = new();
                 List<MessagesDTO> ChatsContent = new();
+                string cacheKey = id + "privates";
 
-                IQueryable<Chats> conversations = from c in _context.chats select c;
-
-                if (type == "favorites")
+                var cacheData = await _cache.GetAsync(cacheKey);
+                if (cacheData is not null)
                 {
-                    conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isFavorite == true);
-                }
-                else if (type == "archived")
-                {
-                    conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isArchived == true);
+                    var cacheDataString = Encoding.UTF8.GetString(cacheData);
+                    ChatsContent = JsonSerializer.Deserialize<List<MessagesDTO>>(cacheDataString)!;
                 }
                 else
                 {
-                    conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id);
-                }
+                    IQueryable<Chats> conversations = from c in _context.chats select c;
 
-                foreach (var conversation in conversations)
-                {
-                    UserChats.Add(conversation);
-                }
-
-                await Task.Run(() =>
-                {
-                    foreach (var userChat in UserChats)
+                    if (type == "favorites")
                     {
-                        IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
-                        chat = chat.Where((u) => u.chat_id == userChat.id);
+                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isFavorite == true);
+                    }
+                    else if (type == "archived")
+                    {
+                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isArchived == true);
+                    }
+                    else
+                    {
+                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id);
+                    }
 
-                        foreach (var c in chat)
+                    foreach (var conversation in conversations)
+                    {
+                        UserChats.Add(conversation);
+                    }
+
+                    await Task.Run(() =>
+                    {
+                        foreach (var userChat in UserChats)
                         {
-                            using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
-                            {
-                                AspNetUsers participants = new();
-                                if (userChat.sender_id != id)
-                                {
-                                    if (!string.IsNullOrEmpty(userChat.sender_id))
-                                    {
-                                        participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
-                                    }
-                                }
-                                else
-                                {
-                                    if (!string.IsNullOrEmpty(userChat.receiver_id))
-                                    {
-                                        participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
-                                    }
-                                }
+                            IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
+                            chat = chat.Where((u) => u.chat_id == userChat.id);
 
-                                if (c is not null && !string.IsNullOrEmpty(c.content))
+                            foreach (var c in chat)
+                            {
+                                using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                                 {
-                                    MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
-                                    contents.status = participants!.Status;
-                                    ChatsContent.Add(contents);
+                                    AspNetUsers participants = new();
+                                    if (userChat.sender_id != id)
+                                    {
+                                        if (!string.IsNullOrEmpty(userChat.sender_id))
+                                        {
+                                            participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (!string.IsNullOrEmpty(userChat.receiver_id))
+                                        {
+                                            participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
+                                        }
+                                    }
+
+                                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                                    {
+                                        MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
+                                        contents.status = participants!.Status;
+                                        ChatsContent.Add(contents);
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
 
-                if (ChatsContent == null)
-                {
-                    _logger.LogWarning("Chat Content is null in Chat - Get All User Chat Route");
-                    return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    if (ChatsContent == null)
+                    {
+                        _logger.LogWarning("Chat Content is null in Chat - Get All User Chat Route");
+                        return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    }
+
+                    string cacheDataString = JsonSerializer.Serialize<List<MessagesDTO>>(ChatsContent);
+
+                    var dataToCache = Encoding.UTF8.GetBytes(cacheDataString);
+
+                    DistributedCacheEntryOptions cacheOpts = new DistributedCacheEntryOptions()
+                        .SetAbsoluteExpiration(DateTime.Now.AddMinutes(2))
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+                    await _cache.SetAsync(cacheKey, dataToCache, cacheOpts);
                 }
 
                 return Ok(new ResponseDTO<MessagesDTO> { User = ChatsContent });

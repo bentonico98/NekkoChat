@@ -13,6 +13,7 @@ using NekkoChat.Server.Utils;
 using Microsoft.AspNetCore.Diagnostics;
 using NekkoChat.Server.Constants;
 using Serilog;
+
 //using BlazorServer.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,12 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.SignIn.RequireConfirmedPhoneNumber = false;
     options.SignIn.RequireConfirmedEmail = false;
     options.SignIn.RequireConfirmedAccount = false;
+});
+
+//Redis Configuration
+builder.Services.AddStackExchangeRedisCache(opts =>
+{
+    opts.Configuration = builder.Configuration["REDIS_CONNECTION_STRING"];
 });
 
 //Configuracion del CORS

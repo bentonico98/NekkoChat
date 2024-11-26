@@ -9,9 +9,10 @@ using System.Text.Json;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using NekkoChat.Server.Constants;
 using NekkoChat.Server.Constants.Interfaces;
-using Nest;
 using NekkoChat.Server.Schemas;
 using AutoMapper;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text;
 namespace NekkoChat.Server.Controllers
 {
     [ApiController]
@@ -21,13 +22,14 @@ namespace NekkoChat.Server.Controllers
         ApplicationDbContext context,
         iGroupChatMessageService messageServices,
         IMapper mapper,
-        IServiceProvider srv) : ControllerBase
+        IServiceProvider srv,
+        IDistributedCache cache) : ControllerBase
     {
         private readonly ILogger<GroupController> _logger = logger;
         private readonly ApplicationDbContext _context = context;
         private readonly iGroupChatMessageService _messageServices = messageServices;
         private readonly IMapper _mapper = mapper;
-
+        private readonly IDistributedCache _cache = cache;
 
         // GET: groupschat/1 --- BUSCA TODAS LAS CONVERSACIONES DE EL USUARIO
         [HttpGet("chats")]
@@ -44,43 +46,63 @@ namespace NekkoChat.Server.Controllers
                 List<Groups_Members> GroupChats = new();
                 List<GroupMessageSchemas> ChatsContent = new();
 
-                IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
+                string cacheKey = user_id + "groups";
 
-                conversations = conversations.Where((c) => c.user_id == user_id);
+                var cacheData = await _cache.GetAsync(cacheKey);
 
-                await Task.Run(() =>
+                if (cacheData is not null)
                 {
-                    foreach (var conversation in conversations)
-                    {
-                        GroupChats.Add(conversation);
-                    }
+                    string cacheDataString = Encoding.UTF8.GetString(cacheData);
+                    ChatsContent = JsonSerializer.Deserialize<List<GroupMessageSchemas>>(cacheDataString)!;
+                }
+                else
+                {
+                    IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
 
-                    if (GroupChats.Count() > 0)
+                    conversations = conversations.Where((c) => c.user_id == user_id);
+
+                    await Task.Run(() =>
                     {
-                        foreach (var userChat in GroupChats)
+                        foreach (var conversation in conversations)
                         {
-                            IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
-                            chat = chat.Where((u) => u.group_id == userChat.group_id);
+                            GroupChats.Add(conversation);
+                        }
 
-                            foreach (var c in chat)
+                        if (GroupChats.Count() > 0)
+                        {
+                            foreach (var userChat in GroupChats)
                             {
-                                if (c is not null && !string.IsNullOrEmpty(c.content))
+                                IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
+                                chat = chat.Where((u) => u.group_id == userChat.group_id);
+
+                                foreach (var c in chat)
                                 {
-                                    GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                                    ChatsContent.Add(payload);
+                                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                                    {
+                                        GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                                        ChatsContent.Add(payload);
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
 
-                if (ChatsContent == null)
-                {
-                    return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    if (ChatsContent == null)
+                    {
+                        return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+                    }
+
+                    string cacheDataString = JsonSerializer.Serialize<List<GroupMessageSchemas>>(ChatsContent);
+                    var dataToCache = Encoding.UTF8.GetBytes(cacheDataString); 
+
+                    DistributedCacheEntryOptions cacheOpts = new DistributedCacheEntryOptions()
+                        .SetAbsoluteExpiration(DateTime.Now.AddMinutes(3))
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+                    await _cache.SetAsync(cacheKey, dataToCache, cacheOpts);
                 }
 
                 return Ok(new ResponseDTO<GroupMessageSchemas> { User = ChatsContent });
-
             }
             catch (Exception ex)
             {

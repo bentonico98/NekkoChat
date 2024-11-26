@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Globalization;
-using Elasticsearch.Net;
-using Nest;
 using NekkoChat.Server.Data;
 using NekkoChat.Server.Models;
 using NekkoChat.Server.Constants.Types;
@@ -32,8 +30,7 @@ namespace NekkoChat.Server.Controllers
             }
             try
             {
-                 var user = await _videocallServices.GetFriendsAsync(user_id);
-
+                var user = await _videocallServices.GetFriendsAsync(user_id);
                 return Ok(user);
             }
             catch (Exception ex)

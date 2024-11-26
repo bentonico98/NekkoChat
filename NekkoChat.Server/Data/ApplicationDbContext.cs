@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace NekkoChat.Server.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<AspNetUsers>
+    public class ApplicationDbContext : IdentityDbContext<AspNetUsers>, IDisposable
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
         base(options)

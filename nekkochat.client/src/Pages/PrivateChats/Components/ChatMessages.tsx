@@ -88,6 +88,12 @@ export default function ChatMessages(
         }
     }
 
+    const handleInfoButton = (id: string|undefined) => {
+        if (!id) return;
+        dispatch(setProfileId(id));
+        dispatch(openUserProfileModal());
+    }
+
     return (
         <>
             {messages.length > 0 ?
@@ -199,7 +205,13 @@ export default function ChatMessages(
                                         handleSetInfo(chat, `${el.id}`);
                                     }}
                                 >
-                                    {el.user_id === sender ? <Avatar src={user.value.profilePhotoUrl} name={el.username} /> : <Avatar src={getPic(participants)} name={el.username} />}
+                                    {el.user_id === sender ?
+                                        <Avatar src={user.value.profilePhotoUrl}
+                                            onClick={() => { handleInfoButton(user.value.id) }}
+                                            name={el.username} /> :
+                                        <Avatar src={getPic(participants)}
+                                            onClick={() => { handleInfoButton(el.user_id) }}
+                                            name={el.username} />}
                                 </Message>
                             );
                         })}

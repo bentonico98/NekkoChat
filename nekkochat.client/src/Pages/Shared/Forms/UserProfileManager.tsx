@@ -52,7 +52,7 @@ export default function UserProfileManager() {
         about: "Hi, Let's get to know eachother.",
         phoneNumber: "Unspecified",
         friends_Count: 0,
-        profilePhotoUrl: "avatar",
+        profilePhotoUrl: avatar,
         isFriend: false,
         isSender: false,
     });

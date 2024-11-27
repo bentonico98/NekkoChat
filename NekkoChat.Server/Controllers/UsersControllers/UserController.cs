@@ -51,7 +51,7 @@ namespace NekkoChat.Server.Controllers
             {
                 var user = await _context.AspNetUsers.FindAsync(user_id)!;
 
-                if (user is null) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NotAllowed, StatusCode = 404 });
+                if (user is null) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
                 UserDTO userView = _mapper.Map<UserDTO>(user);
 

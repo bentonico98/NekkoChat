@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 
 
-/*export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
+export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl("https://localhost:7198/groupchathub", { withCredentials: false })
     .withAutomaticReconnect()
     .build();
@@ -9,8 +9,8 @@ import * as signalR from "@microsoft/signalr";
 export const privateServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
     .withAutomaticReconnect()
-    .build();*/
-export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
+    .build();
+/*export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl("https://062r207b-7198.use2.devtunnels.ms/groupchathub", { withCredentials: false })
     .withAutomaticReconnect()
     .build();
@@ -18,7 +18,7 @@ export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuild
 export const privateServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl("https://062r207b-7198.use2.devtunnels.ms/privatechathub", { withCredentials: false })
     .withAutomaticReconnect()
-    .build();
+    .build();*/
 
 export default class ServerInstance {
 

@@ -2,7 +2,7 @@ import { Button, Image } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMessage, faInfoCircle,  faAdd, faCheck, faCancel, faVideoCamera } from '@fortawesome/free-solid-svg-icons';
+import { faMessage, faInfoCircle, faAdd, faCheck, faCancel, faVideoCamera } from '@fortawesome/free-solid-svg-icons';
 import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
@@ -256,61 +256,66 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
     }
 
     const handleInfoButton = (id: string) => {
-        //navigate(`/account/${id}`);
         if (!id) return;
         dispatch(setProfileId(id));
         dispatch(openUserProfileModal());
     }
 
     return (
-        <Stack key={idx} direction="row" sx={{ maxHeight: "4rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
+        <Stack key={idx} direction="row" sx={{
+            maxHeight: "4rem",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: 500,
+            maxWidth: 'max-content'
+        }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
             <Box>
                 <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
             </Box>
 
-            <Box>
+            <Box sx={{ flexShrink: 1, marginX:"1rem" }}>
                 <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
             </Box>
 
             <Box>
-                <Box>
-                    {!item!.isFriend ?
-                        <Stack direction="row" spacing={1}>
+                {!item!.isFriend ?
+                    <Stack direction="row" spacing={1}>
 
-                            {item!.canSendRequest && !item!.alreadyRequest && <Button
+                        {item!.canSendRequest && !item!.alreadyRequest && <Button
+                            variant="info"
+                            onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
+                                <FontAwesomeIcon icon={faAdd} />}
+                        </Button>}
+
+                        {item!.isSender &&
+                            <Button
                                 variant="info"
-                                onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
-                                    <FontAwesomeIcon icon={faAdd} />}
+                                onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
+                                    <FontAwesomeIcon icon={faCheck} />}
                             </Button>}
 
-                            {item!.isSender &&
-                                <Button
-                                    variant="info"
-                                    onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
-                                        <FontAwesomeIcon icon={faCheck} />}
-                                </Button>}
-
-                            {item!.alreadyRequest &&
-                                <Button
-                                    variant="danger"
-                                    onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
-                                        <FontAwesomeIcon icon={faCancel} />}
-                                </Button>}
-
+                        {item!.alreadyRequest &&
                             <Button
-                                onClick={() => {
-                                    handleInfoButton(id);
-                                }}>{
-                                    <FontAwesomeIcon icon={faInfoCircle} />}
-                            </Button>
-                        </Stack> : <Stack direction="row" spacing={1} >
-                            <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faVideoCamera} />}</Button>
-                            <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
-                            {searchSafe &&
-                                <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
-                        </Stack>
-                    }
-                </Box>
+                                variant="danger"
+                                onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
+                                    <FontAwesomeIcon icon={faCancel} />}
+                            </Button>}
+
+                        <Button
+                            onClick={() => {
+                                handleInfoButton(id);
+                            }}>{
+                                <FontAwesomeIcon icon={faInfoCircle} />}
+                        </Button>
+                    </Stack> : <Stack direction="row" spacing={1} >
+                        <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faVideoCamera} />}</Button>
+                        <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
+                        {searchSafe &&
+                            <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
+                    </Stack>
+                }
             </Box>
         </Stack>
     );

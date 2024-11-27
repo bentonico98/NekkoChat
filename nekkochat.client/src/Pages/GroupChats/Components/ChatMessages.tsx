@@ -10,8 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { iChatSchema, iGroupChatMessagesProps, iuserStore } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetGroup from '../../../Hooks/Group/useGetGroup';
-import { UserState } from '../../../Store/Slices/userSlice';
-import { useAppSelector } from '../../../Hooks/storeHooks';
+import { openUserProfileModal, setProfileId, UserState } from '../../../Store/Slices/userSlice';
+import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 import Modal from "react-modal";
@@ -30,6 +30,7 @@ export default function ChatMessages({
 }: iGroupChatMessagesProps) {
 
     const user: UserState | iuserStore | any = useAppSelector((state)=> state.user)
+    const dispatch = useAppDispatch();
 
     const {
         groupName,
@@ -53,6 +54,12 @@ export default function ChatMessages({
     }
     function close() {
         setModalOpened(false);
+    }
+
+    const handleInfoButton = (id: string | undefined) => {
+        if (!id) return;
+        dispatch(setProfileId(id));
+        dispatch(openUserProfileModal());
     }
 
     return (
@@ -93,7 +100,7 @@ export default function ChatMessages({
                                     direction: `${el.user_id === sender ? "outgoing" : "incoming"}`,
                                     position: "single"
                                 }}>
-                                    <Avatar src={getGroupPic(participants, el.user_id)} name={el.username} />
+                                    <Avatar src={getGroupPic(participants, el.user_id)} onClick={() => { handleInfoButton(el.user_id) } } name={el.username} />
                                     <Message.Header sender={el.username} />
                                     <Message.Footer sentTime={el.created_at} />
                                 </Message>

@@ -1,4 +1,4 @@
-import { Button, Col, Container, Row } from "react-bootstrap";
+import { Button,  Container  } from "react-bootstrap";
 
 import { Search } from "@chatscope/chat-ui-kit-react";
 import FriendButton from "../Shared/FriendButton";
@@ -59,51 +59,57 @@ export default function Index() {
                 </Box>
             </Stack>
 
-            <Row style={{ overflowY: "auto", overflowX: "hidden" }}>
+            <Box style={{ overflowY: "auto", overflowX: "hidden" }}>
                 {friendRequest.length > 0 && <Box>
                     <Typography variant="h3" className="my-2">Pending Friend Requests</Typography>
-                    {friendRequest.map((el: iUserViewModel, idx: number) => {
-                        return <Col xs={4} key={idx}>
-                            <FriendButton
-                                key={idx}
-                                id={el.id}
-                                idx={idx}
-                                item={el}
-                                DisplayMessage={setDisplayInfo} />
-                        </Col>
-                    })}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap: 'wrap' }}>
+
+                        {friendRequest.map((el: iUserViewModel, idx: number) => {
+                            return <Box key={idx}>
+                                <FriendButton
+                                    key={idx}
+                                    id={el.id}
+                                    idx={idx}
+                                    item={el}
+                                    DisplayMessage={setDisplayInfo} />
+                            </Box>
+                        })}
+                    </Box>
                     <Divider />
                 </Box>}
 
                 {searchFriends.length > 0 && <Box>
                     <Typography variant="h5" className="my-3">Search Results</Typography>
-                    {searchFriends.map((el: iUserViewModel, idx: number) => {
-                        return <Col xs={4} key={idx}>
-                            <FriendButton
-                                key={idx}
-                                id={el.id}
-                                idx={idx}
-                                item={el}
-                                DisplayMessage={setDisplayInfo} />
-                        </Col>
-                    })}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap: 'wrap' }}>
+                        {searchFriends.map((el: iUserViewModel, idx: number) => {
+                            return <Box key={idx}>
+                                <FriendButton
+                                    key={idx}
+                                    id={el.id}
+                                    idx={idx}
+                                    item={el}
+                                    DisplayMessage={setDisplayInfo} />
+                            </Box>
+                        })}
+                    </Box>
                     <Divider />
                 </Box>}
 
                 <Typography variant="h5" className="my-3">My Friends</Typography>
-                {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
-                    return <Col xs={4} key={idx}>
-                        <FriendButton
+                <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap:'wrap' }}>
+                    {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+                        return <FriendButton
                             key={idx}
                             id={el.id}
                             idx={idx}
                             item={el}
                             DisplayMessage={setDisplayInfo} />
-                    </Col>
-                })
-                    :
-                <RegularSkeleton />}
-            </Row>
+
+                    })
+                        :
+                        <RegularSkeleton />}
+                </Box>
+            </Box>
 
         </Container>
     );

@@ -25,6 +25,7 @@ import NotificationBar from './NotificationBar';
 
 import nekkoAlt from "../../assets/nekkoAlt.png";
 import { Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 function NekkoNavbar() {
 
@@ -32,6 +33,7 @@ function NekkoNavbar() {
     const notifications: string | null = useAppSelector((state) => state.user.notificationCount);
 
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const [show, setShow] = React.useState<boolean>(false);
 
@@ -44,13 +46,24 @@ function NekkoNavbar() {
         window.location.href = "/login";
     }
 
+    const handleNavigate = (url: string) => {
+        if (url) {
+            navigate(url);
+        }
+    }
+
     return (
         <Navbar bg="light" sticky="top" data-bs-theme="light">
             <Container>
-                <Navbar.Brand href="/inbox" style={{display:"flex", justifyContent:"center", alignItems:"center", textAlign:"center"} } >
+                <Navbar.Brand onClick={() => handleNavigate("/inbox")} style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center"
+                }} >
                     <img
                         alt=""
-                        src={nekkoAlt }
+                        src={nekkoAlt}
                         width="50"
                         height="50"
                         className="d-inline-block align-top"
@@ -58,14 +71,14 @@ function NekkoNavbar() {
                     <Typography variant="h4">NekkoChat</Typography>
                 </Navbar.Brand>
                 <Nav>
-                    <Nav.Link href="/inbox">{<FontAwesomeIcon icon={faInbox} />} Inbox</Nav.Link>
-                    <Nav.Link href="/groupchats">{<FontAwesomeIcon icon={faPeopleGroup} />} Groupchats</Nav.Link>
-                    <Nav.Link href="/chats/videocall">{<FontAwesomeIcon icon={faVideoCamera} />} Videocalls</Nav.Link>
-                    <Nav.Link href="/friends">{<FontAwesomeIcon icon={faUserFriends} />} Friends</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/inbox")}>{<FontAwesomeIcon icon={faInbox} />} Inbox</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/groupchats")}>{<FontAwesomeIcon icon={faPeopleGroup} />} Groupchats</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/chats/videocall")}>{<FontAwesomeIcon icon={faVideoCamera} />} Videocalls</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/friends")}>{<FontAwesomeIcon icon={faUserFriends} />} Friends</Nav.Link>
                 </Nav>
                 <Nav>
-                    <Nav.Link href="/chats?type=favorites">{<FontAwesomeIcon icon={faStar} />} Favorite</Nav.Link>
-                    <Nav.Link href="/chats?type=archived">{<FontAwesomeIcon icon={faArchive} />} Archived</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/chats?type=favorites")}>{<FontAwesomeIcon icon={faStar} />} Favorite</Nav.Link>
+                    <Nav.Link onClick={() => handleNavigate("/chats?type=archived")}>{<FontAwesomeIcon icon={faArchive} />} Archived</Nav.Link>
                 </Nav>
                 <Nav>
                     <Button variant="primary" onClick={handleShow} >{<FontAwesomeIcon icon={faMailBulk} />} <span>{notifications}</span></Button>

@@ -14,7 +14,6 @@ interface TabPanelProps {
     index: number;
     value: number;
 }
-
 function TabPanel(props: TabPanelProps) {
     const { children, value, index, ...other } = props;
 
@@ -51,7 +50,7 @@ export default function SettingsManager() {
     };
 
     return (
-        <Container style={{ width: 900, maxWidth: '100%' }}>
+        <Container style={{ width: '90vw', maxWidth: '100%' }}>
             <Modal.Dialog>
                 <Modal.Header >
                     <Modal.Title>Settings</Modal.Title>

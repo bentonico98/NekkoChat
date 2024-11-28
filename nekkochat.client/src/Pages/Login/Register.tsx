@@ -4,9 +4,8 @@ import { useAppDispatch } from '../../Hooks/storeHooks';
 import { useNavigate } from 'react-router-dom';
 import { login, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../Store/Slices/userSlice';
 import useDisplayMessage from '../../Hooks/useDisplayMessage';
-import { Button, Typography, Box, FormHelperText, FormControl, OutlinedInput, Container, Stack, Divider, FormGroup, Checkbox, FormControlLabel, Link } from '@mui/material';
+import { Button, Typography, Box, FormHelperText, FormControl, OutlinedInput, Container, Divider, FormGroup, Checkbox, FormControlLabel, Link } from '@mui/material';
 import * as yup from 'yup';
-import { Col, Row } from 'react-bootstrap';
 import { iRegisterTypes } from '../../Constants/Types/CommonTypes';
 import ErrorBanner from '../Shared/ErrorBanner';
 import { useFormik } from 'formik';
@@ -159,11 +158,10 @@ export default function Register() {
     });
 
     return (
-        <Container>
-            <Stack spacing={5} direction="column" className="text-center">
-                <Box >
+        <Container sx={{ padding: '2em' }} className="fluidContainer">
+            <Box className="RegisterPageMainContainer">
+                <Box className="AuthPageProfileHeader">
                     <img
-                        alt=""
                         src={nekkoAlt}
                         width="100"
                         height="100"
@@ -171,16 +169,18 @@ export default function Register() {
                         style={{ cursor: 'pointer' }}
                         onClick={() => { navigate('/'); }}
                     />{' '}
+                    <Divider />
+                    <Typography variant="body1" component="h3">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
                 </Box>
-                <Divider />
-                <Typography variant="body1" component="h3" className="mt-2">Join Us Today. Create An Account, It's Free. Miaw!</Typography>
+
                 <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
-                    <Row>
-                        <Col>
-                            <Stack direction="row">
-                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                    <Box className="Two-Row-Container">
+
+                        <Box className="Two-Row-Container-Second-Item">
+                            <Box className="Two-Row-Container">
+                                <Box className="Two-Row-Container-Second-Item">
                                     {formik.errors.fname && <ErrorBanner error={formik.errors.fname} />}
-                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                         <OutlinedInput
                                             name="fname"
                                             id="outlined-adornment-weight1"
@@ -197,9 +197,9 @@ export default function Register() {
                                     </FormControl>
                                 </Box>
 
-                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                <Box className="Two-Row-Container-Second-Item">
                                     {formik.errors.lname && <ErrorBanner error={formik.errors.lname} />}
-                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                         <OutlinedInput
                                             name="lname"
                                             id="outlined-adornment-weight2"
@@ -215,9 +215,9 @@ export default function Register() {
                                         <FormHelperText id="outlined-weight-helper-text">Last Name</FormHelperText>
                                     </FormControl>
                                 </Box>
-                            </Stack>
+                            </Box>
 
-                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                            <Box>
                                 {formik.errors.email && <ErrorBanner error={formik.errors.email} />}
                                 <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                     <OutlinedInput
@@ -238,11 +238,11 @@ export default function Register() {
                             </Box>
 
 
-                            <Stack direction="row">
-                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                            <Box className="Two-Row-Container">
+                                <Box className="Two-Row-Container-Second-Item">
                                     {formik.errors.password && <ErrorBanner error={formik.errors.password} />}
 
-                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                         <OutlinedInput
                                             name="password"
                                             type="password"
@@ -259,10 +259,10 @@ export default function Register() {
                                         <FormHelperText id="outlined-weight-helper-text">Password</FormHelperText>
                                     </FormControl>
                                 </Box>
-                                <Box sx={{ minWidth: '25ch', maxWidth: '100%' }}>
+                                <Box className="Two-Row-Container-Second-Item">
                                     {formik.errors.confirmPassword && <ErrorBanner error={formik.errors.confirmPassword} />}
 
-                                    <FormControl sx={{ m: 1, width: '28ch' }} variant="outlined">
+                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                         <OutlinedInput
                                             name="confirmPassword"
                                             type="password"
@@ -279,33 +279,30 @@ export default function Register() {
                                         <FormHelperText id="outlined-weight-helper-text">Confirm Password</FormHelperText>
                                     </FormControl>
                                 </Box>
-                            </Stack>
+                            </Box>
+                        </Box>
 
-                        </Col>
+                        <Box className="Two-Row-Container-Second-Item">
+                            <Box >
+                                {formik.errors.phoneNumber && <ErrorBanner error={formik.errors.phoneNumber} />}
+                                <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                                    <OutlinedInput
+                                        name="phoneNumber"
+                                        id="outlined-adornment-weight6"
+                                        aria-describedby="outlined-weight-helper-text"
+                                        inputProps={{
+                                            'aria-label': 'weight',
+                                        }}
+                                        value={formik.values.phoneNumber}
+                                        onChange={formik.handleChange}
+                                        onBlur={formik.handleBlur}
+                                        error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
+                                    />
+                                    <FormHelperText id="outlined-weight-helper-text">Phone Number</FormHelperText>
+                                </FormControl>
+                            </Box>
 
-                        <Col>
-                            <Stack>
-                                <Box sx={{ width: 500, maxWidth: '100%' }}>
-                                    {formik.errors.phoneNumber && <ErrorBanner error={formik.errors.phoneNumber} />}
-                                    <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
-                                        <OutlinedInput
-                                            name="phoneNumber"
-                                            id="outlined-adornment-weight6"
-                                            aria-describedby="outlined-weight-helper-text"
-                                            inputProps={{
-                                                'aria-label': 'weight',
-                                            }}
-                                            value={formik.values.phoneNumber}
-                                            onChange={formik.handleChange}
-                                            onBlur={formik.handleBlur}
-                                            error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
-                                        />
-                                        <FormHelperText id="outlined-weight-helper-text">Phone Number</FormHelperText>
-                                    </FormControl>
-                                </Box>
-                            </Stack>
-
-                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                            <Box>
                                 {formik.errors.profilePhotoUrl && <ErrorBanner error={formik.errors.profilePhotoUrl} />}
                                 <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                     <OutlinedInput
@@ -325,7 +322,7 @@ export default function Register() {
                                 </FormControl>
                             </Box>
 
-                            <Box sx={{ width: 500, maxWidth: '100%' }}>
+                            <Box>
                                 {formik.errors.about && <ErrorBanner error={formik.errors.about} />}
                                 <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
                                     <OutlinedInput
@@ -344,13 +341,18 @@ export default function Register() {
                                     <FormHelperText id="outlined-weight-helper-text">Tell more about yourself</FormHelperText>
                                 </FormControl>
                             </Box>
-                        </Col>
-                    </Row>
+                        </Box>
+                    </Box>
 
                     {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
 
-                    <Row>
-                        <FormGroup style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: "1rem", paddingBottom: "1rem" }}>
+                    <Box>
+                        <FormGroup style={{
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            paddingTop: "1rem",
+                            paddingBottom: "1rem"
+                        }}>
                             <FormControlLabel
                                 onChange={formik.handleChange}
                                 value={formik.values.remember}
@@ -358,7 +360,7 @@ export default function Register() {
                                 control={<Checkbox />}
                                 label="Remember" />
                         </FormGroup>
-                    </Row>
+                    </Box>
 
                     <Button
                         color="primary"
@@ -372,7 +374,7 @@ export default function Register() {
                 <Box>
                     <Typography>Already Registered? <Link color="inherit" href="login">Login</Link></Typography>
                 </Box>
-            </Stack>
+            </Box>
         </Container>
     );
 }

@@ -21,7 +21,7 @@ export default function ProfileHeader({ item, func, refresh, category }: iCustom
         if (item.length <= 0) return
         if (!value) return
 
-        var payload = [];
+        var payload: iConversationClusterProps[] = [];
 
         if (category === "Chats") {
             payload = filterArray(item);
@@ -63,11 +63,17 @@ export default function ProfileHeader({ item, func, refresh, category }: iCustom
 
     return (
         <Stack direction="column" >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingX: '1rem', paddingY: '0.5rem' }}>
-                <Typography variant="h6">{category}</Typography>
-                {category === "Chats" ? <ChatIcon sx={{ color: 'gray' }} /> : <GroupAddIcon sx={{ color: 'gray' }} />}
+            <Box sx={{ 
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingX: '1rem',
+                paddingY: '0.5rem'
+            }}>
+                <Typography variant="h6" >{category}</Typography>
+                {category === "Chats" ? <ChatIcon id="ProfileHeaderTitle" sx={{ color: 'gray' }} /> : <GroupAddIcon id="ProfileHeaderTitle" sx={{ color: 'gray' }} />}
             </Box>
-            <Box sx={{ width: "100%", maxWidth: '100%' }}>
+            <Box id="ProfileHeaderSearchBar" sx={{ width: "100%", maxWidth: '100%' }}>
                 <Search
                     placeholder="Search..."
                     onKeyDown={(e) => {

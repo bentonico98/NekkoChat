@@ -1,4 +1,4 @@
-import { useLocation, useNavigate,  useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import React, { useRef, useEffect, useState } from 'react';
 import VideocamIcon from '@mui/icons-material/Videocam';
@@ -14,15 +14,15 @@ import ServerLinks from '../../Constants/ServerLinks';
 import axios from 'axios';
 import useTheme from "@mui/material/styles/useTheme";
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { AlertSnackbar, AlertSnackbarType } from './Components/AlertSnackbar';
+import { AlertSnackbarType } from './Components/AlertSnackbar';
 import { VideoCallComnicationHandler } from './Components/Handlers/VideoComunicationHandler';
 import { HubConnection } from '@microsoft/signalr';
-import { openVideoSettingModal } from '../../Store/Slices/userSlice';
+import { openVideoSettingModal, toggleErrorModal } from '../../Store/Slices/userSlice';
 import { useAppDispatch } from '../../Hooks/storeHooks';
-import { Badge } from 'react-bootstrap';
-import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
+//import { Badge } from 'react-bootstrap';
+//import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
 import UserAuthServices from '../../Utils/UserAuthServices';
-import { Container } from '@mui/material';
+/* AlertSnackbar,*/
 
 export const VideoCall: React.FC = () => {
 
@@ -34,7 +34,7 @@ export const VideoCall: React.FC = () => {
     const localStream = useRef<MediaStream | null>(null);
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const receiverId = useRef<string>("");
-    const [receiverName, setReceiverName] = useState<string>("Unknown");
+    //const [receiverName, setReceiverName] = useState<string>("Unknown");
     const [isOfferState, setIsOfferState] = useState<boolean>(true);
     const [isConnectionStablish, setIsConnectionStablish] = useState<boolean>(false);
     const [isVideoOn, setIsVideoOn] = useState<boolean>(true);
@@ -117,7 +117,7 @@ export const VideoCall: React.FC = () => {
                     receiverId.current = receiver_id;
                     const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
                     if (res.success) {
-                        setReceiverName(res.singleUser.userName);
+                        //setReceiverName(res.singleUser.userName);
                     }
                     setTimeout(() => {
                         VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
@@ -137,7 +137,7 @@ export const VideoCall: React.FC = () => {
                 if (user_id === receiver_id) {
                     const res = await UserAuthServices.SearchUserById(sender_id, receiver_id);
                     if (res.success) {
-                        setReceiverName(res.singleUser.userName);
+                        //setReceiverName(res.singleUser.userName);
                     }
                     setTimeout(async () => {
                         setIsOnCall(true);
@@ -146,7 +146,7 @@ export const VideoCall: React.FC = () => {
                 } else if (user_id === sender_id) {
                     const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
                     if (res.success) {
-                        setReceiverName(res.singleUser.userName);
+                        //setReceiverName(res.singleUser.userName);
                     }
                     setIsOnCall(true);
                     await videocallComunicationHandlerRef.current!.handleCall(sender_id, receiver_id);
@@ -197,7 +197,10 @@ export const VideoCall: React.FC = () => {
                     });
                 }
             })
-            .catch(error => console.error('Error obteniendo los datos del video:', error));
+            .catch(error => {
+                console.error('Error obteniendo los datos del video:', error);
+                dispatch(toggleErrorModal({ status: true, message: "The Camara/Mic Already In Use." }));
+            });
 
         peerConnection.current.onnegotiationneeded = async () => {
             if (probando) {
@@ -210,6 +213,7 @@ export const VideoCall: React.FC = () => {
                         })
                         )).catch((err) => {
                             console.log(err);
+                            dispatch(toggleErrorModal({ status: true, message: "Call Failed." }));
                         });
             }
         };
@@ -229,6 +233,7 @@ export const VideoCall: React.FC = () => {
                             remoteVideo.play().catch(error => {
                                 setIsOnCall(false);
                                 console.error("Error al intentar reproducir el video:", error);
+                                dispatch(toggleErrorModal({ status: true, message: "Video Playback Error." }));
                             });
                         }, { once: true });
                     }
@@ -237,6 +242,14 @@ export const VideoCall: React.FC = () => {
         };
     }, [isVideoOn, isMicOn, isOfferState, isConnectionStablish, user_id, probando, isRenegotiated]);
 
+
+    useEffect(() => {
+        if (alertSnackbarData.isOpen && alertSnackbarData.message) {
+            if (alertSnackbarData.severity === "warning" || alertSnackbarData.severity === "error") {
+                dispatch(toggleErrorModal({ status: true, message: alertSnackbarData.message }));
+            }
+        }
+    }, [])
     const handleMicState = () => {
         if (localStream.current) {
             const audioTrack = localStream.current.getAudioTracks()[0];
@@ -287,6 +300,7 @@ export const VideoCall: React.FC = () => {
                         }
                     } catch (error) {
                         console.error('Error obteniendo video:', error);
+                        dispatch(toggleErrorModal({ status: true, message: "Unable To Connect To Camara." }));
                     }
                 }
             }
@@ -303,9 +317,9 @@ export const VideoCall: React.FC = () => {
         }
     }
 
-    const handleSnackbarClose = () => {
+    /*const handleSnackbarClose = () => {
         setAlertSnackbarData((prevState) => ({ ...prevState, isOpen: false }));
-    };
+    };*/
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
@@ -352,114 +366,60 @@ export const VideoCall: React.FC = () => {
     };
 
     const { state } = useLocation();
-    const [ searchParams ] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [externalCall] = useState(searchParams.get("externalCall") || false);
 
     useEffect(() => {
         if (externalCall) {
-            const data = {name: state.name, photo: state.photo}
+            const data = { name: state.name, photo: state.photo }
             VideocallServerServices.SendVideoNotification(user_id, state.id, JSON.stringify(data));
         }
     }, []);
 
     return (
-        <>
-            {alertSnackbarData!.isOpen &&
-                <AlertSnackbar
-                    message={alertSnackbarData!.message}
-                    isOpen={alertSnackbarData!.isOpen}
-                    severity={alertSnackbarData!.severity}
-                    onClose={handleSnackbarClose} />}
-
-            <Container sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderRadius: "1rem",
-                padding: ".5rem"
-            }}>
+        <Box id="Video-Main-Container">
+            <Box id="Video-Container">
                 {isVideoOn ?
-                    <Box sx={{
-                        minWidth: "42.5vw",
-                        height: "80vh",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "1rem",
-                        flexGrow: "1",
-                    }}>
-                        <div style={{ position: "relative", height: "100%" }}>
-                            <video
-                                id="local"
-                                style={{
-                                    borderRadius: "1rem",
-                                    height: "100%"
-                                }}
-                                autoPlay
-                                ref={videoRef}
-                                onClick={() => {
-                                    console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
-                                }} />
-                            <Badge
-                                bg="primary"
-                                style={{
-                                    position: "absolute",
-                                    top: "1rem",
-                                    left: "1rem",
-                                    zIndex: "1000"
-                                }}>{FirstLetterUpperCase(user_name)}</Badge>
-                        </div>
+                    <Box id="Video-Main-Container-Child">
+                        <video
+                            id="local"
+                            style={{
+                                borderRadius: "1rem",
+                                maxWidth: '100%',
+                                height:'auto'
+                            }}
+                            autoPlay
+                            ref={videoRef}
+                            onClick={() => {
+                                console.log(remoteVideoRef.current?.srcObject); remoteVideoRef.current!.play();
+                            }} />
+                       
                     </Box>
                     :
-                    <Box sx={{
-                        backgroundColor: "#777",
-                        height: "80vh",
-                        minWidth: "42.5vw",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: "1rem",
-                        justifySelf: "center",
-                        flexGrow: "1"
-                    }}>
+                    <Box id="Video-Main-Container-No-Camera">
                         <VideocamOffIcon sx={{
                             fontSize: "4rem",
                             color: "white"
                         }} /></Box>
                 }
 
-                {isOnCall && <Box sx={{
-                    minWidth: "42.5vw",
-                    height: "80vh",
-                    position: "relative",
-                }}
+                {isOnCall && <Box id="Video-Main-Container-Floaty"
                     onMouseDown={handleMouseDown}
                     onTouchStart={handleTouchStart}
                 >
                     <video
                         id='remoto'
-                        style={{ borderRadius: "1rem", height: "100%" }}
+                        style={{
+                            borderRadius: "1rem",
+                            maxWidth: '100%',
+                            height: 'auto' }}
                         autoPlay
                         ref={remoteVideoRef}
                     />
-                    {isOnCall &&
-                        <Badge
-                            bg="primary"
-                            style={{
-                                position: "absolute",
-                                top: "1rem",
-                                left: "1rem",
-                                zIndex: "10"
-                            }}>{FirstLetterUpperCase(receiverName)}</Badge>}
                 </Box>}
-            </Container>
+            </Box>
 
-            <Box sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-
-            }}>
+            <Box id="Video-Button">
                 <VideoCallButton onClick={handleMicState}>{isMicOn ? < MicIcon /> : <MicOffIcon />}</VideoCallButton>
                 <VideoCallButton onClick={handleVideoState}>{isVideoOn ? < VideocamIcon /> : <VideocamOffIcon />}</VideoCallButton>
                 <VideoCallButton onClick={() => { dispatch(openVideoSettingModal()); }}>{<SettingsIcon />}</VideoCallButton>
@@ -474,6 +434,20 @@ export const VideoCall: React.FC = () => {
                         }
                     })}>END</VideoCallButton>}
             </Box>
-        </>
+        </Box>
     );
 }
+
+/** {alertSnackbarData!.isOpen &&
+<AlertSnackbar
+message={alertSnackbarData!.message}
+isOpen={alertSnackbarData!.isOpen}
+severity={alertSnackbarData!.severity}
+onClose={handleSnackbarClose} />}   <Badge
+                            bg="primary"
+                            style={{
+                                position: "absolute",
+                                top: "1rem",
+                                left: "1rem",
+                                zIndex: "1000"
+                            }}>{FirstLetterUpperCase(user_name)}</Badge> */

@@ -10,18 +10,22 @@ import Paper from '@mui/material/Paper';
 export default function Index() {
     const navigate = useNavigate();
     return (
-        <>
-            <Navbar sticky="top" data-bs-theme="light">
+        <Container className="fluidContainer" style={{paddingBottom:'2em'} }>
+            <Navbar className="nekkoNavbar"  sticky="top" data-bs-theme="light">
                 <Container>
-                    <Navbar.Brand href="/" style={{ display: "flex", justifyContent: "center", alignItems: "center", textAlign: "center" }} >
+                    <Navbar.Brand href="/" style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        textAlign: "center"
+                    }} >
                         <img
-                            alt=""
                             src={nekkoAlt}
                             width="50"
                             height="50"
                             className="d-inline-block align-top"
                         />{' '}
-                        <Typography variant="h4">NekkoChat</Typography>
+                        <Typography variant="h4" id="invisible">NekkoChat</Typography>
                     </Navbar.Brand>
 
                     <Nav>
@@ -35,12 +39,14 @@ export default function Index() {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    minWidth: "80vw",
+                    minHeight: "40vh"
                 }}
             >
-                <Paper elevation={3} className='border border-1 rounded-5' sx={{ minWidth: "1000px", minHeight: "400px" }}>
-                    <Stack direction='row'>
-                        <Box className=" p-3">
-                            <Stack direction="column" spacing={1} className="text-left p-3" sx={{ alignItems:"flex-start" }}>
+                <Paper elevation={3} className='border border-1 rounded-5' sx={{ minWidth: "100%", minHeight: "100%" }}>
+                    <Box className="Two-Row-Container">
+                        <Box className="p-3 Two-Row-Container-Second-Item">
+                            <Stack direction="column" spacing={1} className="text-left p-3" sx={{ alignItems: "flex-start" }}>
                                 <Typography variant="h3" >WELCOME TO NEKKOCHAT</Typography>
                                 <Typography variant="h6" >The Place Where Cat's Lovers Meet Fellow Cat's Lovers</Typography>
                                 <Typography variant="body1">1. Individual Chats</Typography>
@@ -58,27 +64,24 @@ export default function Index() {
                             </Stack>
 
                         </Box>
-                        <Box >
-                            <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent:'center' }}>
-                            <img
-                                alt=""
-                                src={nekkoAlt}
-                                width="300"
-                                height="300"
-                                className="d-inline-block align-top"
-                            />
+                        <Box className="p-3 Two-Row-Container-Second-Item">
+                            <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent: 'center' }}>
+                                <img
+                                    id="MainLogoImage"
+                                    src={nekkoAlt}
+                                    className="d-inline-block align-top"
+                                />
 
-                                <Button variant="primary" onClick={() => { navigate('/inbox') } } >Visit NekkoChat {<FontAwesomeIcon icon={faArrowRightLong} />}</Button>
+                                <Button variant="primary" onClick={() => { navigate('/inbox') }} >Visit NekkoChat {<FontAwesomeIcon icon={faArrowRightLong} />}</Button>
                             </Stack>
                         </Box>
-
-                    </Stack>
+                    </Box>
                 </Paper>
             </Box>
-            <Box sx={{display:'flex', justifyContent:'center'} }>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Link to="/inbox" className="text-muted">{<FontAwesomeIcon icon={faCopyright} />} Derechos Reservados Por Benjunior Dorlouis & Lenny Garcia </Link>
             </Box>
-        </>
+        </Container>
     );
 }
 

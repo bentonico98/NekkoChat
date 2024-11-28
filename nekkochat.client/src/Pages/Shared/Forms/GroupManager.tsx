@@ -9,7 +9,7 @@ import MessageServicesClient from '../../../Utils/MessageServicesClient';
 
 import avatar from "../../../assets/avatar.png";
 
-import { Box, Paper, Typography, MobileStepper, Stack, Divider } from '@mui/material';
+import { Box, Paper, Typography, MobileStepper, Divider } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { KeyboardArrowLeft, KeyboardArrowRight } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,8 @@ import RegularSkeleton from '../Skeletons/RegularSkeleton';
 import NotificationServiceClient from '../../../Utils/NotificationServiceClient';
 import GetNotificationName from '../../../Utils/GetNotificationName ';
 import PrivateChatsServerServices from '../../../Utils/PrivateChatsServerServices';
+import SearchIcon from '@mui/icons-material/Search';
+
 interface iGroupRequestTypesv2 {
     sender_id?: string,
     user_id?: string,
@@ -230,107 +232,105 @@ export default function GroupManager() {
     }, [groupInfo]);
 
     return (
-        <Container style={{ width: 1000, maxWidth: '100%' }}>
+        <Container style={{ width: '90vw', maxWidth: '100%' }}>
             <Modal.Dialog >
                 <Modal.Header>
-                    <Modal.Title>New Group</Modal.Title>
+                    <Modal.Title className="my-2">New Group</Modal.Title>
                 </Modal.Header>
 
-                <Stack direction="row" spacing={2}>
-                    <Box sx={{ width: "100%", maxWidth: '100%' }}>
-                        <Search
-                            placeholder="Search..."
-                            onChange={(e) => setValue(e)}
-                            onClearClick={() => {
-                                setValue("");
-                                resetSearch();
-                            }} />
-                    </Box>
-
-                    <Box>
-                        <Button
-                            variant="primary"
-                            onClick={() => { searchFromList(value, friend); }} >Search</Button>
-                    </Box>
-                </Stack>
-
                 <Modal.Body>
-                    {searchFriends.length > 0 && <div>
-                        <Typography variant="h5" className="my-1">Search Results</Typography>
-                        {searchFriends.map((el: iUserViewModel, idx: number) =>
-                            <GroupButton
-                                item={el}
-                                idx={idx}
-                                key={idx}
-                                func={addParticipant} />
-                        )}
-                    </div>}
+                    <Container>
+                        <Box className="Two-Row-Container mx-2" >
+                            <Search
+                                className="Two-Row-Container-First-Item"
+                                placeholder="Search..."
+                                onChange={(e) => setValue(e)}
+                                onClearClick={() => {
+                                    setValue("");
+                                    resetSearch();
+                                }} />
 
-                    <Stack direction="row" spacing={5}>
-                        <Box sx={{ maxWidth: 600, flexGrow: 1, overflowY: "auto" }}>
-                            <Typography variant="h5" className="my-2">My Friends</Typography>
-                            <Divider />
-                            {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
-                                return <GroupButton
+                            <Button
+                                className="Two-Row-Container-Second-Item"
+                                variant="primary"
+                                onClick={() => { searchFromList(value, friend); }} >{<SearchIcon />}</Button>
+                        </Box>
+                        {searchFriends.length > 0 && <Box>
+                            <Typography variant="h5" className="my-1">Search Results</Typography>
+                            {searchFriends.map((el: iUserViewModel, idx: number) =>
+                                <GroupButton
                                     item={el}
                                     idx={idx}
                                     key={idx}
                                     func={addParticipant} />
-                            }) : <RegularSkeleton />}
-                        </Box>
+                            )}
+                        </Box>}
 
-                        <Box sx={{width:400, maxWidth: 400, flexGrow: 1 }}>
-                            <Paper
-                                square
-                                elevation={0}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    height: 50,
-                                    pl: 2,
-                                    bgcolor: 'background.default',
-                                }}
-                            >
-                                <Typography>{steps[activeStep].label}</Typography>
-                            </Paper>
-                            <Box sx={{ height: 255, maxWidth: 400, width: '100%', p: 2 }}>
-                                {steps[activeStep].description}
-                                <hr />
-                                {steps[activeStep].elements}
+                        <Box className="Two-Row-Container">
+                            <Box className="Two-Row-Container-Second-Item">
+                                <Typography variant="h5" className="my-2">My Friends</Typography>
+                                <Divider />
+                                {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+                                    return <GroupButton
+                                        item={el}
+                                        idx={idx}
+                                        key={idx}
+                                        func={addParticipant} />
+                                }) : <RegularSkeleton />}
                             </Box>
-                            <MobileStepper
-                                variant="text"
-                                steps={maxSteps}
-                                position="static"
-                                activeStep={activeStep}
-                                nextButton={
-                                    <Button
-                                        size="sm"
-                                        onClick={handleNext}
-                                        disabled={activeStep === maxSteps - 1}
-                                    >
-                                        Next
-                                        {theme.direction === 'rtl' ? (
-                                            <KeyboardArrowLeft />
-                                        ) : (
-                                            <KeyboardArrowRight />
-                                        )}
-                                    </Button>
-                                }
-                                backButton={
-                                    <Button size="sm" onClick={handleBack} disabled={activeStep === 0}>
-                                        {theme.direction === 'rtl' ? (
-                                            <KeyboardArrowRight />
-                                        ) : (
-                                            <KeyboardArrowLeft />
-                                        )}
-                                        Back
-                                    </Button>
-                                }
-                            />
+
+                            <Box className="Two-Row-Container-Second-Item">
+                                <Paper
+                                    square
+                                    elevation={0}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        height: 50,
+                                        pl: 2,
+                                        bgcolor: 'background.default',
+                                    }}
+                                >
+                                    <Typography>{steps[activeStep].label}</Typography>
+                                </Paper>
+                                <Box sx={{ height: 255, maxWidth: 400, width: '100%', p: 2 }}>
+                                    {steps[activeStep].description}
+                                    <hr />
+                                    {steps[activeStep].elements}
+                                </Box>
+                                <MobileStepper
+                                    variant="text"
+                                    steps={maxSteps}
+                                    position="static"
+                                    activeStep={activeStep}
+                                    nextButton={
+                                        <Button
+                                            size="sm"
+                                            onClick={handleNext}
+                                            disabled={activeStep === maxSteps - 1}
+                                        >
+                                            Next
+                                            {theme.direction === 'rtl' ? (
+                                                <KeyboardArrowLeft />
+                                            ) : (
+                                                <KeyboardArrowRight />
+                                            )}
+                                        </Button>
+                                    }
+                                    backButton={
+                                        <Button size="sm" onClick={handleBack} disabled={activeStep === 0}>
+                                            {theme.direction === 'rtl' ? (
+                                                <KeyboardArrowRight />
+                                            ) : (
+                                                <KeyboardArrowLeft />
+                                            )}
+                                            Back
+                                        </Button>
+                                    }
+                                />
+                            </Box>
                         </Box>
-                    </Stack>
-                    
+                    </Container>
                 </Modal.Body>
 
                 <Modal.Footer>

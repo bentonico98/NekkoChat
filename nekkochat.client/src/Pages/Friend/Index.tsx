@@ -1,4 +1,4 @@
-import { Button,  Container  } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 
 import { Search } from "@chatscope/chat-ui-kit-react";
 import FriendButton from "../Shared/FriendButton";
@@ -10,7 +10,9 @@ import useSearchUserByName from "../../Hooks/useSearchUserByName";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
 import { useEffect } from "react";
 import RegularSkeleton from "../Shared/Skeletons/RegularSkeleton";
-import { Box, Divider, Stack, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
+import SearchIcon from '@mui/icons-material/Search';
+
 export default function Index() {
     const dispatch = useAppDispatch();
 
@@ -44,71 +46,64 @@ export default function Index() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container className="text-center">
+        <Container className="text-center fluidContainer">
             <Typography variant="h3" className="my-4">Friends List</Typography>
 
             <Divider />
 
-            <Stack direction="row" spacing={2}>
-                <Box sx={{ width: "100%", maxWidth: '100%' }}>
-                    <Search placeholder="Search..." onChange={(e) => setValue(e)} onClearClick={() => { setValue(""); resetSearch(); }} />
-                </Box>
+            <Box className="Two-Row-Container">
+                <Search
+                    className="Two-Row-Container-First-Item"
+                    placeholder="Search..." onChange={(e) => setValue(e)}
+                    onClearClick={() => { setValue(""); resetSearch(); }} />
+                <Button
+                    className="Two-Row-Container-Second-Item"
+                    variant="primary"
+                    onClick={() => { searchFromList(value, friend); }} >{<SearchIcon />}</Button>
+            </Box>
 
-                <Box >
-                    <Button variant="primary" onClick={() => { searchFromList(value, friend); }} >Search</Button>
-                </Box>
-            </Stack>
-
-            <Box style={{ overflowY: "auto", overflowX: "hidden" }}>
-                {friendRequest.length > 0 && <Box>
-                    <Typography variant="h3" className="my-2">Pending Friend Requests</Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap: 'wrap' }}>
-
-                        {friendRequest.map((el: iUserViewModel, idx: number) => {
-                            return <Box key={idx}>
-                                <FriendButton
-                                    key={idx}
-                                    id={el.id}
-                                    idx={idx}
-                                    item={el}
-                                    DisplayMessage={setDisplayInfo} />
-                            </Box>
-                        })}
-                    </Box>
-                    <Divider />
-                </Box>}
-
-                {searchFriends.length > 0 && <Box>
-                    <Typography variant="h5" className="my-3">Search Results</Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap: 'wrap' }}>
-                        {searchFriends.map((el: iUserViewModel, idx: number) => {
-                            return <Box key={idx}>
-                                <FriendButton
-                                    key={idx}
-                                    id={el.id}
-                                    idx={idx}
-                                    item={el}
-                                    DisplayMessage={setDisplayInfo} />
-                            </Box>
-                        })}
-                    </Box>
-                    <Divider />
-                </Box>}
-
-                <Typography variant="h5" className="my-3">My Friends</Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-around', flexDirection: "row", flexWrap:'wrap' }}>
-                    {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+            {friendRequest.length > 0 && <Box>
+                <Typography variant="h3" className="my-2">Pending Friend Requests</Typography>
+                <Box className="Three-Row-Container" >
+                    {friendRequest.map((el: iUserViewModel, idx: number) => {
                         return <FriendButton
                             key={idx}
                             id={el.id}
                             idx={idx}
                             item={el}
                             DisplayMessage={setDisplayInfo} />
-
-                    })
-                        :
-                        <RegularSkeleton />}
+                    })}
                 </Box>
+                <Divider />
+            </Box>}
+
+            {searchFriends.length > 0 && <Box>
+                <Typography variant="h5" className="my-3">Search Results</Typography>
+                <Box className="Three-Row-Container" >
+                    {searchFriends.map((el: iUserViewModel, idx: number) => {
+                        return <FriendButton
+                            key={idx}
+                            id={el.id}
+                            idx={idx}
+                            item={el}
+                            DisplayMessage={setDisplayInfo} />
+                    })}
+                </Box>
+                <Divider />
+            </Box>}
+
+            <Typography variant="h5" className="my-3">My Friends</Typography>
+            <Box className="Three-Row-Container">
+                {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+                    return <FriendButton
+                        key={idx}
+                        id={el.id}
+                        idx={idx}
+                        item={el}
+                        DisplayMessage={setDisplayInfo} />
+                })
+                    :
+                    <RegularSkeleton />}
             </Box>
 
         </Container>

@@ -9,7 +9,8 @@ import useDisplayMessage from '../../../Hooks/useDisplayMessage';
 import { useEffect } from 'react';
 import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../../Store/Slices/userSlice';
 import RegularSkeleton from '../Skeletons/RegularSkeleton';
-import { Box, Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Typography } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function PrivateChatManager() {
 
@@ -44,36 +45,33 @@ export default function PrivateChatManager() {
         resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
 
     return (
-        <Container style={{ width: 500, maxWidth: '100%' }}>
+        <Container style={{ width: '90vw', maxWidth: '100%' }}>
             <Modal.Dialog>
                 <Modal.Header >
                     <Modal.Title>New Chat</Modal.Title>
                 </Modal.Header>
 
-                <Stack direction="row" spacing={2}>
-                    <Box sx={{ width: "100%", maxWidth: '100%' }}>
-                        <Search
-                            placeholder="Search..."
-                            onChange={(e) => setValue(e)}
-                            onClearClick={() => {
-                                setValue("");
-                                resetSearch();
-                            }} />
-                    </Box>
+                <Modal.Body>
+                    <Container>
+                        <Box className="Two-Row-Container mx-2">
+                            <Search
+                                className="Two-Row-Container-First-Item"
+                                placeholder="Search..."
+                                onChange={(e) => setValue(e)}
+                                onClearClick={() => {
+                                    setValue("");
+                                    resetSearch();
+                                }} />
 
-                    <Box>
-                        <Button
-                            variant="primary"
-                            onClick={() => {
-                                searchFromList(value, friend);
-                                searchUserByName(value, friend)
-                            }} >Search</Button>
-                    </Box>
-                </Stack>
-
-                <Modal.Body >
-                    <Container style={{ overflowY: "auto", overflowX: "hidden" }}>
-                        {searchFriends.length > 0 && <div>
+                            <Button
+                                className="Two-Row-Container-Second-Item"
+                                variant="primary"
+                                onClick={() => {
+                                    searchFromList(value, friend);
+                                    searchUserByName(value, friend)
+                                }} >{<SearchIcon />}</Button>
+                        </Box>
+                        {searchFriends.length > 0 && <Box className="Three-Row-Container">
                             <Typography variant="h5" className="my-2">Search Results</Typography>
                             {searchFriends.map((el: iUserViewModel, idx: number) => {
                                 return <FriendButton
@@ -84,23 +82,23 @@ export default function PrivateChatManager() {
                                     DisplayMessage={setDisplayInfo}
                                     searchSafe={false} />
                             })}
-                        </div>}
+                        </Box>}
 
                         <Divider />
 
-                        <Typography variant="h6" className="my-2">My Friends</Typography>
-                        {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
-                            return <FriendButton
-                                key={idx}
-                                id={el.id}
-                                idx={idx}
-                                item={el}
-                                DisplayMessage={setDisplayInfo}
-                                searchSafe={false} />
-                        }) : <RegularSkeleton />}
+                        <Typography variant="h6" className="my-2">My Friends</Typography><Box className="Three-Row-Container">
+                            {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
+                                return <FriendButton
+                                    key={idx}
+                                    id={el.id}
+                                    idx={idx}
+                                    item={el}
+                                    DisplayMessage={setDisplayInfo}
+                                    searchSafe={false} />
+                            }) : <RegularSkeleton />}
+                        </Box>
                     </Container>
                 </Modal.Body>
-
             </Modal.Dialog>
         </Container>
     );

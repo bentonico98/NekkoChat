@@ -31,7 +31,7 @@ export default function Inbox() {
     });
 
     const [searchParams] = useSearchParams();
-    const [typeParams] = useState(searchParams.get("type") || "all");
+    const [typeParams, setTypeParams] = useState<string>("all");
 
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
@@ -60,6 +60,12 @@ export default function Inbox() {
             fetchMessage(state.id);
         }
     }, []);
+
+    useEffect(() => {
+        if (searchParams.get("type")) {
+            setTypeParams(searchParams.get("type") || 'all');
+        }
+    }, [searchParams]);
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
 
@@ -96,7 +102,7 @@ export default function Inbox() {
 
     return (
         <>
-            <MainContainer style={{overflowY:'hidden'} }>
+            <MainContainer style={{ overflowY: 'hidden' }}>
                 <SideBox
                     messages={conversations}
                     user={user_id}
@@ -118,8 +124,7 @@ export default function Inbox() {
                             <img
                                 alt=""
                                 src={nekkoAlt}
-                                width="300"
-                                height="300"
+                                id="MainLogoImage"
                                 className="d-inline-block align-top"
                             />
 

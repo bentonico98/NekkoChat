@@ -1,7 +1,7 @@
 class ServerLinks {
-  //private static ServerUrl = "https://localhost:7198/";
+  private static ServerUrl = "https://localhost:7198/";
 
-    private static ServerUrl = "https://062r207b-7198.use2.devtunnels.ms/"; //devTunel
+    //private static ServerUrl = "https://062r207b-7198.use2.devtunnels.ms/"; //devTunel
 
   ///////////////// PRIVATE CHATS URLS
 

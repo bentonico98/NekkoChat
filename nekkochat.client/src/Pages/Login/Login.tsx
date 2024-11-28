@@ -7,8 +7,8 @@ import { login, toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotificat
 import useDisplayMessage from '../../Hooks/useDisplayMessage';
 
 import * as yup from 'yup';
-import { Box, Button, Checkbox, Container, Divider, FormControl, FormControlLabel, FormHelperText, Link, OutlinedInput, Stack, Typography } from '@mui/material';
-import { FormGroup, Row } from 'react-bootstrap';
+import { Box, Button, Checkbox, Container, Divider, FormControl, FormControlLabel, FormHelperText, Link, OutlinedInput, Typography } from '@mui/material';
+import { FormGroup} from 'react-bootstrap';
 import { iLoginTypes } from '../../Constants/Types/CommonTypes';
 import ErrorBanner from '../Shared/ErrorBanner';
 
@@ -123,77 +123,79 @@ export default function Login() {
 
 
     return (
-        <Container maxWidth="sm">
-            <Stack spacing={5} direction="column" className="text-center" >
-                <Box className="mt-5">
+        <Container maxWidth="sm" sx={{ paddingTop: '2em' }} className="fluidContainer" >
+            <Box className="AuthPageMainContainer" >
+                <Box className="AuthPageProfileHeader">
                     <img
-                        alt=""
                         src={nekkoAlt}
                         width="100"
                         height="100"
                         className="d-inline-block align-top"
-                        style={{cursor:'pointer'} }
-                        onClick={() => { navigate('/'); } }
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => { navigate('/'); }}
                     />{' '}
+                    <Divider/>
+                    <Typography variant="body1" component="h3">Login to your account. Miaw!</Typography>
                 </Box>
-                <Divider />
-                <Typography variant="body1" component="h3" className="mt-5">Login to your account. Miaw!</Typography>
 
                 <form onSubmit={(e) => { e.preventDefault(); formik.handleSubmit(); }}>
-                    <Stack>
-                        <Box sx={{ width: 500, maxWidth: '100%' }}>
-                            <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
-                                {formik.errors.email && <ErrorBanner error={formik.errors.email} />}
-                                <OutlinedInput
-                                    name="email"
-                                    type="email"
-                                    id="outlined-adornment-weight1"
-                                    aria-describedby="outlined-weight-helper-text"
-                                    inputProps={{
-                                        'aria-label': 'weight',
-                                    }}
-                                    value={formik.values.email}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.email && Boolean(formik.errors.email)}
-                                />
-                                <FormHelperText id="outlined-weight-helper-text">Email</FormHelperText>
-                            </FormControl>
-                        </Box>
+                    <Box>
+                        <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                            {formik.errors.email && <ErrorBanner error={formik.errors.email} />}
+                            <OutlinedInput
+                                name="email"
+                                type="email"
+                                id="outlined-adornment-weight1"
+                                aria-describedby="outlined-weight-helper-text"
+                                inputProps={{
+                                    'aria-label': 'weight',
+                                }}
+                                value={formik.values.email}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.email && Boolean(formik.errors.email)}
+                            />
+                            <FormHelperText id="outlined-weight-helper-text">Email</FormHelperText>
+                        </FormControl>
+                    </Box>
 
-                        <Box sx={{ width: 500, maxWidth: '100%' }}>
-                            <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
-                                {formik.errors.password && <ErrorBanner error={formik.errors.password} />}
-                                <OutlinedInput
-                                    name="password"
-                                    type="password"
-                                    id="outlined-adornment-weight2"
-                                    aria-describedby="outlined-weight-helper-text"
-                                    inputProps={{
-                                        'aria-label': 'weight',
-                                    }}
-                                    value={formik.values.password}
-                                    onChange={formik.handleChange}
-                                    onBlur={formik.handleBlur}
-                                    error={formik.touched.password && Boolean(formik.errors.password)}
-                                />
-                                <FormHelperText id="outlined-weight-helper-text">Password</FormHelperText>
-                            </FormControl>
-                        </Box>
-                    </Stack>
+                    <Box>
+                        <FormControl sx={{ m: 1, width: '100%' }} variant="outlined">
+                            {formik.errors.password && <ErrorBanner error={formik.errors.password} />}
+                            <OutlinedInput
+                                name="password"
+                                type="password"
+                                id="outlined-adornment-weight2"
+                                aria-describedby="outlined-weight-helper-text"
+                                inputProps={{
+                                    'aria-label': 'weight',
+                                }}
+                                value={formik.values.password}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                error={formik.touched.password && Boolean(formik.errors.password)}
+                            />
+                            <FormHelperText id="outlined-weight-helper-text">Password</FormHelperText>
+                        </FormControl>
+                    </Box>
 
                     {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
 
-                    <Row >
-                        <FormGroup style={{ display: 'flex', justifyContent: 'flex-start', paddingTop: "1rem", paddingBottom: "1rem" }}>
+                    <Box>
+                        <FormGroup style={{
+                            display: 'flex',
+                            justifyContent: 'flex-start',
+                            paddingTop: "1rem",
+                            paddingBottom: "1rem"
+                        }}>
                             <FormControlLabel
                                 onChange={formik.handleChange}
                                 value={formik.values.remember}
                                 name="remember"
-                                control={<Checkbox  />}
+                                control={<Checkbox />}
                                 label="Remember" />
                         </FormGroup>
-                    </Row>
+                    </Box>
 
                     <Button
                         color="primary"
@@ -207,7 +209,7 @@ export default function Login() {
                 <Box>
                     <Typography>Not Registered Yet? <Link color="inherit" href="register">Create an Account</Link></Typography>
                 </Box>
-            </Stack >
+            </Box >
         </Container>
     );
 }

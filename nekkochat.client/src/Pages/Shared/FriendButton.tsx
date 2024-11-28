@@ -12,7 +12,7 @@ import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
 import GetNotificationName from "../../Utils/GetNotificationName ";
-import { Box, Stack, Typography } from "@mui/material";
+import { Box,  Typography } from "@mui/material";
 import PrivateChatsServerServices from "../../Utils/PrivateChatsServerServices";
 import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 
@@ -262,27 +262,14 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
     }
 
     return (
-        <Stack key={idx} direction="row" sx={{
-            maxHeight: "4rem",
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: 500,
-            maxWidth: 'max-content'
-        }} className={`m-2 border border-2 rounded p-2 ${!item!.isFriend && "bg-secondary"}`}>
-            <Box>
-                <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
-            </Box>
+        <Box key={idx} className={`Card-Container p-2 border border-1 rounded ${!item!.isFriend && "bg-secondary"}`}>
+            <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ height:'auto', maxWidth: '50px' }} />
 
-            <Box sx={{ flexShrink: 1, marginX:"1rem" }}>
-                <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
-            </Box>
+            <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
 
             <Box>
                 {!item!.isFriend ?
-                    <Stack direction="row" spacing={1}>
-
+                    <Box className="Card-Container ">
                         {item!.canSendRequest && !item!.alreadyRequest && <Button
                             variant="info"
                             onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
@@ -309,14 +296,14 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
                             }}>{
                                 <FontAwesomeIcon icon={faInfoCircle} />}
                         </Button>
-                    </Stack> : <Stack direction="row" spacing={1} >
+                    </Box> : <Box className="Card-Container" >
                         <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faVideoCamera} />}</Button>
                         <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
                         {searchSafe &&
                             <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
-                    </Stack>
+                    </Box>
                 }
             </Box>
-        </Stack>
+        </Box>
     );
 }

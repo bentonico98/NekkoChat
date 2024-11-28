@@ -44,7 +44,7 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
     }
     useEffect(() => {
         dispatchUser();
-    }, [loggedUser, user_id]);
+    }, [loggedUser, user_id, type]);
 
     return { conversations, loggedUser, user_id };
 }

@@ -60,9 +60,9 @@ namespace NekkoChat.Server.Controllers
                     using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
                     {
                         Friend_List friendsList = ctx.friend_list.Where((c) =>
-                        c.sender_id == userView.Id && c.receiver_id == sender_id && c.isAccepted == true
+                        (c.sender_id == userView.Id && c.receiver_id == sender_id) && c.isAccepted == true
                         ||
-                        c.sender_id == sender_id && c.receiver_id == userView.Id && c.isAccepted == true).FirstOrDefault()!;
+                        (c.sender_id == sender_id && c.receiver_id == userView.Id) && c.isAccepted == true).FirstOrDefault()!;
 
                         if (friendsList is not null && friendsList.isAccepted is not null)
                         {
@@ -106,8 +106,7 @@ namespace NekkoChat.Server.Controllers
             {
                 List<UserDTO> searchRes = new();
 
-                IQueryable<AspNetUsers> results = from c in _context.AspNetUsers select c;
-                results = results.Where((c) => c.UserName!.ToLower().Contains(name.ToLower()));
+                IQueryable<AspNetUsers> results = _context.AspNetUsers.Where((c) => c.UserName!.ToLower().Contains(name.ToLower()));
 
                 await Task.Run(async () =>
                 {
@@ -143,7 +142,6 @@ namespace NekkoChat.Server.Controllers
                         }
                         userView.canSendRequest = canSend;
                         userView.alreadyRequest = alreadySent;
-
 
                         searchRes.Add(userView);
                     }
@@ -223,54 +221,57 @@ namespace NekkoChat.Server.Controllers
                     }
                     else
                     {
-                        IQueryable<Friend_List> friends = from fr in _context.friend_list select fr;
-                        friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == false);
+                        var friends = _context.friend_list
+                            .Join(_context.AspNetUsers, fl => fl.receiver_id, u => u.Id, (fl, u) => new { fl, u })
+                            .Union(_context.friend_list
+                            .Join(_context.AspNetUsers, fl => fl.sender_id, u => u.Id, (fl, u) => new { fl, u }))
+                            .Where((x) => x.fl.receiver_id == user_id && x.fl.isAccepted == false && x.u.Id != user_id);
+
                         if (friends.Any())
                         {
-
                             foreach (var friend in friends)
                             {
-                                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                                if (friend is not null)
                                 {
-                                    if (friend is not null && !string.IsNullOrEmpty(friend.sender_id))
-                                    {
-                                        var user = await ctx.AspNetUsers.FindAsync(friend.sender_id)!;
+                                    var user = friend.u;
 
-                                        if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                        UserDTO userView = _mapper.Map<UserDTO>(user);
-                                        userView.isFriend = false;
-                                        userView.isSender = true;
-                                        userView.canSendRequest = false;
-                                        userView.alreadyRequest = true;
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    userView.isFriend = false;
+                                    userView.isSender = true;
+                                    userView.canSendRequest = false;
+                                    userView.alreadyRequest = true;
 
-                                        friendsList.Add(userView);
-                                    }
+                                    friendsList.Add(userView);
                                 }
                             }
                         }
-                        IQueryable<Friend_List> altFriends = _context.friend_list.Where((fr) => fr.sender_id == user_id && fr.isAccepted == false);
+
+                        var altFriends = _context.friend_list
+                            .Join(_context.AspNetUsers, fl => fl.sender_id, u => u.Id, (fl, u) => new { fl, u })
+                            .Union(_context.friend_list
+                            .Join(_context.AspNetUsers,fl=> fl.receiver_id, u=> u.Id, (fl,u)=> new {fl, u}))
+                            .Where((x) => x.fl.sender_id == user_id && x.fl.isAccepted == false && x.u.Id != user_id);
+
                         if (altFriends.Any())
                         {
                             foreach (var altFriend in altFriends)
                             {
-                                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                                if (altFriend is not null)
                                 {
-                                    if (altFriend is not null && !string.IsNullOrEmpty(altFriend.receiver_id))
-                                    {
-                                        var user = await ctx.AspNetUsers.FindAsync(altFriend.receiver_id)!;
+                                    var user = altFriend.u;
 
-                                        if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                        UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
 
-                                        userView.isFriend = false;
-                                        userView.isSender = false;
-                                        userView.canSendRequest = false;
-                                        userView.alreadyRequest = true;
+                                    userView.isFriend = false;
+                                    userView.isSender = false;
+                                    userView.canSendRequest = false;
+                                    userView.alreadyRequest = true;
 
-                                        friendsList.Add(userView);
-                                    }
+                                    friendsList.Add(userView);
                                 }
                             }
                         }
@@ -299,54 +300,55 @@ namespace NekkoChat.Server.Controllers
                     }
                     else
                     {
-                        IQueryable<Friend_List> friends = from fr in _context.friend_list select fr;
-                        friends = friends.Where((fr) => fr.receiver_id == user_id && fr.isAccepted == true);
+                        var friends = _context.friend_list
+                            .Join(_context.AspNetUsers, fl => fl.receiver_id, u => u.Id, (fl, u) => new { fl, u })
+                            .Union(_context.friend_list.Join(_context.AspNetUsers, fl => fl.sender_id, u => u.Id, (fl, u) => new { fl, u }))
+                            .Where((x) => x.fl.receiver_id == user_id && x.fl.isAccepted == true && x.u.Id != user_id);
+
                         if (friends.Any())
                         {
                             foreach (var friend in friends)
                             {
-                                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                                if (friend is not null)
                                 {
-                                    if (friend is not null && !string.IsNullOrEmpty(friend.sender_id))
-                                    {
-                                        var user = await ctx.AspNetUsers.FindAsync(friend.sender_id)!;
+                                    var user = friend.u;
 
-                                        if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                        UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
 
-                                        userView.isFriend = true;
-                                        userView.isSender = true;
-                                        userView.canSendRequest = false;
+                                    userView.isFriend = true;
+                                    userView.isSender = true;
+                                    userView.canSendRequest = false;
 
-                                        friendsList.Add(userView);
-                                    }
+                                    friendsList.Add(userView);
                                 }
                             }
                         }
 
-                        IQueryable<Friend_List> altFriends2 = _context.friend_list.Where((fr) => fr.sender_id == user_id && fr.isAccepted == true);
+                        var altFriends2 = _context.friend_list
+                            .Join(_context.AspNetUsers, fr => fr.sender_id, u => u.Id, (fr, u) => new { fr, u })
+                            .Union(_context.friend_list.Join(_context.AspNetUsers, fr => fr.receiver_id, u => u.Id, (fr, u) => new { fr, u }))
+                            .Where((x) => x.fr.sender_id == user_id && x.fr.isAccepted == true && x.u.Id != user_id);
+
                         if (altFriends2.Any())
                         {
                             foreach (var altFriend in altFriends2)
                             {
-                                using (var ctx = new ApplicationDbContext(serviceProvider.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                                if (altFriend is not null)
                                 {
-                                    if (altFriend is not null && !string.IsNullOrEmpty(altFriend.receiver_id))
-                                    {
-                                        var user = await ctx.AspNetUsers.FindAsync(altFriend.receiver_id)!;
+                                    var user = altFriend.u;
 
-                                        if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
+                                    if (user is null) return StatusCode(403, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 500 });
 
-                                        UserDTO userView = _mapper.Map<UserDTO>(user);
+                                    UserDTO userView = _mapper.Map<UserDTO>(user);
 
-                                        userView.isFriend = true;
-                                        userView.isSender = false;
-                                        userView.canSendRequest = false;
+                                    userView.isFriend = true;
+                                    userView.isSender = false;
+                                    userView.canSendRequest = false;
 
 
-                                        friendsList.Add(userView);
-                                    }
+                                    friendsList.Add(userView);
                                 }
                             }
                         }
@@ -370,11 +372,11 @@ namespace NekkoChat.Server.Controllers
             {
                 if (ex.Message is not null)
                 {
-                    _logger.LogError(ex.Message + " In Notification - Read Route");
+                    _logger.LogError(ex.Message + " In User - Friends Route");
                 }
                 if (ex.InnerException is not null)
                 {
-                    _logger.LogError(ex?.InnerException?.Message + " In Notification - Read Route");
+                    _logger.LogError(ex?.InnerException?.Message + " In User - Friends Route");
                 }
                 return StatusCode(500, new ResponseDTO<AspNetUsers> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.ErrorMessage, StatusCode = 500 });
             }
@@ -438,7 +440,7 @@ namespace NekkoChat.Server.Controllers
 
             try
             {
-                var friendReq = await _context.friend_list.FirstOrDefaultAsync((fr) =>
+                var friendReq = await _context.friend_list.SingleOrDefaultAsync((fr) =>
                 fr!.sender_id == data.sender_id && fr!.receiver_id == data.receiver_id
                 ||
                 fr!.sender_id == data.receiver_id && fr!.receiver_id == data.sender_id)!;

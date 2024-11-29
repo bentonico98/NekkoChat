@@ -11,7 +11,7 @@ import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetReceiver from '../../../Hooks/useGetReceiver';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import { useAppSelector, useAppDispatch } from '../../../Hooks/storeHooks';
-import { openUserProfileModal, setProfileId, UserState } from '../../../Store/Slices/userSlice';
+import { openUserProfileModal, setProfileId, toggleErrorModal, toggleLoading, toggleMsjModal, UserState } from '../../../Store/Slices/userSlice';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages(
     {
@@ -64,27 +64,17 @@ export default function ChatMessages(
         if (!message_id) return;
         if (!user_id) return;
 
-        DisplayMessage({ isLoading: true });
+        dispatch(toggleLoading(true));
 
         const res = await MessageServicesClient.deleteMessageFromChat({ chat_id, message_id, user_id });
 
         if (res.success) {
-            DisplayMessage({
-                hasMsj: true,
-                msj: "Deletion " + res.message,
-                isLoading: false
-            });
+            dispatch(toggleMsjModal({ status: true, message: "Deletion " + res.message }));
+            dispatch(toggleLoading(false));
+
         } else {
-            if (res.internalMessage) return DisplayMessage({
-                hasError: true,
-                error: res.internalMessage,
-                isLoading: true
-            });
-            DisplayMessage({
-                hasError: true,
-                error: res.error,
-                isLoading: true
-            });
+            dispatch(toggleErrorModal({ status: true, message: res.error }));
+            dispatch(toggleLoading(false));
         }
     }
 
@@ -93,7 +83,6 @@ export default function ChatMessages(
         dispatch(setProfileId(id));
         dispatch(openUserProfileModal());
     }
-
     return (
         <>
             {messages.length > 0 ?
@@ -135,12 +124,17 @@ export default function ChatMessages(
                             >
                                 <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.manageChat({
+                                    const res = await MessageServicesClient.manageChat({
                                         operation: "archive",
                                         chat_id: chat,
                                         sender_id: sender,
                                         archive: true
                                     });
+                                    if (res.success) {
+                                        dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                    } else {
+                                        dispatch(toggleErrorModal({ status: true, message: res.error }));
+                                    }
                                 }}>
                                     <ListItemIcon>
                                         <Archive fontSize="small" />
@@ -149,13 +143,17 @@ export default function ChatMessages(
                                 </MenuItem>
                                 <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.manageChat({
+                                    const res = await MessageServicesClient.manageChat({
                                         operation: "favorite",
                                         chat_id: chat,
                                         sender_id: sender,
                                         favorite: true
                                     });
-
+                                    if (res.success) {
+                                        dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                    } else {
+                                        dispatch(toggleErrorModal({ status: true, message: res.error }));
+                                    }
                                 }}>
                                     <ListItemIcon>
                                         <Favorite fontSize="small" />
@@ -164,11 +162,16 @@ export default function ChatMessages(
                                 </MenuItem>
                                 <MenuItem onClick={async () => {
                                     handleClose();
-                                    await MessageServicesClient.deleteChat({
+                                    const res = await MessageServicesClient.deleteChat({
                                         chat_id: chat,
                                         message_id,
                                         sender_id: sender
                                     });
+                                    if (res.success) {
+                                        dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                    } else {
+                                        dispatch(toggleErrorModal({ status: true, message: res.error }));
+                                    }
                                 }}>
                                     <ListItemIcon>
                                         <Delete fontSize="small" />
@@ -183,6 +186,7 @@ export default function ChatMessages(
                     {/*Chat Component*/}
 
                     <MessageList
+                        style={{ height: '100vh' }}
                         autoScrollToBottom={true}
                         autoScrollToBottomOnMount={true}
                         scrollBehavior="smooth"
@@ -318,10 +322,7 @@ export default function ChatMessages(
                                 value: e
                             });
                             if (!res.success) {
-                                DisplayMessage({
-                                    hasError: true,
-                                    error: "Unable To Send Message."
-                                });
+                                dispatch(toggleErrorModal({ status: true, message: "Failed To Send Message." }));
                             }
                         }} />
                 </ChatContainer>

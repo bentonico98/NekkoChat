@@ -263,11 +263,15 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
 
     return (
         <Box key={idx} className={`Card-Container p-2 border border-1 rounded ${!item!.isFriend && "bg-secondary"}`}>
-            <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ height:'auto', maxWidth: '50px' }} />
+            <Box className="centeredElement">
+                <Image src={item ? item!.profilePhotoUrl : avatar} fluid style={{ height: 'auto', maxWidth: '50px' }} />
+            </Box>
 
-            <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
+            <Box className="centeredElement">
+                <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
+            </Box>
 
-            <Box>
+            <Box className="centeredElement">
                 {!item!.isFriend ?
                     <Box className="Card-Container ">
                         {item!.canSendRequest && !item!.alreadyRequest && <Button

@@ -13,6 +13,7 @@ using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text;
+using System.Collections;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace NekkoChat.Server.Controllers
@@ -56,19 +57,17 @@ namespace NekkoChat.Server.Controllers
                 }
                 else
                 {
-                    IQueryable<Chats> conversations = from c in _context.chats select c;
+                    IQueryable<Chats> conversations = _context.chats.Where(c => c.sender_id == id || c.receiver_id == id);
 
                     if (type == "favorites")
                     {
-                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isFavorite == true);
+                        conversations = conversations
+                            .Where((c) => c.isFavorite == true);
                     }
                     else if (type == "archived")
                     {
-                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id).Where((c) => c.isArchived == true);
-                    }
-                    else
-                    {
-                        conversations = conversations.Where((c) => c.sender_id == id || c.receiver_id == id);
+                        conversations = conversations
+                            .Where((c) => c.isArchived == true);
                     }
 
                     foreach (var conversation in conversations)
@@ -76,43 +75,48 @@ namespace NekkoChat.Server.Controllers
                         UserChats.Add(conversation);
                     }
 
-                    await Task.Run(() =>
+                    if (UserChats.Count() > 0)
                     {
-                        foreach (var userChat in UserChats)
+                        await Task.Run(() =>
                         {
-                            IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
-                            chat = chat.Where((u) => u.chat_id == userChat.id);
-
-                            foreach (var c in chat)
+                            foreach (var userChat in UserChats)
                             {
-                                using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
-                                {
-                                    AspNetUsers participants = new();
-                                    if (userChat.sender_id != id)
-                                    {
-                                        if (!string.IsNullOrEmpty(userChat.sender_id))
-                                        {
-                                            participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (!string.IsNullOrEmpty(userChat.receiver_id))
-                                        {
-                                            participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
-                                        }
-                                    }
+                                IQueryable<Users_Messages> chat = _context.users_messages.Where((u) => u.chat_id == userChat.id);
 
-                                    if (c is not null && !string.IsNullOrEmpty(c.content))
+                                if (chat.Any())
+                                {
+                                    foreach (var c in chat)
                                     {
-                                        MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
-                                        contents.status = participants!.Status;
-                                        ChatsContent.Add(contents);
+                                        using (var ctx = new ApplicationDbContext(_srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                                        {
+                                            AspNetUsers participants = new();
+                                            if (userChat.sender_id != id)
+                                            {
+                                                if (!string.IsNullOrEmpty(userChat.sender_id))
+                                                {
+                                                    participants = ctx.AspNetUsers.Find(userChat.sender_id)!;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                if (!string.IsNullOrEmpty(userChat.receiver_id))
+                                                {
+                                                    participants = ctx.AspNetUsers.Find(userChat.receiver_id)!;
+                                                }
+                                            }
+
+                                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                                            {
+                                                MessagesDTO contents = System.Text.Json.JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
+                                                contents.status = participants!.Status;
+                                                ChatsContent.Add(contents);
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
+                    }
 
                     if (ChatsContent == null)
                     {
@@ -156,23 +160,30 @@ namespace NekkoChat.Server.Controllers
 
             try
             {
-                List<object> currentChats = new();
                 int chat_id = int.Parse(id);
-                IQueryable<Users_Messages> chat = from u in _context.users_messages select u;
-                chat = chat.Where((u) => u.chat_id == chat_id);
 
-                await Task.Run(() =>
+                List<MessagesDTO> currentChats = new();
+
+                IQueryable<Users_Messages> chat = _context.users_messages.Where((u) => u.chat_id == chat_id);
+
+                if (chat.Any())
                 {
-                    foreach (var c in chat)
+                    await Task.Run(() =>
                     {
-                        if (c is not null && !string.IsNullOrEmpty(c.content))
+                        foreach (var c in chat)
                         {
-                            currentChats.Add(JsonDocument.Parse(c.content));
+                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                            {
+                                MessagesDTO payload = JsonSerializer.Deserialize<MessagesDTO>(c.content)!;
+                                currentChats.Add(payload);
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
-                return Ok(new ResponseDTO<object> { User = currentChats });
+                if (currentChats.Count() <= 0) return NotFound(new ResponseDTO<MessagesDTO> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+
+                return Ok(new ResponseDTO<MessagesDTO> { User = currentChats });
             }
             catch (Exception ex)
             {
@@ -292,7 +303,7 @@ namespace NekkoChat.Server.Controllers
         [HttpDelete("chat/delete/{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
-            return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            return StatusCode(403, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoDeleteActiveChat, StatusCode = 403 });
         }
 
         // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)

@@ -13,6 +13,8 @@
         public static string WrongCredentials { get; set; } = "Wrong Credentials, Please Try Again";
         public static string MissingValues { get; set; } = "Missing Mandatory Values.";
         public static string Failed { get; set; } = "Operation Failed.";
+        public static string NoDeleteActiveChat { get; set; } = "Failed To Delete Active Conversation.";
+
 
     }
 }

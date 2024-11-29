@@ -10,6 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Assets\**" />
+    <Content Remove="Assets\**" />
+    <EmbeddedResource Remove="Assets\**" />
+    <None Remove="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="HttpMultipartParser" Version="8.4.0" />
     <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.4" />
@@ -42,7 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Assets\" />
     <Folder Include="Constants\Containers\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>

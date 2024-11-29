@@ -334,15 +334,14 @@ export default function GroupProfile() {
     }
     return (
         <>
-            <Container className="text-center">
+            <Container className="text-center fluidContainer" >
                 <Image
                     src={userInfo.profilePhotoUrl || avatar}
                     fluid
                     width={150}
                 />
                 <Typography variant="h4" className="my-3">{FirstLetterUpperCase(userInfo.name || "Unknown")}</Typography>
-
-                <Stack direction="row" spacing={1} style={{ alignContent: "center", justifyContent: "center" }}>
+                <Box className="Three-Row-Container">
                     <Button
                         onClick={() => {
                             handlePhoneButton();
@@ -359,7 +358,7 @@ export default function GroupProfile() {
                             handleManageFriendButton("remove", userInfo.id, user.value.id);
                         }}>{<FontAwesomeIcon icon={faTrashCan} />}
                     </Button>
-                </Stack>
+                </Box>
 
                 <Stack direction="column" className="my-2" spacing={3}>
                     <Box>
@@ -368,13 +367,13 @@ export default function GroupProfile() {
                     </Box>
                     <Box>
                         <Typography variant="h6">Participants</Typography>
-                        <Stack direction="row" sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                        <Box className="Three-Row-Container">
                             {userInfo.participants.length > 0 && userInfo.participants.map((el: iparticipants, idx: number) => {
                                 return (
                                     <ParticipantButton key={idx} item={el} />
                                 );
                             })}
-                        </Stack>
+                        </Box>
                     </Box>
                 </Stack>
             </Container>

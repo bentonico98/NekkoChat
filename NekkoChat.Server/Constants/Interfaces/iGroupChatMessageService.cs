@@ -12,6 +12,6 @@ namespace NekkoChat.Server.Constants.Interfaces
         public bool favoriteMessage(int group_id, ChatRequest data);
         public bool archiveMessage(int group_id, ChatRequest data);
         public bool deleteMessage(int group_id, ChatRequest data);
-        public bool deleteChat();
+        public Task<bool> deleteChat(int group_id, string participant_id);
     }
 }

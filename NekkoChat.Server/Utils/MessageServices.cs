@@ -286,9 +286,8 @@ namespace NekkoChat.Server.Utils
         public bool deleteChat(int chat_id, string user_id)
         {
             // --- TO DO
-            return true;
+            return false;
         }
-
 
 
         /// /////////////// FUNCIONES PRIVADAS -- DEBAJO DE ESTA LINEA

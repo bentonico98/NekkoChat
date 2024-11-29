@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { iChatSchema, iGroupChatMessagesProps, iuserStore } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetGroup from '../../../Hooks/Group/useGetGroup';
-import { openUserProfileModal, setProfileId, UserState } from '../../../Store/Slices/userSlice';
+import { openUserProfileModal, setProfileId, toggleErrorModal, toggleMsjModal, UserState } from '../../../Store/Slices/userSlice';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
@@ -18,7 +18,8 @@ import Modal from "react-modal";
 import customStyles from '../../../Constants/Styles/ModalStyles';
 import GroupManagerAlt from '../../Shared/Forms/GroupManagerAlt';
 import { useState } from 'react';
-
+import {  ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 export default function ChatMessages({
     messages,
     connected,
@@ -45,6 +46,17 @@ export default function ChatMessages({
 
     const [modalOpened, setModalOpened] = useState<boolean>(false);
 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const openAnchor = Boolean(anchorEl);
+
+    const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        event.preventDefault();
+        setAnchorEl(event.currentTarget);
+    };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
     function open() {
         setModalOpened(true);
     }
@@ -65,7 +77,7 @@ export default function ChatMessages({
     return (
         <>
             {messages.length > 0 ?
-                <ChatContainer>
+                <ChatContainer >
                     {/*Chat Header*/}
                     <ConversationHeader>
                         <Avatar
@@ -75,13 +87,44 @@ export default function ChatMessages({
                         <ConversationHeader.Content userName={FirstLetterUpperCase(groupName)} />
                         <ConversationHeader.Actions>
                             <AddUserButton onClick={open} />
-                            <EllipsisButton orientation="vertical" />
+                            <EllipsisButton
+                                orientation="vertical"
+                                onClick={handleClick} />
+                            <Menu
+                                id="basic-menu"
+                                anchorEl={anchorEl}
+                                open={openAnchor}
+                                onClose={handleClose}
+                                MenuListProps={{
+                                    'aria-labelledby': 'basic-button',
+                                }}
+                            >
+                                <MenuItem onClick={async () => {
+                                    handleClose();
+                                    const res = await MessageServicesClient.deleteUserChat({
+                                        chat_id: receiver,
+                                        sender_id: sender
+                                    });
+                                    if (res.success) {
+                                        dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                    } else {
+                                        dispatch(toggleErrorModal({ status: true, message: res.error }));
+                                    }
+                                }}>
+                                    <ListItemIcon>
+                                        <ExitToAppIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Leave Group</ListItemText>
+                                </MenuItem>
+
+                            </Menu>
                         </ConversationHeader.Actions>
                     </ConversationHeader>
 
                     {/*Chat Component*/}
 
                     <MessageList
+                        style={{ height: '100vh' }}
                         autoScrollToBottom={true}
                         autoScrollToBottomOnMount={true}
                         scrollBehavior="smooth"
@@ -137,10 +180,7 @@ export default function ChatMessages({
                                 participants: [{ id: "0", name: "None", connectionid: "00000000", profilePic: "/src/assets/avatar.png" }]
                             });
                             if (!res.success) {
-                                DisplayMessage({
-                                    hasError: true,
-                                    error: "Unable To Send Message."
-                                });
+                                dispatch(toggleErrorModal({ status: true, message: "Unable To Send Message."}))
                             }
                         }} />
                 </ChatContainer> : <NekkoSpinner />}

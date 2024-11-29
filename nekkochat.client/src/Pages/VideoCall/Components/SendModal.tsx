@@ -7,7 +7,6 @@ import useVideocallSignalServer from '../../../Hooks/useVideocallSignalR';
 import VideocallServerServices from '../../../Utils/VideoCallService';
 import CircularProgress from '@mui/material/CircularProgress';
 import { VideoCallButton } from './VideoCallButtom';
-import { Stack } from '@mui/material';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import { Image } from "react-bootstrap";
 import avatar from "../../../assets/avatar.png";
@@ -80,26 +79,22 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
                                 </Box> :
                                 Users.map((user, idx) => {
                                     return (
-                                        <Stack key={idx} direction="row" spacing={3} sx={{ maxHeight: "5rem", display: "flex", justifyContent: "space-between", flexWrap: "wrap", alignItems: "center", width: 500, maxWidth: '100%' }} className={`m-2 border border-2 rounded p-2`}>
-                                            <Box>
+                                        <Box  key={idx} className={`Three-Row-Container m-2 border border-2 rounded p-2`}>
+                                            <Box className="centeredElement">
                                                 <Image src={user.profilePhotoUrl != null ? user.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
                                             </Box>
 
-                                            <Box>
+                                            <Box className="centeredElement">
                                                 <Typography variant="h6" >{FirstLetterUpperCase(user!.userName)}</Typography>
                                             </Box>
 
-                                            <Box>
-                                                <Box>
-                                                    <Stack direction="row" spacing={1} >
-                                                        <Button onClick={() => {
-                                                            handleInvokeVideoNotification(user.id, data);
-                                                            handleClose();
-                                                        }}><SendIcon /></Button>
-                                                    </Stack>
-                                                </Box>
+                                            <Box className="centeredElement">
+                                                <Button onClick={() => {
+                                                    handleInvokeVideoNotification(user.id, data);
+                                                    handleClose();
+                                                }}><SendIcon /></Button>
                                             </Box>
-                                        </Stack>
+                                        </Box>
                                     )
                                 })}
                 </Box>

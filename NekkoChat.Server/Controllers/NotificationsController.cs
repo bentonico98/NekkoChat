@@ -39,7 +39,6 @@ namespace NekkoChat.Server.Controllers
             try
             {
                 List<NotificationSchema> userNotifications = new();
-                List<SingleNotificationSchema> userViewNotifications = new();
 
                 string cacheKey = user_id + "notifications";
 

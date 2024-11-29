@@ -179,7 +179,7 @@ export default function Login() {
                         </FormControl>
                     </Box>
 
-                    {isGlobalError && <Typography className="text-danger my-2">{globalError} </Typography>}
+                    {isGlobalError && <Typography className="text-danger my-1">{globalError} </Typography>}
 
                     <Box>
                         <FormGroup style={{

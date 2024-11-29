@@ -59,7 +59,7 @@ export default class MessageServicesClient {
     public static async deleteChat(data: iServerRequestTypes | any) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getDeleteMessageUrl(data);
+        let url = ServerLinks.getDeleteChatUrl(data.chat_id);
 
         const result = await axios.delete(url, data).then((res) => {
             return res.data;
@@ -71,9 +71,20 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async deleteUserChat(data: iServerRequestTypes) {
+    public static async deleteUserChat(data: iServerRequestTypes | any) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
         if (!data.chat_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
+
+        let url = ServerLinks.getDeleteGroupChatUrl(data.chat_id, data.sender_id);
+
+        const result = await axios.delete(url, data).then((res) => {
+            return res.data;
+        }).catch(err => {
+            console.error(err);
+            return new ResponseViewModel(false, 500, null, null, err.response.data.error);
+        });
+
+        return result;
     }
 
     public static async manageChat(data: iServerRequestTypes) {

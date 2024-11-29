@@ -159,7 +159,7 @@ export default function Register() {
 
     return (
         <Container sx={{ padding: '2em' }} className="fluidContainer">
-            <Box className="RegisterPageMainContainer">
+            <Box className="AuthPageMainContainer">
                 <Box className="AuthPageProfileHeader">
                     <img
                         src={nekkoAlt}

@@ -22,7 +22,6 @@ namespace NekkoChat.Server.Controllers
         ApplicationDbContext context,
         iGroupChatMessageService messageServices,
         IMapper mapper,
-        IServiceProvider srv,
         IDistributedCache cache) : ControllerBase
     {
         private readonly ILogger<GroupController> _logger = logger;
@@ -43,7 +42,6 @@ namespace NekkoChat.Server.Controllers
 
             try
             {
-                List<Groups_Members> GroupChats = new();
                 List<GroupMessageSchemas> ChatsContent = new();
 
                 string cacheKey = user_id + "groups";
@@ -57,32 +55,19 @@ namespace NekkoChat.Server.Controllers
                 }
                 else
                 {
-                    IQueryable<Groups_Members> conversations = from c in _context.groups_members select c;
-
-                    conversations = conversations.Where((c) => c.user_id == user_id);
-
                     await Task.Run(() =>
                     {
-                        foreach (var conversation in conversations)
-                        {
-                            GroupChats.Add(conversation);
-                        }
+                        var chat = _context.groups_members
+                        .GroupJoin(_context.groups_messages, gm => gm.group_id, msj => msj.group_id, (gm, msj) => new { gm, msj })
+                        .Where(x => x.gm.user_id == user_id);
 
-                        if (GroupChats.Count() > 0)
+                        foreach (var c in chat)
                         {
-                            foreach (var userChat in GroupChats)
+                            if (c is not null && !string.IsNullOrEmpty(c.msj.FirstOrDefault()?.content))
                             {
-                                IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
-                                chat = chat.Where((u) => u.group_id == userChat.group_id);
-
-                                foreach (var c in chat)
-                                {
-                                    if (c is not null && !string.IsNullOrEmpty(c.content))
-                                    {
-                                        GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                                        ChatsContent.Add(payload);
-                                    }
-                                }
+                                string content = c.msj.FirstOrDefault()?.content!;
+                                GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(content)!;
+                                ChatsContent.Add(payload);
                             }
                         }
                     });
@@ -93,7 +78,7 @@ namespace NekkoChat.Server.Controllers
                     }
 
                     string cacheDataString = JsonSerializer.Serialize<List<GroupMessageSchemas>>(ChatsContent);
-                    var dataToCache = Encoding.UTF8.GetBytes(cacheDataString); 
+                    var dataToCache = Encoding.UTF8.GetBytes(cacheDataString);
 
                     DistributedCacheEntryOptions cacheOpts = new DistributedCacheEntryOptions()
                         .SetAbsoluteExpiration(DateTime.Now.AddMinutes(3))
@@ -127,24 +112,26 @@ namespace NekkoChat.Server.Controllers
 
             try
             {
-                List<GroupMessageSchemas> currentChats = new();
-
                 int chat_id = int.Parse(id);
 
-                IQueryable<Groups_Messages> chat = from u in _context.groups_messages select u;
-                chat = chat.Where((u) => u.group_id == chat_id);
+                List<GroupMessageSchemas> currentChats = new();
 
-                await Task.Run(() =>
+                IQueryable<Groups_Messages> chat = _context.groups_messages.Where((u) => u.group_id == chat_id);
+
+                if (chat.Any())
                 {
-                    foreach (var c in chat)
+                    await Task.Run(() =>
                     {
-                        if (c is not null && !string.IsNullOrEmpty(c.content))
+                        foreach (var c in chat)
                         {
-                            GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
-                            currentChats.Add(payload);
+                            if (c is not null && !string.IsNullOrEmpty(c.content))
+                            {
+                                GroupMessageSchemas payload = JsonSerializer.Deserialize<GroupMessageSchemas>(c.content)!;
+                                currentChats.Add(payload);
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
                 if (currentChats.Count() <= 0) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
@@ -174,45 +161,28 @@ namespace NekkoChat.Server.Controllers
             try
             {
                 var group = await _context.groups.FindAsync(group_id);
-                List<string> participantsIds = new();
                 List<ParticipantsSchema> participants = new();
 
                 if (group is null) return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
 
-                IQueryable<Groups_Members> participantsList = _context.groups_members.Where((gm) => gm.group_id == group_id);
-
-                await Task.Run(async () =>
+                await Task.Run(() =>
                 {
-                    if (participantsList.Any())
-                    {
-                        foreach (var p in participantsList)
-                        {
-                            if (p is not null && !string.IsNullOrEmpty(p.user_id))
-                            {
-                                participantsIds.Add(p.user_id);
-                            }
-                        }
-                    }
+                    var users = _context.groups_members
+                    .GroupJoin(_context.AspNetUsers, gm => gm.user_id, u => u.Id, (gm, u) => new { gm, u })
+                    .Where((x) => x.gm.group_id == group_id);
 
-                    if (participantsIds.Count() > 0)
+                    foreach (var user in users)
                     {
-                        foreach (var p in participantsIds)
+                        if (user is not null)
                         {
-                            using (var ctx = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+                            ParticipantsSchema userView = new ParticipantsSchema
                             {
-                                var user = await ctx.AspNetUsers.FindAsync(p)!;
-                                if (user is not null)
-                                {
-                                    ParticipantsSchema userView = new ParticipantsSchema
-                                    {
-                                        id = user.Id,
-                                        name = $"{user.Fname} {user.Lname}",
-                                        connectionid = !string.IsNullOrEmpty(user.ConnectionId) ? user.ConnectionId : "",
-                                        profilePic = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? user.ProfilePhotoUrl : "/src/assets/avatar.png"
-                                    };
-                                    participants.Add(userView);
-                                }
-                            }
+                                id = user.u.FirstOrDefault()!.Id,
+                                name = $"{user.u.FirstOrDefault()!.Fname} {user.u.FirstOrDefault()!.Lname}",
+                                connectionid = !string.IsNullOrEmpty(user.u.FirstOrDefault()?.ConnectionId!) ? user.u.FirstOrDefault()!.ConnectionId! : "",
+                                profilePic = !string.IsNullOrEmpty(user.u.FirstOrDefault()?.ProfilePhotoUrl) ? user.u.FirstOrDefault()!.ProfilePhotoUrl! : "/src/assets/avatar.png"
+                            };
+                            participants.Add(userView);
                         }
                     }
                 });
@@ -390,8 +360,27 @@ namespace NekkoChat.Server.Controllers
 
         // DELETE groupschat/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
         [HttpDelete("chat/delete/{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete([FromRoute] int id, [FromQuery] string participant_id)
         {
+            if (id <= 0 || string.IsNullOrEmpty(participant_id))
+            {
+                _logger.LogWarning("Id is Null in Group - Delete Chat Route");
+                return NotFound(new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoExist, StatusCode = 404 });
+            }
+
+            bool messageDeleted = false;
+
+            if (ModelState.IsValid)
+            {
+                messageDeleted = await _messageServices.deleteChat(id, participant_id);
+            }
+
+            if (!messageDeleted)
+            {
+                _logger.LogWarning("Operation Failed in Group - Delete Chat Route");
+                return StatusCode(500, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.Failed, StatusCode = 500 });
+            }
+            return Ok(new ResponseDTO<bool>());
         }
     }
 }

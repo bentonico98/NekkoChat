@@ -96,6 +96,7 @@ button {
 .Three-Row-Container {
     display: grid;
     grid-template-columns: 1fr;
+    gap:0.5em;
 }
 
 .Card-Container {
@@ -148,10 +149,6 @@ button {
 }
 
 .AuthPageMainContainer {
-    display:grid;
-    grid-template-rows:repeat(2,1fr);
-}
-.RegisterPageMainContainer {
     display: grid;
     grid-template-rows: 1fr;
     gap: 1em;
@@ -163,6 +160,9 @@ button {
     justify-content:center;
     gap: 0.5em;
     max-height:fit-content;
+}
+.centeredElement {
+    align-content: center;
 }
 
 @media(max-width:39em) {
@@ -313,7 +313,7 @@ button {
 
     .Three-Row-Container {
         display: grid;
-        grid-template-columns: repeat(4,1fr);
+        grid-template-columns: repeat(3,1fr);
     }
 
     .Card-Container {

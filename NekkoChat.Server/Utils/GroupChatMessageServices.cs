@@ -325,9 +325,81 @@ namespace NekkoChat.Server.Utils
 
             return true;
         }
-        public bool deleteChat()
+        public async Task<bool> deleteChat(int group_id, string participant_id)
         {
-            return true;
+            bool isSuccessful = false;
+            if (group_id <= 0 || string.IsNullOrEmpty(participant_id))
+            {
+                _logger.LogError("Group Id Not Exist -- Group Chat Message Services");
+                return false;
+            }
+            using (var _context = new ApplicationDbContext(srv.GetRequiredService<DbContextOptions<ApplicationDbContext>>()))
+            {
+                var group = await _context.groups.FindAsync(group_id);
+                var currentParticipant = await _context.AspNetUsers.FindAsync(participant_id);
+
+                if (group is null || currentParticipant is null) return isSuccessful;
+
+                ResponseDTO<Groups_Messages> filteredConvoResponse = fetchUsersMessages(group_id);
+
+                if (!filteredConvoResponse.Success || filteredConvoResponse.SingleUser is null) return isSuccessful;
+
+                Groups_Messages filteredConvo = filteredConvoResponse.SingleUser;
+
+                var chats = filteredConvo.content;
+
+                if (chats is null) return isSuccessful;
+
+                GroupMessageSchemas parseConvo = JsonSerializer.Deserialize<GroupMessageSchemas>(chats)!;
+                IEnumerable<ParticipantsSchema> allParticipants = parseConvo!.participants;
+
+                bool isParticipant = belongToGroup(allParticipants, participant_id);
+
+                if (!isParticipant) return isSuccessful;
+
+                List<ParticipantsSchema> newParticipants = new();
+
+                if (allParticipants.Any())
+                {
+                    foreach (var participant in allParticipants)
+                    {
+                        if (participant.id != participant_id)
+                        {
+                            newParticipants.Add(participant);
+                        }
+                    }
+                }
+
+                if (newParticipants.Count() <= 0) return isSuccessful;
+
+                string payload = JBProcessor.GroupChatProcessed(group_id, group.name!, parseConvo!.messages, newParticipants.ToArray());
+
+                filteredConvo.content = payload;
+
+                Groups_Members membership = _context.groups_members
+                    .Where((gm)=> gm.group_id == group_id && gm.user_id == participant_id)
+                    .First();
+
+                if(membership is null) return isSuccessful;
+
+                _context.groups_members.Remove(membership); 
+                _context.groups_messages.Update(filteredConvo);
+                await _context.SaveChangesAsync();
+
+                isSuccessful = await this.sendMessage(new GroupRequest
+                {
+                    user_id= participant_id,
+                    sender_id = participant_id,
+                    group_id = group_id,
+                    groupname= group.name!,
+                    groupdesc = group.description!,
+                    groupphoto = group.profilePhotoUrl!,
+                    grouptype = group.type!,
+                    participants = newParticipants.ToArray(),
+                    value = $"{currentParticipant.UserName} has left the group."
+                });
+            }
+            return isSuccessful;
         }
 
         public async Task<bool> addParticipantToGroup(GroupRequest data, int group_id)
@@ -399,7 +471,7 @@ namespace NekkoChat.Server.Utils
                     group_id = group_id,
                     user_id = data.user_id
                 };
-               
+
                 await _context.groups_members.AddAsync(newMember);
                 await _context.SaveChangesAsync();
             }
@@ -412,6 +484,15 @@ namespace NekkoChat.Server.Utils
         private bool belongToUser(IEnumerable<GroupChatSchemas> messages, ChatRequest data)
         {
             var exist = messages.Where((m) => m.id == data.message_id && m.user_id == data.user_id);
+
+            if (!exist.Any()) return false;
+
+            return true;
+        }
+
+        private bool belongToGroup(IEnumerable<ParticipantsSchema> participants, string participant_id)
+        {
+            var exist = participants.Where((p) => p.id.Equals(participant_id));
 
             if (!exist.Any()) return false;
 

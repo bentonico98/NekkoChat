@@ -18,9 +18,9 @@ namespace NekkoChat.Server.Utils
 
         public class VideocallSenderUsers : IVideocallSenderUsers
         {
-            public string Id { get; set; }
-            public string ProfilePhotoUrl { get; set; }
-            public string UserName { get; set; }
+            public string Id { get; set; } = string.Empty;
+            public string ProfilePhotoUrl { get; set; } = string.Empty;
+            public string UserName { get; set; } = string.Empty;
         }
 
         public async Task<List<VideocallSenderUsers>> GetFriendsAsync(string userId)
@@ -39,8 +39,8 @@ namespace NekkoChat.Server.Utils
                 .Select(x => new VideocallSenderUsers
                 {
                     Id = x.u.Id,
-                    ProfilePhotoUrl = x.u.ProfilePhotoUrl,
-                    UserName = x.u.UserName
+                    ProfilePhotoUrl = x.u.ProfilePhotoUrl!,
+                    UserName = x.u.UserName!
                 })
                 .ToListAsync();
 

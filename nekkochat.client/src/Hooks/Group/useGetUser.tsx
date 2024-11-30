@@ -5,13 +5,13 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { iConversationClusterProps, iDisplayMessageTypes, iuserStore } from "../../Constants/Types/CommonTypes";
 import { UserState } from "../../Store/Slices/userSlice";
 
-export default function useGetUser(user: UserState | iuserStore | any, DisplayMessage: (obj: iDisplayMessageTypes) => void ) {
+export default function useGetUser(user: UserState | iuserStore | any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const navigate = useNavigate();
 
     const [loggedUser, setLoggedUser] = useState<iuserStore | any>(user);
     const [conversations, setconversations] = useState<iConversationClusterProps[]>([]);
     const [user_id, setUser_id] = useState<string>(user.value?.id ? user.value?.id : "0");
-    
+
     const dispatchUser = async () => {
         if (UserAuthServices.isAuthenticated() && loggedUser == null) {
             setLoggedUser(user);
@@ -26,12 +26,12 @@ export default function useGetUser(user: UserState | iuserStore | any, DisplayMe
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
                     error: res.internalMessage,
-                    isLoading: true
+                    isLoading: false
                 });
                 DisplayMessage({
                     hasError: true,
                     error: res.error,
-                    isLoading: true
+                    isLoading: false
                 });
             }
             setLoggedUser(user);
@@ -45,8 +45,5 @@ export default function useGetUser(user: UserState | iuserStore | any, DisplayMe
         dispatchUser();
     }, [loggedUser, user_id]);
 
-    return { conversations, loggedUser, user_id };
+    return { conversations, loggedUser, user_id, refresh: dispatchUser };
 }
-
-//dispatch(getUserData());
-//const dispatch = useAppDispatch();

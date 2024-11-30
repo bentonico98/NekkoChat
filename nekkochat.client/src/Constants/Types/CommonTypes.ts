@@ -149,6 +149,7 @@ export interface iSideBoxProps {
     messages: iConversationClusterProps[],
     user: string,
     setCurrentConversation: (arg: any) => void,
+    trigger:()=> void,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
 }
 export interface iTypingComponentProps {
@@ -166,7 +167,9 @@ export interface iChatMessagesProps {
     receiver: string | number,
     participants: iparticipants[],
     isTyping: iTypingComponentProps,
+    trigger: () => void,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
+                            
 }
 export interface iGroupChatMessagesProps {
     messages: iChatSchema[],
@@ -176,6 +179,6 @@ export interface iGroupChatMessagesProps {
     receiver: number,
     participants: iparticipants[],
     isTyping: iTypingComponentProps,
+    trigger: () => void,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
-
 }

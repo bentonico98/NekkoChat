@@ -23,9 +23,10 @@ import { useAppDispatch } from '../../Hooks/storeHooks';
 //import FirstLetterUpperCase from '../../Utils/FirstLetterUpperCase';
 import UserAuthServices from '../../Utils/UserAuthServices';
 /* AlertSnackbar,*/
+import incomingCall from "../../assets/Sounds/incomingCall.wav";
 
 export const VideoCall: React.FC = () => {
-
+    
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -113,6 +114,9 @@ export const VideoCall: React.FC = () => {
             });
 
             connection.on('offervideonotification', async (sender_id: string, receiver_id: string, isAccepted: boolean) => {
+                const callSound = new Audio(incomingCall);
+                callSound.play();
+
                 if (isAccepted) {
                     receiverId.current = receiver_id;
                     const res = await UserAuthServices.SearchUserById(receiver_id, sender_id);
@@ -121,12 +125,14 @@ export const VideoCall: React.FC = () => {
                     }
                     setTimeout(() => {
                         VideocallServerServices.SendConnectedVideoNotification(sender_id, receiver_id);
+                        callSound.pause();
                     }, 5000);
                 }
                 else {
                     if (user_id === sender_id) {
                         handleAlertSnackbar("REJECTION");
                         setIsOnCall(false);
+                        callSound.pause();
                     }
 
                 }
@@ -311,9 +317,12 @@ export const VideoCall: React.FC = () => {
     const handleAlertSnackbar = (type: string) => {
         if (type == "DISCONNECTED") {
             setAlertSnackbarData({ message: "El usuario se ha desconectado", isOpen: true, severity: "warning" })
+            dispatch(toggleErrorModal({ status: true, message: "User Disconnected." }));
+
         }
         if (type == "REJECTION") {
             setAlertSnackbarData({ message: "La conexion ha sido rechazada", isOpen: true, severity: "error" })
+            dispatch(toggleErrorModal({ status: true, message: "Connection Not Established." }));
         }
     }
 

@@ -78,7 +78,9 @@ export default function Inbox() {
     const {
         conversations,
         loggedUser,
-        user_id } = useGetUser(user, setDisplayInfo);
+        user_id,
+        refresh
+    } = useGetUser(user, setDisplayInfo);
 
     const { connected } = useSignalServer(loggedUser, addToChat, setDisplayInfo);
 
@@ -100,6 +102,7 @@ export default function Inbox() {
                     messages={conversations}
                     user={user_id}
                     setCurrentConversation={fetchMessage}
+                    trigger={refresh}
                     DisplayMessage={setDisplayInfo}
                 />
 
@@ -111,15 +114,14 @@ export default function Inbox() {
                         sender={user_id}
                         receiver={chatID}
                         isTyping={isTyping}
+                        trigger={refresh}
                         DisplayMessage={setDisplayInfo}
                     /> : <Box style={{ minWidth: "70%", display: 'flex', alignItems: 'center', justifyContent: "center" }}>
                         <Box>
                             <Stack direction='column' spacing={2} className="text-left p-3" sx={{ alignItems: "center", justifyContent: 'center' }}>
                                 <img
-                                    alt=""
                                     src={nekkoAlt}
-                                    width="300"
-                                    height="300"
+                                    id="MainLogoImage"
                                     className="d-inline-block align-top"
                                 />
 

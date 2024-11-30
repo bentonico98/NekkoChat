@@ -274,7 +274,9 @@ button {
     .hamburgerMenuButton {
         display: none;
     }
-
+    .hamburgerMenu {
+        display: none;
+    }
     #MainLogoImage {
         width: 25em;
         height: auto;
@@ -325,7 +327,9 @@ button {
     .hamburgerMenuButton {
         display: none;
     }
-
+    .hamburgerMenu {
+        display: none;
+    }
     #MainLogoImage {
         width: 25em;
         height: auto;

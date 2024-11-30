@@ -18,6 +18,7 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
             setUser_id(loggedUser.value.id);
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
             DisplayMessage({ isLoading: true });
+
             MessageServicesClient.getAllUsersChats(loggedUser.value.id, type).then((res) => {
                 if (res.success) {
                     setconversations(res.user);
@@ -26,12 +27,12 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
                     if (res.internalMessage) return DisplayMessage({
                         hasError:true,
                         error: res.internalMessage,
-                        isLoading: true
+                        isLoading: false
                     });
                     DisplayMessage({
                         hasError: true,
                         error: res.error,
-                        isLoading: true
+                        isLoading: false
                     });
                 }
             });
@@ -46,5 +47,5 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
         dispatchUser();
     }, [loggedUser, user_id, type]);
 
-    return { conversations, loggedUser, user_id };
+    return { conversations, loggedUser, user_id, refresh: dispatchUser  };
 }

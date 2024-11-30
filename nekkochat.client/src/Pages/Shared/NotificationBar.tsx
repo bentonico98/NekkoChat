@@ -3,8 +3,7 @@ import NekkoNotification from './NekkoNotification';
 import useGetNotifications from '../../Hooks/Notifications/useGetNotifications';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { setNotificationCount } from '../../Store/Slices/userSlice';
-import useDisplayMessage from '../../Hooks/useDisplayMessage';
+import { setNotificationCount, toggleNotification } from '../../Store/Slices/userSlice';
 import { useAppSelector } from '../../Hooks/storeHooks';
 
 interface iCustomProps {
@@ -19,19 +18,16 @@ export default function NotificationBar({ show, setShow, userId }: iCustomProps)
 
     const handleClose = () => setShow(false);
 
-    const { setDisplayInfo } = useDisplayMessage();
-
     const { notifications } = useGetNotifications(userId);
 
     useEffect(() => {
         if (notifications.length > 0) {
             var counts = notifications.filter((el) => el.seen == false).length;
+
             if (counts > parseInt(notificationCount)) {
-                setDisplayInfo({
-                    hasNotification: true,
-                    notification: "+1 New Notification"
-                });
+                dispatch(toggleNotification({ status: true, message: counts + " New Notification"}));
             }
+           
             dispatch(setNotificationCount(counts.toString()));
         }
     }, [notifications]);

@@ -22,6 +22,7 @@ export default function ChatMessages(
         receiver,
         participants,
         isTyping,
+        trigger,
         DisplayMessage
     }: iChatMessagesProps) {
 
@@ -71,6 +72,7 @@ export default function ChatMessages(
         if (res.success) {
             dispatch(toggleMsjModal({ status: true, message: "Deletion " + res.message }));
             dispatch(toggleLoading(false));
+            await trigger();
 
         } else {
             dispatch(toggleErrorModal({ status: true, message: res.error }));
@@ -132,6 +134,7 @@ export default function ChatMessages(
                                     });
                                     if (res.success) {
                                         dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                        await trigger();
                                     } else {
                                         dispatch(toggleErrorModal({ status: true, message: res.error }));
                                     }
@@ -151,6 +154,7 @@ export default function ChatMessages(
                                     });
                                     if (res.success) {
                                         dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                        await trigger();
                                     } else {
                                         dispatch(toggleErrorModal({ status: true, message: res.error }));
                                     }
@@ -169,6 +173,7 @@ export default function ChatMessages(
                                     });
                                     if (res.success) {
                                         dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                        await trigger();
                                     } else {
                                         dispatch(toggleErrorModal({ status: true, message: res.error }));
                                     }
@@ -286,7 +291,9 @@ export default function ChatMessages(
                                 </Typography>
                             </MenuItem>
                             <Divider />
-                            <MenuItem onClick={() => { handleDeleteMessageButton(chat_id, message_id, sender) }}>
+                            <MenuItem onClick={() => {
+                                handleDeleteMessageButton(chat_id, message_id, sender)
+                            }}>
                                 <ListItemIcon>
                                     <Delete fontSize="small" />
                                 </ListItemIcon>
@@ -322,8 +329,9 @@ export default function ChatMessages(
                                 value: e
                             });
                             if (!res.success) {
-                                dispatch(toggleErrorModal({ status: true, message: "Failed To Send Message." }));
+                                return dispatch(toggleErrorModal({ status: true, message: "Failed To Send Message." }));
                             }
+                            await trigger();
                         }} />
                 </ChatContainer>
                 : <NekkoSpinner/>}

@@ -27,6 +27,7 @@ export default function ChatMessages({
     receiver,
     participants,
     isTyping,
+    trigger,
     DisplayMessage
 }: iGroupChatMessagesProps) {
 
@@ -107,6 +108,7 @@ export default function ChatMessages({
                                     });
                                     if (res.success) {
                                         dispatch(toggleMsjModal({ status: true, message: res.message }));
+                                        await trigger();
                                     } else {
                                         dispatch(toggleErrorModal({ status: true, message: res.error }));
                                     }
@@ -180,8 +182,9 @@ export default function ChatMessages({
                                 participants: [{ id: "0", name: "None", connectionid: "00000000", profilePic: "/src/assets/avatar.png" }]
                             });
                             if (!res.success) {
-                                dispatch(toggleErrorModal({ status: true, message: "Unable To Send Message."}))
+                                return dispatch(toggleErrorModal({ status: true, message: "Unable To Send Message."}))
                             }
+                            await trigger();
                         }} />
                 </ChatContainer> : <NekkoSpinner />}
 

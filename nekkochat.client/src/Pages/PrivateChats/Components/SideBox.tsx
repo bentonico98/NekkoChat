@@ -12,7 +12,14 @@ import useGetReceiver from '../../../Hooks/useGetReceiver';
 import ConversationSkeleton from '../../Shared/Skeletons/ConversationSkeleton';
 import ProfileHeaderSkeleton from '../../Shared/Skeletons/ProfileHeaderSkeleton';
 import avatar from "../../../assets/avatar.png";
-export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
+import { useAppDispatch } from '../../../Hooks/storeHooks';
+import { toggleErrorModal, toggleMsjModal } from '../../../Store/Slices/userSlice';
+export default function SideBox({
+    messages,
+    user,
+    setCurrentConversation,
+    trigger,
+    DisplayMessage }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
 
@@ -22,6 +29,8 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
 
     const [chat_id, setChat_id] = useState<number>();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+    const dispatch = useAppDispatch();
 
     const open = Boolean(anchorEl);
 
@@ -75,6 +84,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                                     user_id: user,
                                     sender_id: user,
                                 });
+                                await trigger();
                             }}>
                             <Avatar
                                 src={getPic(el.participants) || avatar}
@@ -99,14 +109,19 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                 >
                     <MenuItem onClick={async () => {
                         handleClose();
-                        await MessageServicesClient.manageChat({
+                        const res = await MessageServicesClient.manageChat({
                             operation: "archive",
                             chat_id,
                             user_id: user,
                             sender_id: user,
                             archive: true
                         });
-                    }}>
+                        if (res.success) {
+                            dispatch(toggleMsjModal({ status: true, message: res.message }));
+                            await trigger();
+                        } else {
+                            dispatch(toggleErrorModal({ status: true, message: res.message }));
+                        }                    }}>
                         <ListItemIcon>
                             <Archive fontSize="small" />
                         </ListItemIcon>
@@ -114,15 +129,19 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                     </MenuItem>
                     <MenuItem onClick={async () => {
                         handleClose();
-                        await MessageServicesClient.manageChat({
+                        const res = await MessageServicesClient.manageChat({
                             operation: "favorite",
                             chat_id,
                             user_id: user,
                             sender_id: user,
                             favorite: true
                         });
-
-                    }}>
+                        if (res.success) {
+                            dispatch(toggleMsjModal({ status: true, message: res.message }));
+                            await trigger();
+                        } else {
+                            dispatch(toggleErrorModal({ status: true, message: res.message }));
+                        }                    }}>
                         <ListItemIcon>
                             <Favorite fontSize="small" />
                         </ListItemIcon>
@@ -130,11 +149,17 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                     </MenuItem>
                     <MenuItem onClick={async () => {
                         handleClose();
-                        await MessageServicesClient.deleteUserChat({
+                        const res = await MessageServicesClient.deleteUserChat({
                             chat_id,
                             user_id: user,
                             sender_id: user,
                         });
+                        if (res.success) {
+                            dispatch(toggleMsjModal({ status: true, message: res.message }));
+                            await trigger();
+                        } else {
+                            dispatch(toggleErrorModal({ status: true, message: res.message }));
+                        }
                     }}>
                         <ListItemIcon>
                             <Delete fontSize="small" />

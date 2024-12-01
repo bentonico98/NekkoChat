@@ -21,15 +21,16 @@ export default function useGetChatFromUser(DisplayMessage: (obj: iDisplayMessage
                 if (res.internalMessage) return DisplayMessage({
                     hasError: true,
                     error: res.internalMessage,
-                    isLoading: true
+                    isLoading: false
                 });
                 DisplayMessage({
                     hasError: true,
                     error: res.error,
-                    isLoading: true
+                    isLoading: false
                 });
             }
         });
+        DisplayMessage({ isLoading: false });
     }, []);
 
     return { messages, setMessages, chatID, currentConvo, fetchMessage: setCurrentConversation };

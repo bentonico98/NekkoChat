@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Coravel" Version="6.0.0" />
     <PackageReference Include="HttpMultipartParser" Version="8.4.0" />
     <PackageReference Include="Microsoft.AspNet.Identity.Core" Version="2.2.4" />
     <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.4.3" />

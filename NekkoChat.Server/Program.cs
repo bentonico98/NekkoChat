@@ -13,6 +13,8 @@ using NekkoChat.Server.Utils;
 using Microsoft.AspNetCore.Diagnostics;
 using NekkoChat.Server.Constants;
 using Serilog;
+using Coravel;
+using NekkoChat.Server.Services;
 
 //using BlazorServer.Hubs;
 
@@ -73,11 +75,16 @@ builder.Services.AddCors(options =>
         });
 });
 
+//Background Services
+builder.Services.AddScheduler();
+
 //Necessary Injections
 builder.Services.AddScoped<iMessageService, MessageServices>();
 builder.Services.AddScoped<iGroupChatMessageService, GroupChatMessageServices>();
 builder.Services.AddScoped<iNotificationService, NotificationService>();
 builder.Services.AddTransient<iFriendRequestService, FriendRequestService>();
+builder.Services.AddScoped<EmptyGroupsGuardian>();
+builder.Services.AddScoped<CloneParticipantGuardian>();
 
 //Serilog Configurations
 var logger = new LoggerConfiguration()
@@ -150,6 +157,17 @@ app.MapFallbackToFile("/index.html");
 app.MapHub<PrivateChatHub>("/privatechathub");
 app.MapHub<GroupChatHub>("/groupchathub");
 app.MapHub<VideoCallHub>("/videocallhub");
+
+//Backgroup Services Schedulers
+app.Services.UseScheduler(scheduler => {
+    scheduler.Schedule<EmptyGroupsGuardian>()
+    .Hourly()
+    .PreventOverlapping(nameof(EmptyGroupsGuardian));
+
+    scheduler.Schedule<CloneParticipantGuardian>()
+    .Hourly()
+    .PreventOverlapping(nameof(CloneParticipantGuardian));
+});
 
 app.Run();
 

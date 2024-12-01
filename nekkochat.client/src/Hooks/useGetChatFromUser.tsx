@@ -23,14 +23,15 @@ export default function useGetChatFromUser(user_id: string, DisplayMessage: (obj
             if (res.internalMessage) return DisplayMessage({
                 hasError: true,
                 error: res.internalMessage,
-                isLoading: true
+                isLoading: false
             });
             DisplayMessage({
                 hasError: true,
                 error: res.error,
-                isLoading: true
+                isLoading: false
             });
         }
+        DisplayMessage({ isLoading: false });
     };
 
     return { messages, setMessages, chatID, receiverID, currentConvo, fetchMessage: setCurrentConversation };

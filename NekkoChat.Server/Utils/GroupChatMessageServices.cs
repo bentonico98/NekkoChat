@@ -370,8 +370,6 @@ namespace NekkoChat.Server.Utils
                     }
                 }
 
-                if (newParticipants.Count() <= 0) return isSuccessful;
-
                 string payload = JBProcessor.GroupChatProcessed(group_id, group.name!, parseConvo!.messages, newParticipants.ToArray());
 
                 filteredConvo.content = payload;

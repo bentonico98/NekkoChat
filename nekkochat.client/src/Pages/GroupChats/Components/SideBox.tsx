@@ -10,7 +10,7 @@ import ProfileHeaderSkeleton from "../../Shared/Skeletons/ProfileHeaderSkeleton"
 import ConversationSkeleton from "../../Shared/Skeletons/ConversationSkeleton";
 import { Divider } from "@mui/material";
 import { useEffect, useState } from "react";
-export default function SideBox({ messages, user, setCurrentConversation, DisplayMessage }: iSideBoxProps) {
+export default function SideBox({ messages, user, setCurrentConversation, trigger, DisplayMessage }: iSideBoxProps) {
 
     const { getUnreadMessages } = useGetReceiver(user, DisplayMessage);
 
@@ -58,6 +58,7 @@ export default function SideBox({ messages, user, setCurrentConversation, Displa
                                 participants: el.participants,
                                 value: "No Message"
                             });
+                            await trigger();
                         }}>
                         <Avatar
                             src={avatar}

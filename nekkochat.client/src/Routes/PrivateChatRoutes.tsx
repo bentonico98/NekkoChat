@@ -12,7 +12,6 @@ import InboxGroup from "../Pages/GroupChats/Inbox";
 
 import FriendList from "../Pages/Friend/Index";
 import GroupProfile from "../Pages/Friend/GroupProfile";
-import Settings from "../Pages/Settings/Index";
 
 import AppLayout from "../Layouts/AppLayout";
 import AltLayout from "../Layouts/AltLayout";
@@ -45,8 +44,6 @@ export default function PrivateChatRoutes() {
                     <Route path="/group/:user_id" element={<GroupProfile />} />
 
                     <Route path="profile" element={<FriendList />} />
-
-                    <Route path="settings" element={<Settings />} />
                 </Route>
 
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.784122">
+﻿<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.784122">
   <PropertyGroup>
     <StartupCommand>npm run dev</StartupCommand>
     <JavaScriptTestRoot>src\</JavaScriptTestRoot>
@@ -8,4 +8,26 @@
     <!-- Folder where production build objects will be placed -->
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="src\Hooks\Private\**" />
+    <None Remove="src\Pages\Friend\Components\**" />
+    <None Remove="src\Pages\Login\Components\**" />
+    <None Remove="src\Pages\Shared\Forms\NewFolder\**" />
+    <None Remove="src\StateManagement\**" />
+    <TypeScriptConfiguration Remove="src\Hooks\Private\**" />
+    <TypeScriptConfiguration Remove="src\Pages\Friend\Components\**" />
+    <TypeScriptConfiguration Remove="src\Pages\Login\Components\**" />
+    <TypeScriptConfiguration Remove="src\Pages\Shared\Forms\NewFolder\**" />
+    <TypeScriptConfiguration Remove="src\StateManagement\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\Constants\Styles\" />
+    <Folder Include="src\Constants\Types\" />
+    <Folder Include="src\Hooks\Server\" />
+    <Folder Include="src\Layouts\" />
+    <Folder Include="src\Model\" />
+    <Folder Include="src\Pages\Shared\Skeletons\" />
+    <Folder Include="src\Pages\Welcome\" />
+    <Folder Include="src\Store\Slices\" />
+  </ItemGroup>
 </Project>

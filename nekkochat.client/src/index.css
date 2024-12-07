@@ -1,68 +1,346 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+    a:hover {
+        color: #535bf2;
+    }
+
+html, body {
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background-color: yellow;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+h1, h3 {
+    font-size: 1em;
+    line-height: 1.1;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
 }
 
+    button:hover {
+        border-color: #646cff;
+    }
+
+    button:focus,
+    button:focus-visible {
+        outline: 4px auto -webkit-focus-ring-color;
+    }
+
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+    :root {
+        color: #213547;
+        background-color: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    html, body {
+        height: auto;
+        width: 100%;
+        background-color: yellow;
+    }
+
+    a:hover {
+        color: #747bff;
+    }
+
+    button {
+        background-color: #f9f9f9;
+    }
+}
+
+.Two-Row-Container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.Two-Row-Container-First-Item {
+    flex-grow: 1;
+    flex-basis: 100%;
+}
+
+.Two-Row-Container-Second-Item {
+    flex-grow: 1;
+    flex-basis: 100%;
+}
+
+.Three-Row-Container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap:0.5em;
+}
+
+.Card-Container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0.5em;
+    gap:0.5em;
+}
+
+#Video-Main-Container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height:100vh;
+}
+#Video-Container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2em;
+    grid-auto-rows: 1fr;
+    position:relative;
+}
+#Video-Main-Container-Child {
+    border-radius: 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+
+#Video-Main-Container-No-Camera {
+    background-color: #777;
+    min-width: 100vw;
+    min-height:35vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+}
+#Video-Button {
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    padding-top:1em;
+}
+
+.fluidContainer {
+    min-height:100vh;
+}
+
+.AuthPageMainContainer {
+    display: grid;
+    grid-template-rows: 1fr;
+    gap: 1em;
+}
+.AuthPageProfileHeader {
+    display: flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap: 0.5em;
+    max-height:fit-content;
+}
+.centeredElement {
+    align-content: center;
+}
+
+@media(max-width:39em) {
+    #invisible {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #invisible1 {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #invisible2 {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #invisible3 {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #ProfileHeaderTitle {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #ProfileHeaderSearchBar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    #MainLogoImage {
+        width: 15em;
+        height: auto;
+    }
+
+    .hamburgerMenuButton {
+        display: block;
+    }
+
+    .hamburgerMenu {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: white;
+        gap: 0.5em;
+        padding: 0.5em;
+    }
+
+    .nekkoNavbar {
+        position: relative;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+    #Video-Main-Container-Floaty {
+        max-width: 42.5vw;
+        height: auto;
+        position: fixed;
+        top: 5em;
+        right: 1em;
+        display: grid;
+        grid-template-columns: 1fr;
+        border: 5px solid orange
+    }
+}
+
+@media(min-width:40em) {
+    h1, h3 {
+        font-size: 1em;
+        line-height: 1.1;
+    }
+
+    .Two-Row-Container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .Two-Row-Container-First-Item {
+        flex-grow: 1;
+        flex-shrink: 0;
+    }
+
+    .Two-Row-Container-Second-Item {
+        flex-grow: 0;
+        flex-shrink: 1;
+    }
+
+    .Three-Row-Container {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+    }
+
+    .Card-Container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin: 0.5em;
+    }
+
+    .hamburgerMenuButton {
+        display: none;
+    }
+    .hamburgerMenu {
+        display: none;
+    }
+    #MainLogoImage {
+        width: 25em;
+        height: auto;
+    }
+    #Video-Container {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+    }
+    #Video-Main-Container-Floaty {
+        border-radius: 1rem;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(min-width:60em) {
+    h1, h3 {
+        font-size: 3.2em;
+        line-height: 1.1;
+    }
+
+    .Two-Row-Container {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .Two-Row-Container-First-Item {
+        flex-grow: 1;
+        flex-shrink: 0;
+    }
+
+    .Two-Row-Container-Second-Item {
+        flex-grow: 0;
+        flex-shrink: 1;
+    }
+
+    .Three-Row-Container {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+    }
+
+    .Card-Container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin: 0.5em;
+    }
+
+    .hamburgerMenuButton {
+        display: none;
+    }
+    .hamburgerMenu {
+        display: none;
+    }
+    #MainLogoImage {
+        width: 25em;
+        height: auto;
+    }
+    #Video-Container {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+    }
+    #Video-Main-Container-Floaty {
+        border-radius: 1rem;
+        display: grid;
+        grid-template-columns: 1fr;
+    }
 }

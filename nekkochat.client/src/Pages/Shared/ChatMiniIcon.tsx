@@ -7,11 +7,8 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
 import { iuserStore } from "../../Constants/Types/CommonTypes";
-import { UserState } from "../../Store/Slices/userSlice";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import { Box, Stack, Typography } from "@mui/material";
-
-
 interface iSimpleUser {
     fname: string,
     lname: string,
@@ -24,7 +21,7 @@ type incomingProps = {
 }
 export default function ChatMiniIcon({ idx, item }: incomingProps) {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
 
     const navigate = useNavigate();
 
@@ -55,7 +52,7 @@ export default function ChatMiniIcon({ idx, item }: incomingProps) {
             <Box sx={{ width: 100, maxWidth: '100%' }}>
                 <Stack direction="row" spacing={1} >
                     <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faPhone} />}</Button>
-                    <Button onClick={() => { handleMessageButton(user.value.id, item!.id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
+                    <Button onClick={() => { handleMessageButton(user.value?.id || '0', item!.id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
                 </Stack>
             </Box>
         </Stack>

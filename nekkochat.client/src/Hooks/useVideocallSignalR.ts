@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import UserAuthServices from "../Utils/UserAuthServices";
 import VideocallServerServices from "../Utils/VideoCallService";
+import { videoServer } from "../Constants/ServerInstance";
 
+interface IConnectionTypes {
+    connectionId: string | null;
+    connection: signalR.HubConnection;
+}
 export default function useVideocallSignalServer() {
     const [connected, setConnected] = useState<boolean>(false);
-    const [conn, setConn] = useState<any>();
+    const [conn, setConn] = useState<IConnectionTypes>({
+        connectionId: '',
+        connection: videoServer
+    });
 
     const user = JSON.parse(localStorage.getItem("user") || '{}')
 
@@ -21,8 +29,9 @@ export default function useVideocallSignalServer() {
         }
     };
 
-    const setConnectionId = async (id: string, conection: any) => {
-        console.log("Set connection ID: " + user_id, conection?.connectionId);
+    const setConnectionId = async (id: string, conection: string | null) => {
+        if (!conection) return;
+        console.log("Set connection ID: " + user_id, conection);
          await UserAuthServices.SetConnectionId({
             user_id: id,
             sender_id: id,
@@ -47,7 +56,7 @@ export default function useVideocallSignalServer() {
     useEffect(() => {
         console.log("Connection Object:", conn);
         if (user_id && conn && connected) {
-            console.log("Setting connection ID: " + user_id, conn?.connectionId);
+            console.log("Setting connection ID: " + user_id, conn!.connectionId);
             setConnectionId(user_id, conn?.connectionId);
         } else {
             console.warn("Connection is undefined or not established");

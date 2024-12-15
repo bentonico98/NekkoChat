@@ -3,23 +3,22 @@ import MessageServicesClient from "../Utils/MessageServicesClient";
 import { useNavigate } from "react-router-dom";
 import UserAuthServices from "../Utils/UserAuthServices";
 import { iConversationClusterProps, iDisplayMessageTypes, iuserStore } from "../Constants/Types/CommonTypes";
-import { UserState } from "../Store/Slices/userSlice";
 
-export default function useGetUser(user: UserState | iuserStore | any, type: string, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+export default function useGetUser(user: iuserStore , type: string, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const navigate = useNavigate();
 
-    const [loggedUser, setLoggedUser] = useState<iuserStore | any>(user);
+    const [loggedUser, setLoggedUser] = useState<iuserStore>(user);
     const [conversations, setconversations] = useState<iConversationClusterProps[]>([]);
     const [user_id, setUser_id] = useState<string>(user.value.id ? user.value.id : "0");
     
     const dispatchUser = () => {
         if (UserAuthServices.isAuthenticated() && loggedUser == null) {
             setLoggedUser(user);
-            setUser_id(loggedUser.value.id);
+            setUser_id(user.value?.id || '0');
         } else if (UserAuthServices.isAuthenticated() && loggedUser) {
             DisplayMessage({ isLoading: true });
 
-            MessageServicesClient.getAllUsersChats(loggedUser.value.id, type).then((res) => {
+            MessageServicesClient.getAllUsersChats(user.value?.id || '0', type).then((res) => {
                 if (res.success) {
                     setconversations(res.user);
                     DisplayMessage({ isLoading: false });
@@ -37,7 +36,7 @@ export default function useGetUser(user: UserState | iuserStore | any, type: str
                 }
             });
             setLoggedUser(user);
-            setUser_id(loggedUser.value.id);
+            setUser_id(user.value?.id || '0');
         }
         else {
             navigate("/login");

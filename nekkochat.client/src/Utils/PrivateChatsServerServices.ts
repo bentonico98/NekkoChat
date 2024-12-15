@@ -1,12 +1,12 @@
 import ServerInstance from "../Constants/ServerInstance";
 import { privateServer } from "../Constants/ServerInstance";
-import { iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
+import { AddToPrivateChatType, iDisplayMessageTypes, iNotificationTypes, iServerRequestTypes } from "../Constants/Types/CommonTypes";
 
 export default class PrivateChatsServerServices {
 
     public static dispatchFunction: (obj: iDisplayMessageTypes) => void;
 
-    public static async Listen(addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+    public static async Listen(addToChat: AddToPrivateChatType, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
 
         this.dispatchFunction = DisplayMessage;
 
@@ -14,7 +14,7 @@ export default class PrivateChatsServerServices {
 
             try {
                 privateServer.on("ReceiveSpecificMessage", (user_id: string, msj: string) => {
-                    addToChat(user_id, msj, false);
+                    addToChat(user_id, msj, { typing: false, user_id });
                 });
 
                 privateServer.on("ReceiveTypingSignal", (user: string) => {
@@ -31,6 +31,7 @@ export default class PrivateChatsServerServices {
                         return { success: true, conn: privateServer.connectionId };
                     }
                 }, 1500);
+                console.log(er);
             }
             return { success: true, conn: privateServer.connectionId };
         } else if (privateServer.state == "Disconnected") {
@@ -43,6 +44,7 @@ export default class PrivateChatsServerServices {
 
                 return { success: true, conn: connection.connectionId };
             } catch (ex) {
+                console.log(ex);
                 return { success: false, conn: null };
             }
         }
@@ -57,6 +59,7 @@ export default class PrivateChatsServerServices {
                 error: "Error Sending Message."
             });
             await ServerInstance.StartPrivateServer();
+            return er;
         }
     }
     public static async SendTypingSignal(data: iServerRequestTypes) {
@@ -68,6 +71,7 @@ export default class PrivateChatsServerServices {
                 error: "Server Is Down, Try Again."
             });
             await ServerInstance.StartPrivateServer();
+            return er;
         }
     }
 
@@ -82,7 +86,8 @@ export default class PrivateChatsServerServices {
                 error: "Failed To Send Notification."
             });
             await ServerInstance.StartPrivateServer();
+            return er;
         }
     }
-   
+
 };

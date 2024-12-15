@@ -40,7 +40,7 @@ export default function GroupManager() {
 
     const navigate = useNavigate();
 
-    const user: iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
@@ -59,8 +59,8 @@ export default function GroupManager() {
 
     }, [displayInfo]);
 
-    const { friend, value, setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
-    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
+    const { friend, value, setValue } = useGetUserFriendList(user.value.id || '0', setDisplayInfo);
+    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id || '0', setDisplayInfo);
 
     const [isValid, setValid] = useState<boolean>(false);
 
@@ -141,7 +141,7 @@ export default function GroupManager() {
             });
 
             info.participants!.forEach(async (el: iparticipants) => {
-                let notificationSent = await NotificationServiceClient.CreateNotification({
+                const notificationSent = await NotificationServiceClient.CreateNotification({
                     user_id: el.id,
                     operation: "Added To A Groupchat.",
                     from: 'Unknown',
@@ -188,7 +188,7 @@ export default function GroupManager() {
 
         if (isChecked) {
             if (groupInfo.participants?.length > 0) {
-                let exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
+                const exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
                 if (exists) return;
             }
             setGroupInfo({

@@ -11,7 +11,7 @@ import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetReceiver from '../../../Hooks/useGetReceiver';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import { useAppSelector, useAppDispatch } from '../../../Hooks/storeHooks';
-import { openUserProfileModal, setProfileId, toggleErrorModal, toggleLoading, toggleMsjModal, UserState } from '../../../Store/Slices/userSlice';
+import { openUserProfileModal, setProfileId, toggleErrorModal, toggleLoading, toggleMsjModal } from '../../../Store/Slices/userSlice';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
 export default function ChatMessages(
     {
@@ -26,7 +26,7 @@ export default function ChatMessages(
         DisplayMessage
     }: iChatMessagesProps) {
 
-    const user : UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user : iuserStore  = useAppSelector((state) => state.user);
     const { getReceiverName, getLastOnline, getChatStartDate } = useGetReceiver(sender, DisplayMessage);
     const { getParticipantName, getPic } = useGetParticipants(sender);
 

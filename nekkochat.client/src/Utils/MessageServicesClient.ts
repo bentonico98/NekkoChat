@@ -12,7 +12,7 @@ export default class MessageServicesClient {
 
     public static async sendMessageToUser(data: iServerRequestTypes) {
 
-        let url = ServerLinks.getSendMessageUrl(data.chat_id);
+        const url = ServerLinks.getSendMessageUrl(data.chat_id);
         const result = await axios.put(url, data).then((res) => {
             return res.data;
         }).catch(err => {
@@ -29,7 +29,7 @@ export default class MessageServicesClient {
     public static async sendReadMessage(data: iServerRequestTypes) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getReadMessageUrl(data.chat_id);
+        const url = ServerLinks.getReadMessageUrl(data.chat_id);
 
         const result = await axios.put(url, data).then((res) => {
             return res.data;
@@ -41,12 +41,12 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async deleteMessageFromChat(data: iServerRequestTypes | any) {
+    public static async deleteMessageFromChat(data: iServerRequestTypes) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getDeleteMessageUrl(data.chat_id);
+        const url = ServerLinks.getDeleteMessageUrl(data.chat_id);
 
-        const result = await axios.delete(url, data).then((res) => {
+        const result = await axios.patch(url, data).then((res) => {
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -56,12 +56,12 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async deleteChat(data: iServerRequestTypes | any) {
+    public static async deleteChat(data: iServerRequestTypes) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getDeleteChatUrl(data.chat_id);
+        const url = ServerLinks.getDeleteChatUrl(data.chat_id);
 
-        const result = await axios.delete(url, data).then((res) => {
+        const result = await axios.patch(url, data).then((res) => {
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -71,13 +71,13 @@ export default class MessageServicesClient {
         return result;
     }
 
-    public static async deleteUserChat(data: iServerRequestTypes | any) {
+    public static async deleteUserChat(data: iServerRequestTypes) {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
         if (!data.chat_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getDeleteGroupChatUrl(data.chat_id, data.sender_id);
+        const url = ServerLinks.getDeleteGroupChatUrl(data.chat_id, data.sender_id);
 
-        const result = await axios.delete(url, data).then((res) => {
+        const result = await axios.patch(url, data).then((res) => {
             return res.data;
         }).catch(err => {
             console.error(err);
@@ -90,7 +90,7 @@ export default class MessageServicesClient {
     public static async manageChat(data: iServerRequestTypes) {
         if (!data.user_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getManageChatUrl(data.chat_id);
+        const url = ServerLinks.getManageChatUrl(data.chat_id);
 
         const result = await axios.put(url, data).then((res) => {
             return res.data;
@@ -103,7 +103,7 @@ export default class MessageServicesClient {
     }
 
     public static async createChat(data: iServerRequestTypes) {
-        let url = ServerLinks.getCreateChatUrl();
+        const url = ServerLinks.getCreateChatUrl();
 
         const result = await axios.post(url, data).then((res) => {
             return res.data;
@@ -118,7 +118,7 @@ export default class MessageServicesClient {
 
     //// USER SERVICES
     public static async getUserById(user_id: string, sender_id:string) {
-        let url = ServerLinks.getUserById(user_id, sender_id);
+        const url = ServerLinks.getUserById(user_id, sender_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -132,7 +132,7 @@ export default class MessageServicesClient {
 
     public static async getAllUsersChats(user_id: string, type:string) {
 
-        let url = ServerLinks.getAllUsersChatUrl(user_id,type);
+        const url = ServerLinks.getAllUsersChatUrl(user_id,type);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -149,7 +149,7 @@ export default class MessageServicesClient {
     }
 
     public static async getChatFromUser(chat_id: number) {
-        let url = ServerLinks.getOneUsersChatUrl(chat_id);
+        const url = ServerLinks.getOneUsersChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -171,7 +171,7 @@ export default class MessageServicesClient {
     public static async getGroupById(group_id: number) {
         if (!group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getGroupById(group_id);
+        const url = ServerLinks.getGroupById(group_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -185,7 +185,7 @@ export default class MessageServicesClient {
 
     public static async getAllGroupsChats(user_id: string) {
 
-        let url = ServerLinks.getAllGroupsChatUrl(user_id);
+        const url = ServerLinks.getAllGroupsChatUrl(user_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -202,7 +202,7 @@ export default class MessageServicesClient {
     }
 
     public static async getGroupFromUser(chat_id: number) {
-        let url = ServerLinks.getOneGroupChatUrl(chat_id);
+        const url = ServerLinks.getOneGroupChatUrl(chat_id);
 
         const result = await axios.get(url).then((res) => {
             return res.data;
@@ -221,7 +221,7 @@ export default class MessageServicesClient {
 
     public static async sendMessageToGroup(data: iGroupRequestTypes) {
 
-        let url = ServerLinks.getSendMessageToGroupUrl(data.group_id);
+        const url = ServerLinks.getSendMessageToGroupUrl(data.group_id);
 
         const result = await axios.put(url, data).then((res) => {
             return res.data;
@@ -241,7 +241,7 @@ export default class MessageServicesClient {
         if (!data.group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
         if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getReadGroupMessageUrl(data.group_id);
+        const url = ServerLinks.getReadGroupMessageUrl(data.group_id);
 
         const result = await axios.put(url, data).then((res) => {
             return res.data;
@@ -257,7 +257,7 @@ export default class MessageServicesClient {
         if (!data.group_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
         if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getAddParticipantToGroupUrl(data.group_id);
+        const url = ServerLinks.getAddParticipantToGroupUrl(data.group_id);
 
         const result = await axios.put(url, data).then((res) => {
             return res.data;
@@ -272,7 +272,7 @@ export default class MessageServicesClient {
         if (!data.sender_id) return new ResponseViewModel(false, 500, null, null, "Missing Values");
         if (!data.groupname) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
-        let url = ServerLinks.getCreateGroupChatUrl();
+        const url = ServerLinks.getCreateGroupChatUrl();
 
         const result = await axios.post(url, data).then((res) => {
             return res.data;

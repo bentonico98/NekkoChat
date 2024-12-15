@@ -20,7 +20,7 @@ export default function useSearchUserByName(
 
         const res = await UserAuthServices.SearchUserByName(stringSearch, user_id);
         if (res.success) {
-            let searchRes: iUserViewModel[] = res.user.filter(
+            const searchRes: iUserViewModel[] = res.user.filter(
                 (r: iUserViewModel) => r.id !== user_id
             );
             if (friends.length > 0) {
@@ -55,7 +55,7 @@ export default function useSearchUserByName(
     const handleSearchFromList = useCallback(
         (stringSearch: string, list: iUserViewModel[]) => {
             const filter = list.filter((u: iUserViewModel) =>
-                u.userName.includes(stringSearch)
+                u.userName?.includes(stringSearch)
             );
             if (filter.length > 0) {
                 setSearchFriends(filter);

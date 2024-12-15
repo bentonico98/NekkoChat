@@ -6,7 +6,7 @@ import avatar from "../../assets/avatar.png";
 import { iparticipants, iuserStore } from "../../Constants/Types/CommonTypes";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import { Box, Typography } from "@mui/material";
-import { openUserProfileModal, setProfileId, UserState } from "../../Store/Slices/userSlice";
+import { openUserProfileModal, setProfileId } from "../../Store/Slices/userSlice";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 
 type incomingProps = {
@@ -14,7 +14,7 @@ type incomingProps = {
 }
 export default function ParticipantButton({ item }: incomingProps) {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user:  iuserStore = useAppSelector((state) => state.user);
 
     const dispatch = useAppDispatch();
 
@@ -25,7 +25,7 @@ export default function ParticipantButton({ item }: incomingProps) {
     }
 
     return (
-        <Box className={`mx-1 border border-2 rounded p-1 Three-Row-Container ${user.value.id == item!.id && "bg-warning"}`}>
+        <Box className={`mx-1 border border-2 rounded p-1 Three-Row-Container ${user.value?.id == item!.id && "bg-warning"}`}>
             <Box className="centeredElement">
                 <Image  src={avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
             </Box>

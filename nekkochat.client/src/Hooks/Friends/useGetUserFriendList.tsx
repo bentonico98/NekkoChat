@@ -12,8 +12,8 @@ export default function useGetUserFriendList(user_id: string | null, DisplayMess
 
         DisplayMessage({ isLoading: true });
 
-        let res = await UserAuthServices.GetUserFriends(id,"any");
-        let fReq = await UserAuthServices.GetUserFriends(id,"requests");
+        const res = await UserAuthServices.GetUserFriends(id,"any");
+        const fReq = await UserAuthServices.GetUserFriends(id,"requests");
         if (res.success) {
             setFriend([...res.user]);
         DisplayMessage({ isLoading: false });

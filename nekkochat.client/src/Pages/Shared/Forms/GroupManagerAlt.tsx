@@ -38,7 +38,7 @@ export default function GroupManagerAlt({
     groupphoto,
     participants = [] }: iGroupRequestTypesv2) {
 
-    const user: iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore  = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
     const [allMembers, setAllMembers] = useState<iUserViewModel[]>([]);
 
@@ -58,8 +58,8 @@ export default function GroupManagerAlt({
 
     }, [displayInfo]);
 
-    const { friend, value, setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
-    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
+    const { friend, value, setValue } = useGetUserFriendList(user.value?.id || '0', setDisplayInfo);
+    const { searchFriends, searchFromList, resetSearch } = useSearchUserByName(user.value?.id || '0', setDisplayInfo);
 
     const [isValid, setValid] = useState<boolean>(false);
 
@@ -101,7 +101,7 @@ export default function GroupManagerAlt({
                 return;
             }
 
-            let notificationSent = await NotificationServiceClient.CreateNotification({
+            const notificationSent = await NotificationServiceClient.CreateNotification({
                 user_id: el.id,
                 operation: "Added To A Groupchat.",
                 from: 'Unknown',
@@ -134,7 +134,7 @@ export default function GroupManagerAlt({
 
         if (isChecked) {
             if (groupInfo.participants && groupInfo.participants?.length > 0) {
-                let exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
+                const exists = groupInfo?.participants?.some((el: iparticipants) => el.id === id);
                 if (exists) return;
             }
             setGroupInfo({
@@ -168,7 +168,7 @@ export default function GroupManagerAlt({
     }, [groupInfo]);
 
     useEffect(() => {
-        var payload: iUserViewModel[] = [];
+        const payload: iUserViewModel[] = [];
         friend.forEach((f) => {
             if (groupInfo.members && groupInfo.members.length > 0) {
                 const included = groupInfo.members.some((p) => p.id == f.id);
@@ -179,7 +179,7 @@ export default function GroupManagerAlt({
         });
         setAllMembers(payload);
 
-    }, [friend]);
+    }, [friend, groupInfo.members]);
 
     return (
         <Container style={{ width: 600, maxWidth: '100%' }}>

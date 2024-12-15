@@ -21,7 +21,7 @@ export default function Register() {
     const [globalError, setGlobalError] = useState<string>("");
 
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
-    const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
+    const [currentUser, setCurrentUser] = useState({ success: false, user: {} });
 
     const navigate = useNavigate();
 

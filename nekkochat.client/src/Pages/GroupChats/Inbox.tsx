@@ -49,30 +49,32 @@ export default function Inbox() {
 
     }, [displayInfo]);
 
-    const addToChat = (user: string, userN: string, msj: string, { typing, user_id, username }: iTypingComponentProps, groupID: string, groupName: string) => {
+    const addToChat = (user: string | null, userN: string | null, msj: string | null, { typing, user_id, username }: iTypingComponentProps, groupID: string | null, groupName: string | null) => {
         if (!msj && !user) {
-            setIsTyping({ typing: typing, user_id: user_id, username, group_id: groupID, groupname: groupName });
+            setIsTyping({ typing: typing, user_id: user_id, username, group_id: groupID || '0', groupname: groupName || 'Unknown' });
             setTimeout(() => {
-                setIsTyping({ typing: false, user_id: user_id, username, group_id: groupID, groupname: groupName });
+                setIsTyping({ typing: false, user_id: user_id, username, group_id: groupID || '0', groupname: groupName || 'Unknown' });
             }, 3000);
             return;
         }
-        setMessages((c: iChatSchema[]) => {
-            let payload: iChatSchema[] = [...c];
-            if (c[0].group_id == parseInt(groupID)) {
-                payload = [...c, {
-                    id: Math.floor(Math.random()).toString(),
-                    user_id: user,
-                    username: userN,
-                    content: msj,
-                    groupname: groupName,
-                    group_id: parseInt(groupID),
-                    read: false,
-                    created_at: new Date().toJSON()
-                }];
-            }
-            return payload;
-        });
+        if (msj && groupID) {
+            setMessages((c: iChatSchema[]) => {
+                let payload: iChatSchema[] = [...c];
+                if (c[0].group_id == parseInt(groupID)) {
+                    payload = [...c, {
+                        id: Math.floor(Math.random()).toString(),
+                        user_id: user || '0',
+                        username: userN || 'Unknown',
+                        content: msj,
+                        groupname: groupName || 'Unknown',
+                        group_id: parseInt(groupID),
+                        read: false,
+                        created_at: new Date().toJSON()
+                    }];
+                }
+                return payload;
+            });
+        }
     };
 
     const {

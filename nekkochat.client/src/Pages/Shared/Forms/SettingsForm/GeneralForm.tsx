@@ -4,26 +4,26 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { useAppDispatch, useAppSelector } from '../../../../Hooks/storeHooks';
 import { IUserEditTypes, iuserStore } from '../../../../Constants/Types/CommonTypes';
-import { closeSettingModal, refreshUserData, toggleErrorModal, toggleMsjModal, UserState } from '../../../../Store/Slices/userSlice';
+import { closeSettingModal, refreshUserData, toggleErrorModal, toggleMsjModal } from '../../../../Store/Slices/userSlice';
 import { useState } from 'react';
 import UserAuthServices from '../../../../Utils/UserAuthServices';
 
 function GeneralForm() {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const [userInfo, setUserInfo] = useState<IUserEditTypes>({
-        user_id: user.value.id,
-        fname: user.value.fname,
-        lname: user.value.lname,
-        about: user.value.about || ''
+        user_id: user.value?.id || '0',
+        fname: user.value?.fname || 'Unknown',
+        lname: user.value?.lname || 'Unknown',
+        about: user.value?.about || ''
     });
 
     const handleSaveButton = async () => {
         const res = await UserAuthServices.ManageUserProfile(userInfo);
         if (res.success) {
-            dispatch(refreshUserData(user.value.id));
+            dispatch(refreshUserData(user.value?.id || '0'));
             dispatch(toggleMsjModal({ status: true, message: "Succesfull" }));
         } else {
             dispatch(toggleErrorModal({ status: true, message: res.error }));
@@ -53,7 +53,7 @@ function GeneralForm() {
                     aria-label="Last Name"
                     aria-describedby="basic-addon1"
                     value={userInfo.lname}
-                    onChange={(e) => setUserInfo({ ...userInfo, lname: `${e.target.value}` }) }
+                    onChange={(e) => setUserInfo({ ...userInfo, lname: `${e.target.value}` })}
                 />
             </InputGroup>
 
@@ -62,7 +62,7 @@ function GeneralForm() {
                 <Form.Control
                     placeholder={user.value.about || "Write Something about yourself..."}
                     value={userInfo.about}
-                    onChange={(e) => { setUserInfo({ ...userInfo, about: `${e.target.value}` }); } }
+                    onChange={(e) => { setUserInfo({ ...userInfo, about: `${e.target.value}` }); }}
                     as="textarea"
                     aria-label="Write Something about yourself..." />
             </InputGroup>

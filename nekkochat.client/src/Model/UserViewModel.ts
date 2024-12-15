@@ -27,8 +27,8 @@ export default class UserViewModel implements iUserViewModel {
         this.fname = fname;
         this.lname = lname;
         this.connectionId = connectionId;
-        this.profilePhotoUrl = profilepic,
-            this.friends_Count = friendCount;
+        this.profilePhotoUrl = profilepic;
+        this.friends_Count = friendCount;
         this.about = about;
         this.lastOnline = lastOnline;
     }

@@ -4,17 +4,18 @@ export interface ErrorInterface {
     password?: string,
     confirmpassword?: string,
 }
-export interface iUserVideoCallTypes{
+export interface iUserVideoCallTypes {
     name: string,
     photo: string,
-    id:string
+    id: string
 }
+export type AddToGroupChatType = (user: string | null, userN: string | null, msj: string | null, { typing, user_id, username }: iTypingComponentProps, groupID: string | null, groupName: string | null) => void;
+export type AddToPrivateChatType = (user: string | null, msj: string | null, { typing, user_id }: iTypingComponentProps) => void;
 export interface iLoginTypes {
     email: string,
     password: string,
     remember: boolean
 }
-
 export interface iRegisterTypes {
     email: string;
     fname: string;
@@ -33,7 +34,7 @@ export interface iNotificationTypes {
     operation?: string
     type?: number
     from?: string
-    from_id?:string
+    from_id?: string
     url?: string
     seen?: boolean
 }
@@ -80,7 +81,7 @@ export interface iparticipants {
     id: string,
     name: string,
     connectionid: string,
-    profilePic:string
+    profilePic: string
 }
 
 export interface iuserStore {
@@ -99,19 +100,20 @@ export interface iuserStore {
 }
 
 export interface iUserViewModel {
-    id: string,
-    userName: string,
-    fname: string,
-    lname: string,
-    connectionId: string,
-    profilePhotoUrl: string,
+    id?: string,
+    userName?: string,
+    fname?: string,
+    lname?: string,
+    connectionId?: string,
+    profilePhotoUrl?: string,
+    phoneNumber?: string,
     friends_Count?: number,
     about?: string,
     lastOnline?: string,
     isFriend?: boolean,
     isSender?: boolean,
     canSendRequest?: boolean,
-    alreadyRequest?:boolean
+    alreadyRequest?: boolean
 }
 export interface IUserEditTypes {
     user_id: string,
@@ -135,7 +137,7 @@ export interface iChatSchema {
     created_at?: string,
     read?: boolean,
     groupname?: string | undefined,
-    group_id?:number | undefined
+    group_id?: number | undefined
 }
 export interface iConversationClusterProps {
     _id: string,
@@ -148,8 +150,8 @@ export interface iConversationClusterProps {
 export interface iSideBoxProps {
     messages: iConversationClusterProps[],
     user: string,
-    setCurrentConversation: (arg: any) => void,
-    trigger:()=> void,
+    setCurrentConversation: (arg: number) => void,
+    trigger: () => void,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
 }
 export interface iTypingComponentProps {
@@ -157,7 +159,7 @@ export interface iTypingComponentProps {
     user_id: string,
     username?: string,
     group_id?: string,
-    groupname?:string
+    groupname?: string
 }
 export interface iChatMessagesProps {
     messages: iChatSchema[],
@@ -169,7 +171,7 @@ export interface iChatMessagesProps {
     isTyping: iTypingComponentProps,
     trigger: () => void,
     DisplayMessage: (obj: iDisplayMessageTypes) => void
-                            
+
 }
 export interface iGroupChatMessagesProps {
     messages: iChatSchema[],

@@ -1,10 +1,10 @@
 import ServerLinks from "../Constants/ServerLinks"
 import axios from "axios";
 import ResponseViewModel from "../Model/ReponseViewModel";
-import { iRegisterTypes, iServerRequestTypes, IUserEditTypes } from "../Constants/Types/CommonTypes";
+import { iLoginTypes, iRegisterTypes, iServerRequestTypes, IUserEditTypes } from "../Constants/Types/CommonTypes";
 export default class UserAuthServices {
 
-    public static async Login(payload: any) {
+    public static async Login(payload: iLoginTypes) {
         const url = ServerLinks.getLoginUrl();
 
         const result = await axios.post(url, payload).then((res) => {
@@ -62,7 +62,7 @@ export default class UserAuthServices {
 
     }
 
-    public static async SetProfilePicture(data: any, user_id: string, username :string) {
+    public static async SetProfilePicture(data: FormData, user_id: string, username :string) {
         //if (!data.file) return new ResponseViewModel(false, 500, null, null, "Missing Values");
 
         const url = ServerLinks.getSetProfilePicUrl(user_id, username);
@@ -199,7 +199,7 @@ export default class UserAuthServices {
     }
     public static isAuthenticated() {
         const user = localStorage.getItem("user");
-        let isNull = user === null;
+        const isNull = user === null;
         return !isNull;
     }
     public static isRemembered() {

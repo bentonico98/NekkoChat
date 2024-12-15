@@ -41,7 +41,7 @@ export default function useGetGroup(user: string, messages: iChatSchema[], group
         }
     }
     const getChatStartDate = (filter: iChatSchema[]) => {
-        const date: string = filter[0]?.created_at || new Date().toJSON();
+        const date: string = filter[0]?.created_at || new Date().toDateString();
         const formattedDate = timeAgo(date);
         if (formattedDate) {
             setStartDate(formattedDate);

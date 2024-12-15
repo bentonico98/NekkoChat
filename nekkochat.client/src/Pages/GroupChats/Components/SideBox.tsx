@@ -46,7 +46,7 @@ export default function SideBox({ messages, user, setCurrentConversation, trigge
                         info={el.messages[el.messages.length - 1].content}
                         unreadCnt={getUnreadMessages(el.messages)}
                         onClick={async () => {
-                            setCurrentConversation(el._id);
+                            setCurrentConversation(parseInt(el._id));
                             await MessageServicesClient.sendReadMessageGroup({
                                 group_id: parseInt(el._id),
                                 sender_id: user,

@@ -36,7 +36,7 @@ builder.Services.AddResponseCompression(options =>
 
 //Config DB Context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-options.UseNpgsql(builder.Configuration.GetConnectionString("nekkoDbBen") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
+options.UseNpgsql(builder.Configuration.GetConnectionString("containerDb") ?? throw new InvalidOperationException("Connection string 'dbContext' not found.")));
 
 
 //Config for Identity
@@ -52,7 +52,8 @@ builder.Services.Configure<IdentityOptions>(options =>
 //Redis Configuration
 builder.Services.AddStackExchangeRedisCache(opts =>
 {
-    opts.Configuration = builder.Configuration["REDIS_CONNECTION_STRING"];
+    //opts.Configuration = builder.Configuration["REDIS_CONNECTION_STRING"];
+    opts.Configuration = builder.Configuration.GetConnectionString("containerCache");
 });
 
 //Configuracion del CORS
@@ -61,14 +62,14 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
+            builder.WithOrigins("https://localhost:5173", "http://172.18.0.2:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
         });
     options.AddPolicy("SignalROrigin",
         builder =>
         {
-            builder.WithOrigins("https://localhost:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
+            builder.WithOrigins("https://localhost:5173", "http://172.18.0.2:5173", "https://10.0.0.37:5173", "http://localhost:5173", "http://10.0.0.37:5173", "https://192.168.8.117:5173", "http://192.168.8.117:5173")
                    .AllowAnyHeader()
                    .AllowAnyMethod()
                    .AllowCredentials();
@@ -113,6 +114,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    //app.ApplyMigration();
 }
 
 app.UseHttpsRedirection();
@@ -159,7 +161,8 @@ app.MapHub<GroupChatHub>("/groupchathub");
 app.MapHub<VideoCallHub>("/videocallhub");
 
 //Backgroup Services Schedulers
-app.Services.UseScheduler(scheduler => {
+app.Services.UseScheduler(scheduler =>
+{
     scheduler.Schedule<EmptyGroupsGuardian>()
     .Hourly()
     .PreventOverlapping(nameof(EmptyGroupsGuardian));

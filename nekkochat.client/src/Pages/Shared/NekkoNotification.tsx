@@ -9,7 +9,6 @@ import GetUserNotificationService from "../../Utils/GetUserNotificationService";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
 import { useAppSelector } from "../../Hooks/storeHooks";
-import { UserState } from "../../Store/Slices/userSlice";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -18,7 +17,7 @@ interface iCustomProps {
 }
 export default function NekkoNotification({ item }: iCustomProps) {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const navigate = useNavigate();
 
     const [tabColor, setTabColor] = useState<string>("bg-light text-black");
@@ -27,7 +26,7 @@ export default function NekkoNotification({ item }: iCustomProps) {
 
     const handleClick = async (id: string | undefined, url: string = "/friends") => {
         if (item.seen) {
-           return navigate(url);
+            return navigate(url);
         }
         const res = await NotificationServiceClient.ReadNotification({
             user_id: user.value.id,
@@ -51,16 +50,15 @@ export default function NekkoNotification({ item }: iCustomProps) {
         if (!item.seen) {
             setTabColor("bg-primary text-white");
             setButtonColor("bg-primary text-white");
-        } 
-
+        }
     }, [])
     return (
         <>
             {item.type ?
                 <Button onClick={() => handleClick(item!.id, item!.url)} >
-                    <Card className={tabColor} sx={{ display: 'flex', flexWrap:"wrap", maxHeight: "90px", minWidth: "360px", justifyContent: 'space-between' }}>
+                    <Card className={tabColor} sx={{ display: 'flex', flexWrap: "wrap", maxHeight: "90px", minWidth: "360px", justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                            <CardContent sx={{ flex: '1 0 auto', textAlign:"left" }}>
+                            <CardContent sx={{ flex: '1 0 auto', textAlign: "left" }}>
                                 <Typography component="div" variant="h5">
                                     {FirstLetterUpperCase(GetUserNotificationService(item.type))}
                                 </Typography>
@@ -74,8 +72,8 @@ export default function NekkoNotification({ item }: iCustomProps) {
                                 </Typography>
                             </CardContent>
                         </Box>
-                        <Box sx={{ position: "fixed", right:"0.5rem", display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
-                            <Button variant="text" size="large" onClick={() => { handleDeleteButton(item!.id, item!.url) } }  >{<FontAwesomeIcon className={buttonColor} icon={faTrashAlt} />}</Button>
+                        <Box sx={{ position: "fixed", right: "0.5rem", display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'center' }}>
+                            <Button variant="text" size="large" onClick={() => { handleDeleteButton(item!.id, item!.url) }}  >{<FontAwesomeIcon className={buttonColor} icon={faTrashAlt} />}</Button>
                         </Box>
                     </Card>
                 </Button>

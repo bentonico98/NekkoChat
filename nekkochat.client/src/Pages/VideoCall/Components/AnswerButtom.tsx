@@ -25,7 +25,7 @@ export default function SimpleSnackbar() {
     const Receiver_id: string = user.id;
     const { connected, conn } = useVideocallSignalServer();
 
-    let connection: any;
+    let connection: signalR.HubConnection | null = null;
 
     useEffect(() => {
         if (connected) {
@@ -43,7 +43,9 @@ export default function SimpleSnackbar() {
             });
 
             return () => {
-                connection.off('videonotification');
+                if (connection) {
+                    connection.off('videonotification');
+                }
             };
         }
     }, [connected, connection]);

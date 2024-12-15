@@ -4,7 +4,7 @@ import { Search } from "@chatscope/chat-ui-kit-react";
 import FriendButton from "../Shared/FriendButton";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import { iuserStore, iUserViewModel } from "../../Constants/Types/CommonTypes";
-import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from "../../Store/Slices/userSlice";
+import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from "../../Store/Slices/userSlice";
 import useGetUserFriendList from "../../Hooks/Friends/useGetUserFriendList";
 import useSearchUserByName from "../../Hooks/useSearchUserByName";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
@@ -32,18 +32,18 @@ export default function Index() {
 
     }, [displayInfo]);
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
 
     const {
         friend,
         friendRequest,
         value,
-        setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
+        setValue } = useGetUserFriendList(user.value?.id || '0', setDisplayInfo);
 
     const {
         searchFriends,
         searchFromList,
-        resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
+        resetSearch } = useSearchUserByName(user.value?.id || '0', setDisplayInfo);
 
     return (
         <Container className="text-center fluidContainer">
@@ -68,7 +68,6 @@ export default function Index() {
                     {friendRequest.map((el: iUserViewModel, idx: number) => {
                         return <FriendButton
                             key={idx}
-                            id={el.id}
                             idx={idx}
                             item={el}
                             DisplayMessage={setDisplayInfo} />
@@ -83,7 +82,6 @@ export default function Index() {
                     {searchFriends.map((el: iUserViewModel, idx: number) => {
                         return <FriendButton
                             key={idx}
-                            id={el.id}
                             idx={idx}
                             item={el}
                             DisplayMessage={setDisplayInfo} />
@@ -97,7 +95,6 @@ export default function Index() {
                 {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
                     return <FriendButton
                         key={idx}
-                        id={el.id}
                         idx={idx}
                         item={el}
                         DisplayMessage={setDisplayInfo} />

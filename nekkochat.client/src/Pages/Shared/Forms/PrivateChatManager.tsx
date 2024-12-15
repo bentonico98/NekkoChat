@@ -14,7 +14,7 @@ import SearchIcon from '@mui/icons-material/Search';
 
 export default function PrivateChatManager() {
 
-    const user: iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
@@ -36,13 +36,13 @@ export default function PrivateChatManager() {
     const {
         friend,
         value,
-        setValue } = useGetUserFriendList(user.value.id, setDisplayInfo);
+        setValue } = useGetUserFriendList(user.value?.id || '0', setDisplayInfo);
 
     const {
         searchFriends,
         searchUserByName,
         searchFromList,
-        resetSearch } = useSearchUserByName(user.value.id, setDisplayInfo);
+        resetSearch } = useSearchUserByName(user.value?.id || '0', setDisplayInfo);
 
     return (
         <Container style={{ width: '90vw', maxWidth: '100%' }}>
@@ -76,7 +76,6 @@ export default function PrivateChatManager() {
                             {searchFriends.map((el: iUserViewModel, idx: number) => {
                                 return <FriendButton
                                     key={idx}
-                                    id={el.id}
                                     idx={idx}
                                     item={el}
                                     DisplayMessage={setDisplayInfo}
@@ -90,7 +89,6 @@ export default function PrivateChatManager() {
                             {friend.length > 0 ? friend.map((el: iUserViewModel, idx: number) => {
                                 return <FriendButton
                                     key={idx}
-                                    id={el.id}
                                     idx={idx}
                                     item={el}
                                     DisplayMessage={setDisplayInfo}

@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { iChatSchema, iGroupChatMessagesProps, iuserStore } from '../../../Constants/Types/CommonTypes';
 import FirstLetterUpperCase from '../../../Utils/FirstLetterUpperCase';
 import useGetGroup from '../../../Hooks/Group/useGetGroup';
-import { openUserProfileModal, setProfileId, toggleErrorModal, toggleMsjModal, UserState } from '../../../Store/Slices/userSlice';
+import { openUserProfileModal, setProfileId, toggleErrorModal, toggleMsjModal } from '../../../Store/Slices/userSlice';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
 import useGetParticipants from '../../../Hooks/useGetParticipants';
 import NekkoSpinner from '../../Shared/Skeletons/NekkoSpinner';
@@ -31,7 +31,7 @@ export default function ChatMessages({
     DisplayMessage
 }: iGroupChatMessagesProps) {
 
-    const user: UserState | iuserStore | any = useAppSelector((state)=> state.user)
+    const user:  iuserStore = useAppSelector((state)=> state.user)
     const dispatch = useAppDispatch();
 
     const {
@@ -41,7 +41,7 @@ export default function ChatMessages({
         groupPhoto,
         startDate } = useGetGroup(sender, messages, receiver, DisplayMessage);
 
-    const { getGroupPic } = useGetParticipants(user.value.id);
+    const { getGroupPic } = useGetParticipants(user.value?.id || '0');
 
     const navigate = useNavigate();
 

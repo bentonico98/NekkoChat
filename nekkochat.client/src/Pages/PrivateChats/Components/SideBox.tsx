@@ -78,7 +78,7 @@ export default function SideBox({
                                 handleClick(e);
                             }}
                             onClick={async () => {
-                                setCurrentConversation(el._id);
+                                setCurrentConversation(parseInt(el._id));
                                 await MessageServicesClient.sendReadMessage({
                                     chat_id: parseInt(el._id || "0"),
                                     user_id: user,

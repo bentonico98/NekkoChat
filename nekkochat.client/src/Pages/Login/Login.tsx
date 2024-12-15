@@ -22,7 +22,7 @@ export default function Login() {
     const [isGlobalError, setIsGlobalError] = useState<boolean>(false);
     const [globalError, setGlobalError] = useState<string>("");
 
-    const [currentUser, setCurrentUser] = useState<any>({ success: false, user: {} });
+    const [currentUser, setCurrentUser] = useState({ success: false, user: {} });
     const [loggedIn, setLoggedIn] = useState<boolean>(false);
     const navigate = useNavigate();
 

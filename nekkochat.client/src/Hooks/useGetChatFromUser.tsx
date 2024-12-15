@@ -14,7 +14,7 @@ export default function useGetChatFromUser(user_id: string, DisplayMessage: (obj
         if (res.success) {
             setcurrentConvo(res.user);
             setChatID(res.user[0]._id);
-            var filter = res.user[0].participants.filter((i: iparticipants) => i.id !== user_id);
+            const filter = res.user[0].participants.filter((i: iparticipants) => i.id !== user_id);
             setMessages(res.user[0].messages);
             setReceiverID(filter[0].id);
             DisplayMessage({ isLoading: false });

@@ -21,6 +21,7 @@
     <TypeScriptConfiguration Remove="src\StateManagement\**" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="dist\" />
     <Folder Include="src\Constants\Styles\" />
     <Folder Include="src\Constants\Types\" />
     <Folder Include="src\Hooks\Server\" />
@@ -29,5 +30,11 @@
     <Folder Include="src\Pages\Shared\Skeletons\" />
     <Folder Include="src\Pages\Welcome\" />
     <Folder Include="src\Store\Slices\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.dockerignore">
+      <DependentUpon>$(DockerDefaultDockerfile)</DependentUpon>
+      <Link>.dockerignore</Link>
+    </None>
   </ItemGroup>
 </Project>

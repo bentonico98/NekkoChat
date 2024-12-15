@@ -13,7 +13,7 @@ import UserAuthServices from '../../../Utils/UserAuthServices';
 
 export default function ProfileManager() {
 
-    const user: iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const dispatch = useDispatch();
 
     const handleClickButton = () => {
@@ -21,16 +21,16 @@ export default function ProfileManager() {
     }
 
     const changeProfilePicture = async () => {
-       
+
         const form: HTMLFormElement = document.querySelector("#nekkoform")!;
 
         const formData = new FormData(form);
-     
+
         console.log(formData)
 
-        const res = await UserAuthServices.SetProfilePicture(formData,user.value.id, user.value.userName);
+        const res = await UserAuthServices.SetProfilePicture(formData, user.value?.id || '0', user.value?.userName || 'Unknown');
         if (res.success) {
-            dispatch(refreshUserData(user.value.id));
+            dispatch(refreshUserData(user.value?.id || '0'));
             dispatch(toggleMsjModal({ status: true, message: "Profile Picture Updated." }));
         } else {
             dispatch(toggleErrorModal({ status: true, message: res.error }));
@@ -47,11 +47,11 @@ export default function ProfileManager() {
                 <Modal.Body>
                     <Container>
                         <Row>
-                            <Col xs={12} style={{ display: 'flex', flexDirection: 'column', alignItems:"center" }}>
-                                <Image src={user.value.profilePhotoUrl} roundedCircle fluid width={200}  />
+                            <Col xs={12} style={{ display: 'flex', flexDirection: 'column', alignItems: "center" }}>
+                                <Image src={user.value.profilePhotoUrl} roundedCircle fluid width={200} />
                                 <form onSubmit={(e) => { e.preventDefault(); changeProfilePicture() }} id="nekkoform" encType="multipart/form-data">
                                     <input name="file" type="file" />
-                                    <Button type="submit">{<FontAwesomeIcon id="nekkoFileButton" style={{ cursor: "pointer" }}  icon={faPen} />}</Button>
+                                    <Button type="submit">{<FontAwesomeIcon id="nekkoFileButton" style={{ cursor: "pointer" }} icon={faPen} />}</Button>
                                 </form>
                             </Col>
                             <Col>
@@ -59,14 +59,14 @@ export default function ProfileManager() {
                                 <Typography variant="h6">Last Name: <Typography variant="subtitle1" className="text-muted">{FirstLetterUpperCase(user.value.lname || "Unknown")}</Typography></Typography>
                             </Col>
                         </Row>
-                       
+
                         <Row>
                             <Typography variant="h6" className="text-bold">About</Typography>
                             <Typography variant="body2" className="text-muted">{user.value.about || "Hi, Let's get to know eachother."}</Typography>
                         </Row>
                         <Row>
                             <Typography variant="h6" className="text-bold">Phone Number</Typography>
-                            <Typography variant="body2" className="text-muted">{user.value.phoneNumber || "Unspecified"}</Typography>
+                            <Typography variant="body2" className="text-muted">{user.value?.phoneNumber || "Unspecified"}</Typography>
                         </Row>
                         <Row>
                             <Typography variant="h6" className="text-bold">Friends</Typography>

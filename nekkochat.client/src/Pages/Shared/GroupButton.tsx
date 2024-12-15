@@ -17,7 +17,7 @@ export default function GroupButton({ item, idx, func }: incomingProps) {
                     className="btn-check"
                     id={`${item.userName}`}
                     onChange={(e) => {
-                        func(item.id, `${item.fname} ${item.lname}`, e.target.checked);
+                        func(item?.id || '0', `${item.fname} ${item.lname}`, e.target.checked);
                     }} />
                 <label className="btn btn-outline-primary" htmlFor={`${item.userName}`}>{FirstLetterUpperCase(`${item.fname} ${item.lname}`)}</label>
             </Row>

@@ -300,14 +300,14 @@ namespace NekkoChat.Server.Controllers
         }
 
         // DELETE chats/chat/delete/{id}/5 -- Ruta que borra o sale de un chat (PROXIMAMENTE)
-        [HttpDelete("chat/delete/{id}")]
+        [HttpPatch("chat/delete/{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
             return StatusCode(403, new ResponseDTO<Groups> { Success = false, Message = ErrorMessages.ErrorRegular, Error = ErrorMessages.NoDeleteActiveChat, StatusCode = 403 });
         }
 
         // DELETE chats/chat/message/delete/5?user_id=user_id -- Ruta que borra o sale de un chat (PROXIMAMENTE)
-        [HttpDelete("chat/message/delete/{id}")]
+        [HttpPatch("chat/message/delete/{id}")]
         public async Task<IActionResult> DeleteSingleMessage([FromRoute] int id, [FromBody] ChatRequest data)
         {
             if (id <= 0)

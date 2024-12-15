@@ -22,7 +22,7 @@ export default function NotificationBar({ show, setShow, userId }: iCustomProps)
 
     useEffect(() => {
         if (notifications.length > 0) {
-            var counts = notifications.filter((el) => el.seen == false).length;
+            const counts = notifications.filter((el) => el.seen == false).length;
 
             if (counts > parseInt(notificationCount)) {
                 dispatch(toggleNotification({ status: true, message: counts + " New Notification"}));

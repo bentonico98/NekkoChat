@@ -10,6 +10,11 @@ export const privateServer: signalR.HubConnection = new signalR.HubConnectionBui
     .withUrl("https://localhost:7198/privatechathub", { withCredentials: false })
     .withAutomaticReconnect()
     .build();
+
+export const videoServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
+    .withUrl("https://localhost:7198/videocallhub", { withCredentials: false })
+    .withAutomaticReconnect()
+    .build();
 /*export const groupServer: signalR.HubConnection = new signalR.HubConnectionBuilder()
     .withUrl("https://062r207b-7198.use2.devtunnels.ms/groupchathub", { withCredentials: false })
     .withAutomaticReconnect()

@@ -6,7 +6,7 @@ import avatar from "../../../assets/avatar.png";
 import { faMessage, faTrashCan, faAdd, faStopCircle, faVideo, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from '../../../Store/Slices/userSlice';
+import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from '../../../Store/Slices/userSlice';
 import { useAppDispatch, useAppSelector } from '../../../Hooks/storeHooks';
 import { iuserStore, iUserVideoCallTypes } from '../../../Constants/Types/CommonTypes';
 import useDisplayMessage from '../../../Hooks/useDisplayMessage';
@@ -21,7 +21,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default function UserProfileManager() {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
@@ -60,7 +60,7 @@ export default function UserProfileManager() {
     useEffect(() => {
         setDisplayInfo({ isLoading: true });
 
-        UserAuthServices.SearchUserById(user_id, user.value.id).then((res) => {
+        UserAuthServices.SearchUserById(user_id, user.value?.id || '0').then((res) => {
             if (res.success) {
                 setUserInfo(res.singleUser);
                 setDisplayInfo({ isLoading: false });
@@ -359,7 +359,7 @@ export default function UserProfileManager() {
                             <Button
                                 variant="info"
                                 onClick={() => {
-                                    handleManageFriendButton("accept", userInfo.id, user.value.id);
+                                    handleManageFriendButton("accept", userInfo.id, user.value?.id || '0');
                                 }}>{
                                     <FontAwesomeIcon icon={faCheck} />}
                             </Button>}
@@ -373,13 +373,13 @@ export default function UserProfileManager() {
                         <Button
                             className="mx-1"
                             onClick={() => {
-                                handleMessageButton(user.value.id, userInfo.id, "Hello");
+                                handleMessageButton(user.value?.id || '0', userInfo.id, "Hello");
                             }}>{<FontAwesomeIcon icon={faMessage} />}
                         </Button>
                         <Button
                             variant="danger"
                             onClick={() => {
-                                handleManageFriendButton("remove", userInfo.id, user.value.id);
+                                handleManageFriendButton("remove", userInfo.id, user.value?.id || '0');
                             }}
                             className="mx-1">{
                                 <FontAwesomeIcon icon={faTrashCan} />}
@@ -391,14 +391,14 @@ export default function UserProfileManager() {
                             variant="danger"
                             className="mx-1"
                             onClick={() => {
-                                handleManageFriendButton("add", userInfo!.id, user.value.id);
+                                handleManageFriendButton("add", userInfo!.id, user.value?.id || '0');
                             }}>{
                                 <FontAwesomeIcon icon={faAdd} />}
                         </Button>
                         <Button
                             variant="danger"
                             onClick={() => {
-                                handleManageFriendButton("block", userInfo.id, user.value.id);
+                                handleManageFriendButton("block", userInfo.id, user.value?.id || '0');
                             }}
                             className="mx-1">{
                                 <FontAwesomeIcon icon={faStopCircle} />}

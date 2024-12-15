@@ -36,7 +36,7 @@ export default function Inbox() {
     const user = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
-    const addToChat = (user: string, msj: string, { typing, user_id }: iTypingComponentProps) => {
+    const addToChat = (user: string | null, msj: string | null, { typing, user_id }: iTypingComponentProps) => {
         if (!msj && !user) {
             setIsTyping({ typing: typing, user_id: user_id });
             setTimeout(() => {
@@ -44,14 +44,16 @@ export default function Inbox() {
             }, 3000);
             return;
         }
-        setMessages((c: iChatSchema[]) =>
-            [...c, new ChatSchema(
-                Math.floor(Math.random()).toString(),
-                user,
-                user,
-                msj,
-                new Date().toJSON(),
-                false)]);
+        if (msj) {
+            setMessages((c: iChatSchema[]) =>
+                [...c, new ChatSchema(
+                    Math.floor(Math.random()).toString(),
+                    user || '0',
+                    user || 'Unknown',
+                    msj,
+                    new Date().toJSON(),
+                    false)]);
+        }
     };
 
     useEffect(() => {

@@ -1,0 +1,12 @@
+services:
+  nekkochat.server:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:7198
+      - ASPNETCORE_HTTP_PORTS=7198
+      - ASPNETCORE_HTTPS_PORTS=7198
+    ports:
+      - "7198:7198"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro

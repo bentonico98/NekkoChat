@@ -32,6 +32,7 @@ export default class NotificationServerServices {
                     hasError: true,
                     error: "Server Is Down, Try Again."
                 });
+                console.log(er);
             }
         }
     }

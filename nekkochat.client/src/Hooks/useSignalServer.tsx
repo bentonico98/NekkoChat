@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import UserAuthServices from "../Utils/UserAuthServices";
-import { iDisplayMessageTypes, iuserStore } from "../Constants/Types/CommonTypes";
+import { iDisplayMessageTypes, iuserStore, AddToPrivateChatType } from "../Constants/Types/CommonTypes";
 import PrivateChatsServerServices from "../Utils/PrivateChatsServerServices";
-export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+export default function useSignalServer(user: iuserStore, addToChat: AddToPrivateChatType, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<string | null | undefined>();
 

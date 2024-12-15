@@ -15,7 +15,7 @@ import {
 
 import { useAppDispatch, useAppSelector } from '../../Hooks/storeHooks';
 
-import { logout, toggleLoading, UserState } from "../../Store/Slices/userSlice";
+import { logout, toggleLoading} from "../../Store/Slices/userSlice";
 
 import UserAuthServices from '../../Utils/UserAuthServices';
 import { iuserStore } from '../../Constants/Types/CommonTypes';
@@ -31,7 +31,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import "../../../src/index.css";
 function NekkoNavbar() {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user:  iuserStore  = useAppSelector((state) => state.user);
     const notifications: string | null = useAppSelector((state) => state.user.notificationCount);
 
     const dispatch = useAppDispatch();
@@ -45,7 +45,7 @@ function NekkoNavbar() {
     const handleLogout = async () => {
         dispatch(toggleLoading(true));
         dispatch(logout());
-        await UserAuthServices.Logout({ user_id: user.value.id });
+        await UserAuthServices.Logout({ user_id: user.value?.id });
         window.location.href = "/login";
     }
 
@@ -107,7 +107,7 @@ function NekkoNavbar() {
                     </Box>
                 </Container>
 
-                <NotificationBar show={show} setShow={setShow} userId={user.value.id} />
+                <NotificationBar show={show} setShow={setShow} userId={user.value?.id || '0'} />
             </Navbar>
             {openMenu && <Box className="hamburgerMenu">
                 <Nav.Link onClick={() => handleNavigate("/inbox", null)}>{<FontAwesomeIcon icon={faInbox} />} Inbox</Nav.Link>

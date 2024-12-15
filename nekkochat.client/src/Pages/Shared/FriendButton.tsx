@@ -7,7 +7,7 @@ import MessageServicesClient from "../../Utils/MessageServicesClient";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import avatar from "../../assets/avatar.png";
 import { iDisplayMessageTypes, iuserStore, iUserVideoCallTypes, iUserViewModel } from "../../Constants/Types/CommonTypes";
-import { openUserProfileModal, setProfileId, UserState } from "../../Store/Slices/userSlice";
+import { openUserProfileModal, setProfileId } from "../../Store/Slices/userSlice";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import NotificationServiceClient from "../../Utils/NotificationServiceClient";
@@ -18,23 +18,22 @@ import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 
 type incomingProps = {
     item?: iUserViewModel
-    id: string,
     idx: number,
     DisplayMessage: (obj: iDisplayMessageTypes) => void,
     searchSafe?: boolean
 }
-export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe = true }: incomingProps) {
+export default function FriendButton({idx, item, DisplayMessage, searchSafe = true }: incomingProps) {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore= useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const navigate = useNavigate();
 
     const handlePhoneButton = () => {
         const state: iUserVideoCallTypes = {
-            id: item!.id,
-            name: item!.userName,
-            photo: item!.profilePhotoUrl
+            id: item?.id || '',
+            name: item?.userName || '',
+            photo: item?.profilePhotoUrl || ''
         }
         navigate("/chats/videocall?externalCall=true", { state });
     }
@@ -268,7 +267,7 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
             </Box>
 
             <Box className="centeredElement">
-                <Typography variant="h6" >{FirstLetterUpperCase(item!.fname)} {FirstLetterUpperCase(item!.lname)}</Typography>
+                <Typography variant="h6" >{FirstLetterUpperCase(item?.fname || 'Unknown')} {FirstLetterUpperCase(item?.lname || 'Unknown')}</Typography>
             </Box>
 
             <Box className="centeredElement">
@@ -276,35 +275,35 @@ export default function FriendButton({ id, idx, item, DisplayMessage, searchSafe
                     <Box className="Card-Container ">
                         {item!.canSendRequest && !item!.alreadyRequest && <Button
                             variant="info"
-                            onClick={() => { handleManageFriendButton("add", item!.id, user.value.id); }}>{
+                            onClick={() => { handleManageFriendButton("add", item!.id || '0', user.value?.id || '0'); }}>{
                                 <FontAwesomeIcon icon={faAdd} />}
                         </Button>}
 
                         {item!.isSender &&
                             <Button
                                 variant="info"
-                                onClick={() => { handleManageFriendButton("accept", item!.id, user.value.id); }}>{
+                                onClick={() => { handleManageFriendButton("accept", item!.id || '0', user.value?.id || '0'); }}>{
                                     <FontAwesomeIcon icon={faCheck} />}
                             </Button>}
 
                         {item!.alreadyRequest &&
                             <Button
                                 variant="danger"
-                                onClick={() => { handleManageFriendButton("decline", item!.id, user.value.id); }}>{
+                                onClick={() => { handleManageFriendButton("decline", item!.id || '0', user.value?.id || '0'); }}>{
                                     <FontAwesomeIcon icon={faCancel} />}
                             </Button>}
 
                         <Button
                             onClick={() => {
-                                handleInfoButton(id);
+                                handleInfoButton(item!.id || '0');
                             }}>{
                                 <FontAwesomeIcon icon={faInfoCircle} />}
                         </Button>
                     </Box> : <Box className="Card-Container" >
                         <Button onClick={() => { handlePhoneButton(); }}>{<FontAwesomeIcon icon={faVideoCamera} />}</Button>
-                        <Button onClick={() => { handleMessageButton(user.value.id, id, "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
+                        <Button onClick={() => { handleMessageButton(user.value?.id || '0', item!.id || '0', "Hello"); }}>{<FontAwesomeIcon icon={faMessage} />}</Button>
                         {searchSafe &&
-                            <Button onClick={() => { handleInfoButton(id); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
+                            <Button onClick={() => { handleInfoButton(item!.id || '0'); }}>{<FontAwesomeIcon icon={faInfoCircle} />}</Button>}
                     </Box>
                 }
             </Box>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { iDisplayMessageTypes,  iuserStore } from "../../Constants/Types/CommonTypes";
+import { AddToGroupChatType, iDisplayMessageTypes,  iuserStore } from "../../Constants/Types/CommonTypes";
 import GroupChatsServerServices from "../../Utils/GroupChatsServerServices";
 import UserAuthServices from "../../Utils/UserAuthServices";
-export default function useSignalServer(user: iuserStore, addToChat: any, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
+
+//
+export default function useSignalServer(user: iuserStore, addToChat: AddToGroupChatType, DisplayMessage: (obj: iDisplayMessageTypes) => void) {
     const [connected, setConnected] = useState<boolean>(false);
     const [conn, setConn] = useState<string | null | undefined>();
 

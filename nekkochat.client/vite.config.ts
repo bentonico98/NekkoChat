@@ -10,7 +10,7 @@ import { env } from 'process';
 const baseFolder =
     env.APPDATA !== undefined && env.APPDATA !== ''
         ? `${env.APPDATA}/ASP.NET/https`
-        : `${env.HOME}/.aspnet/https`;
+        : `/usr/src/app/certificates`;
 
 const certificateName = "nekkochat.client";
 const certFilePath = path.join(baseFolder, `${certificateName}.pem`);
@@ -26,7 +26,7 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
         'Pem',
         '--no-password',
     ], { stdio: 'inherit', }).status) {
-        throw new Error("Could not create certificate.");
+        throw new Error("Could not create certificate." +  " keyFilePath: " + keyFilePath + " certFilePath: " + certFilePath);
     }
 }
 
@@ -35,6 +35,17 @@ const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_H
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                    }
+                }
+            }
+        }
+    },
     plugins: [plugin(),],
     resolve: {
         alias: {

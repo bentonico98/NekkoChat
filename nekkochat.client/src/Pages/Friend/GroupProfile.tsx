@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import UserAuthServices from "../../Utils/UserAuthServices";
 import FirstLetterUpperCase from "../../Utils/FirstLetterUpperCase";
 import MessageServicesClient from "../../Utils/MessageServicesClient";
-import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification, UserState } from "../../Store/Slices/userSlice";
+import { toggleErrorModal, toggleLoading, toggleMsjModal, toggleNotification } from "../../Store/Slices/userSlice";
 import { iparticipants, iuserStore } from "../../Constants/Types/CommonTypes";
 import { useAppDispatch, useAppSelector } from "../../Hooks/storeHooks";
 import useDisplayMessage from "../../Hooks/useDisplayMessage";
@@ -22,7 +22,7 @@ import ParticipantButton from "../Shared/ParticipantButton";
 
 export default function GroupProfile() {
 
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore  = useAppSelector((state) => state.user);
     const dispatch = useAppDispatch();
 
     const { displayInfo, setDisplayInfo } = useDisplayMessage();
@@ -349,13 +349,13 @@ export default function GroupProfile() {
                     </Button>
                     <Button
                         onClick={() => {
-                            handleMessageButton(user.value.id, userInfo.id, "Hello");
+                            handleMessageButton(user.value?.id || '0', userInfo.id, "Hello");
                         }}>{<FontAwesomeIcon icon={faMessage} />}
                     </Button>
                     <Button
                         variant="danger"
                         onClick={() => {
-                            handleManageFriendButton("remove", userInfo.id, user.value.id);
+                            handleManageFriendButton("remove", userInfo.id, user.value?.id || '0');
                         }}>{<FontAwesomeIcon icon={faTrashCan} />}
                     </Button>
                 </Box>

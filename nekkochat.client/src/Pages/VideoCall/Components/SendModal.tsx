@@ -22,7 +22,6 @@ export type IProfileData = {
     name: string,
     photo?: string
 }
-
 interface ISendModal {
     Users: IUserData[],
     data: IProfileData
@@ -41,7 +40,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
 
     const { connected, conn } = useVideocallSignalServer();
 
-    let connection: any
+    let connection: signalR.HubConnection | null = null;
 
     React.useEffect(() => {
         if (connected) {
@@ -79,7 +78,7 @@ export const SendModal: React.FC<ISendModal> = ({ Users, loading, error, data })
                                 </Box> :
                                 Users.map((user, idx) => {
                                     return (
-                                        <Box  key={idx} className={`Three-Row-Container m-2 border border-2 rounded p-2`}>
+                                        <Box key={idx} className={`Three-Row-Container m-2 border border-2 rounded p-2`}>
                                             <Box className="centeredElement">
                                                 <Image src={user.profilePhotoUrl != null ? user.profilePhotoUrl : avatar} fluid style={{ maxHeight: "50px", maxWidth: '50px' }} />
                                             </Box>

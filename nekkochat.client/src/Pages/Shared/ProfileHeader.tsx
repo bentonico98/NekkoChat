@@ -4,7 +4,6 @@ import { Search } from "@chatscope/chat-ui-kit-react";
 import { useState } from "react";
 import { iConversationClusterProps, iuserStore } from "../../Constants/Types/CommonTypes";
 import { useAppSelector } from "../../Hooks/storeHooks";
-import { UserState } from "../../Store/Slices/userSlice";
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import ChatIcon from '@mui/icons-material/Chat';
 interface iCustomProps {
@@ -15,13 +14,13 @@ interface iCustomProps {
 }
 export default function ProfileHeader({ item, func, refresh, category }: iCustomProps) {
     const [value, setValue] = useState<string>('');
-    const user: UserState | iuserStore | any = useAppSelector((state) => state.user);
+    const user: iuserStore = useAppSelector((state) => state.user);
 
     const filterSearch = () => {
         if (item.length <= 0) return
         if (!value) return
 
-        var payload: iConversationClusterProps[] = [];
+        let payload: iConversationClusterProps[] = [];
 
         if (category === "Chats") {
             payload = filterArray(item);
@@ -39,7 +38,7 @@ export default function ProfileHeader({ item, func, refresh, category }: iCustom
 
         item.forEach((arr) => {
             arr.participants.forEach((part) => {
-                if (part.name.toLowerCase().includes(value) && part.id != user.value.id) {
+                if (part.name.toLowerCase().includes(value) && part.id != user.value?.id) {
                     payload.push(arr);
                 }
             })

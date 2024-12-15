@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import timeAgo from "../Utils/TimeFormatter";
 import MessageServicesClient from "../Utils/MessageServicesClient";
 import GetUserStatusService from "../Utils/GetUserStatusService";
@@ -41,43 +40,43 @@ export default function useGetReceiver(user: string, DisplayMessage: (obj: iDisp
             return GetUserStatusService(res.singleUser.status);
         }
     };
-    const getUnreadMessages = useCallback((messages: iChatSchema[]) => {
+    const getUnreadMessages = (messages: iChatSchema[]) => {
         const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
         const message: iChatSchema[] = messages.filter((i: iChatSchema) => i.read === false && i.user_id !== user);
         return message.length;
-    }, [user])
+    }
 
-    const getChatStartDate = useCallback((messages: iChatSchema[]) => {
+    const getChatStartDate = (messages: iChatSchema[]) => {
         const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
-        const date: string = filter[0]?.created_at || new Date().toJSON();
+        const date: string = filter[0]?.created_at || new Date().toDateString();
 
         const formattedDate = timeAgo(date);
 
         return formattedDate;
-    }, [user]);
+    }
 
-    const getLastOnline = useCallback((messages: iChatSchema[]) => {
+    const getLastOnline = (messages: iChatSchema[]) => {
         const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
-        const date: string = filter[filter.length - 1]?.created_at || new Date().toJSON();
+        const date: string = filter[filter.length - 1]?.created_at || new Date().toDateString();
 
         const formattedDate = timeAgo(date);
 
         return formattedDate;
 
-    }, [user])
+    }
 
-    const getReceiverName = useCallback((messages: iChatSchema[]) => {
+    const getReceiverName = (messages: iChatSchema[]) => {
         const filter = getParticipants(messages);
         if (filter.length <= 0) return;
 
         return filter[0]?.username || "";
-    }, [user]);
+    };
 
     const getParticipants = (messages: iChatSchema[]) => {
         return messages.filter((i: iChatSchema) => i.user_id !== user);
